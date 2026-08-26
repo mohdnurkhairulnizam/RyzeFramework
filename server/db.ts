@@ -1,92 +1,231 @@
-import { eq } from "drizzle-orm";
+import { and, desc, eq, like, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
-import { ENV } from './_core/env';
+import { nanoid } from "nanoid";
+import {
+  ryzeFiles,
+  ryzeMemory,
+  ryzeSessions,
+  ryzeSettings,
+  ryzeSkills,
+  ryzeTaskLogs,
+  ryzeTasks,
+  type User,
+  users,
+} from "../drizzle/schema";
+import { ENV } from "./_core/env";
+import { buildPortableExport } from "./ryzeExport";
+import { filterOwnedRecords, requireOwnedRecord } from "./ryzeOwnership";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
-    try {
-      _db = drizzle(process.env.DATABASE_URL);
-    } catch (error) {
-      console.warn("[Database] Failed to connect:", error);
-      _db = null;
-    }
+    _db = drizzle(process.env.DATABASE_URL);
   }
   return _db;
 }
 
-export async function upsertUser(user: InsertUser): Promise<void> {
-  if (!user.openId) {
-    throw new Error("User openId is required for upsert");
-  }
-
+async function requireDb() {
   const db = await getDb();
-  if (!db) {
-    console.warn("[Database] Cannot upsert user: database not available");
-    return;
-  }
+  if (!db) throw new Error("Database is unavailable.");
+  return db;
+}
 
-  try {
-    const values: InsertUser = {
-      openId: user.openId,
-    };
-    const updateSet: Record<string, unknown> = {};
-
-    const textFields = ["name", "email", "loginMethod"] as const;
-    type TextField = (typeof textFields)[number];
-
-    const assignNullable = (field: TextField) => {
-      const value = user[field];
-      if (value === undefined) return;
-      const normalized = value ?? null;
-      values[field] = normalized;
-      updateSet[field] = normalized;
-    };
-
-    textFields.forEach(assignNullable);
-
-    if (user.lastSignedIn !== undefined) {
-      values.lastSignedIn = user.lastSignedIn;
-      updateSet.lastSignedIn = user.lastSignedIn;
-    }
-    if (user.role !== undefined) {
-      values.role = user.role;
-      updateSet.role = user.role;
-    } else if (user.openId === ENV.ownerOpenId) {
-      values.role = 'admin';
-      updateSet.role = 'admin';
-    }
-
-    if (!values.lastSignedIn) {
-      values.lastSignedIn = new Date();
-    }
-
-    if (Object.keys(updateSet).length === 0) {
-      updateSet.lastSignedIn = new Date();
-    }
-
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
-      set: updateSet,
-    });
-  } catch (error) {
-    console.error("[Database] Failed to upsert user:", error);
-    throw error;
-  }
+export async function upsertUser(user: typeof users.$inferInsert): Promise<void> {
+  const db = await requireDb();
+  await db.insert(users).values({
+    ...user,
+    role: user.role ?? (user.openId === ENV.ownerOpenId ? "admin" : "user"),
+    lastSignedIn: new Date(),
+  }).onDuplicateKeyUpdate({
+    set: {
+      name: user.name ?? null,
+      email: user.email ?? null,
+      loginMethod: user.loginMethod ?? null,
+      lastSignedIn: new Date(),
+    },
+  });
 }
 
 export async function getUserByOpenId(openId: string) {
-  const db = await getDb();
-  if (!db) {
-    console.warn("[Database] Cannot get user: database not available");
-    return undefined;
-  }
-
-  const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
-
-  return result.length > 0 ? result[0] : undefined;
+  const db = await requireDb();
+  const rows = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
+  return rows[0];
 }
 
-// TODO: add feature queries here as your schema grows.
+export async function ensureSettings(userId: number) {
+  const db = await requireDb();
+  await db.insert(ryzeSettings).values({ userId }).onDuplicateKeyUpdate({ set: { updatedAt: new Date() } });
+  const rows = await db.select().from(ryzeSettings).where(eq(ryzeSettings.userId, userId)).limit(1);
+  return rows[0]!;
+}
+
+export async function updateSafeSettings(userId: number, input: { provider: string; ryzeModel: string; nerdModel: string; demoMode: boolean }) {
+  const db = await requireDb();
+  await ensureSettings(userId);
+  await db.update(ryzeSettings).set({
+    provider: input.provider,
+    ryzeModel: input.ryzeModel,
+    nerdModel: input.nerdModel,
+    demoMode: input.demoMode,
+    externalLlmEnabled: false,
+    emailEnabled: false,
+    telegramEnabled: false,
+    updatedAt: new Date(),
+  }).where(eq(ryzeSettings.userId, userId));
+  return ensureSettings(userId);
+}
+
+export async function listSessions(userId: number) {
+  const db = await requireDb();
+  return db.select().from(ryzeSessions).where(and(eq(ryzeSessions.userId, userId), eq(ryzeSessions.status, "active"))).orderBy(desc(ryzeSessions.updatedAt));
+}
+
+export async function createSession(userId: number, name?: string) {
+  const db = await requireDb();
+  const session = { id: `sess_${nanoid(12)}`, userId, name: (name?.trim() || "New sandbox chat").slice(0, 80) };
+  await db.insert(ryzeSessions).values(session);
+  return session;
+}
+
+export async function ensureSession(userId: number, preferredSessionId?: string) {
+  const db = await requireDb();
+  if (preferredSessionId) {
+    const existing = await db.select().from(ryzeSessions).where(and(eq(ryzeSessions.id, preferredSessionId), eq(ryzeSessions.userId, userId))).limit(1);
+    if (existing[0]) return requireOwnedRecord(existing[0], userId);
+  }
+  const sessions = await listSessions(userId);
+  return sessions[0] ?? createSession(userId);
+}
+
+export async function createTask(userId: number, sessionId: string, prompt: string, action: string) {
+  const db = await requireDb();
+  const task = { id: `task_${nanoid(14)}`, userId, sessionId, prompt: prompt.slice(0, 5000), action, status: "PENDING" as const, totalSteps: 1 };
+  await db.insert(ryzeTasks).values(task);
+  await db.update(ryzeSessions).set({ updatedAt: new Date() }).where(and(eq(ryzeSessions.id, sessionId), eq(ryzeSessions.userId, userId)));
+  return task;
+}
+
+export async function updateTask(userId: number, taskId: string, values: Partial<typeof ryzeTasks.$inferInsert>) {
+  const db = await requireDb();
+  await db.update(ryzeTasks).set({ ...values, updatedAt: new Date() }).where(and(eq(ryzeTasks.id, taskId), eq(ryzeTasks.userId, userId)));
+}
+
+export async function addTaskLog(userId: number, taskId: string, actor: "ryze" | "nerd" | "system", level: "info" | "success" | "warning" | "error", message: string) {
+  const db = await requireDb();
+  const sequenceRows = await db.select({ count: sql<number>`count(*)` }).from(ryzeTaskLogs).where(and(eq(ryzeTaskLogs.taskId, taskId), eq(ryzeTaskLogs.userId, userId)));
+  const sequence = Number(sequenceRows[0]?.count ?? 0) + 1;
+  await db.insert(ryzeTaskLogs).values({ id: undefined, userId, taskId, sequence, actor, level, message: message.slice(0, 2000) });
+}
+
+export async function addMemory(userId: number, input: { scope: "core" | "evolving"; kind: string; content: string; tags: string[]; outcome?: "SUCCESS" | "FAIL" | "NEUTRAL" }) {
+  const db = await requireDb();
+  await db.insert(ryzeMemory).values({
+    id: `mem_${nanoid(14)}`,
+    userId,
+    scope: input.scope,
+    kind: input.kind.slice(0, 64),
+    content: input.content.slice(0, 5000),
+    tags: JSON.stringify(input.tags.slice(0, 12)),
+    outcome: input.outcome ?? "NEUTRAL",
+  });
+}
+
+export async function searchMemory(userId: number, query: string) {
+  const db = await requireDb();
+  const terms = query.trim().split(/\s+/).filter((term) => term.length > 2).slice(0, 5);
+  if (!terms.length) return db.select().from(ryzeMemory).where(eq(ryzeMemory.userId, userId)).orderBy(desc(ryzeMemory.createdAt)).limit(8);
+  const pattern = `%${terms.join("%")}%`;
+  return db.select().from(ryzeMemory).where(and(eq(ryzeMemory.userId, userId), like(ryzeMemory.content, pattern))).orderBy(desc(ryzeMemory.createdAt)).limit(8);
+}
+
+export async function awardSkill(userId: number, domain: string, success: boolean) {
+  const db = await requireDb();
+  const existing = await db.select().from(ryzeSkills).where(and(eq(ryzeSkills.userId, userId), eq(ryzeSkills.domain, domain))).limit(1);
+  if (!existing[0]) {
+    const xp = success ? 10 : 0;
+    await db.insert(ryzeSkills).values({ userId, domain, xp, level: 1 + Math.floor(xp / 100), successCount: success ? 1 : 0, failCount: success ? 0 : 1 });
+    return;
+  }
+  const xp = Math.max(0, existing[0].xp + (success ? 10 : -2));
+  await db.update(ryzeSkills).set({ xp, level: 1 + Math.floor(xp / 100), successCount: existing[0].successCount + (success ? 1 : 0), failCount: existing[0].failCount + (success ? 0 : 1), updatedAt: new Date() }).where(eq(ryzeSkills.id, existing[0].id));
+}
+
+export async function saveFileMetadata(userId: number, input: { taskId?: string; storageKey: string; url: string; originalName: string; mimeType: string; byteSize: number; category: string; source: "upload" | "generated" }) {
+  const db = await requireDb();
+  const file = { id: `file_${nanoid(14)}`, userId, taskId: input.taskId ?? null, ...input };
+  await db.insert(ryzeFiles).values(file);
+  return file;
+}
+
+export async function listFiles(userId: number) {
+  const db = await requireDb();
+  return db.select().from(ryzeFiles).where(eq(ryzeFiles.userId, userId)).orderBy(desc(ryzeFiles.createdAt));
+}
+
+export async function getDashboard(userId: number) {
+  const db = await requireDb();
+  const [settings, sessions, tasks, logs, memory, skills, files] = await Promise.all([
+    ensureSettings(userId),
+    listSessions(userId),
+    db.select().from(ryzeTasks).where(eq(ryzeTasks.userId, userId)).orderBy(desc(ryzeTasks.createdAt)).limit(60),
+    db.select().from(ryzeTaskLogs).where(eq(ryzeTaskLogs.userId, userId)).orderBy(desc(ryzeTaskLogs.createdAt)).limit(360),
+    db.select().from(ryzeMemory).where(eq(ryzeMemory.userId, userId)).orderBy(desc(ryzeMemory.createdAt)).limit(120),
+    db.select().from(ryzeSkills).where(eq(ryzeSkills.userId, userId)).orderBy(desc(ryzeSkills.xp)),
+    listFiles(userId),
+  ]);
+  return scopeDashboardData(userId, {
+    settings: requireOwnedRecord(settings, userId),
+    sessions,
+    tasks,
+    logs,
+    memory,
+    skills,
+    files,
+  });
+}
+
+export function scopeDashboardData<
+  TSettings extends { userId: number },
+  TSessions extends { userId: number },
+  TTasks extends { userId: number },
+  TLogs extends { userId: number },
+  TMemory extends { userId: number },
+  TSkills extends { userId: number },
+  TFiles extends { userId: number },
+>(userId: number, dashboard: {
+  settings: TSettings;
+  sessions: TSessions[];
+  tasks: TTasks[];
+  logs: TLogs[];
+  memory: TMemory[];
+  skills: TSkills[];
+  files: TFiles[];
+}) {
+  return {
+    settings: requireOwnedRecord(dashboard.settings, userId),
+    sessions: filterOwnedRecords(dashboard.sessions, userId),
+    tasks: filterOwnedRecords(dashboard.tasks, userId),
+    logs: filterOwnedRecords(dashboard.logs, userId),
+    memory: filterOwnedRecords(dashboard.memory, userId),
+    skills: filterOwnedRecords(dashboard.skills, userId),
+    files: filterOwnedRecords(dashboard.files, userId),
+  };
+}
+
+export function buildUserScopedExport(userId: number, dashboard: any) {
+  const scoped = scopeDashboardData(userId, dashboard);
+  return buildPortableExport({
+    settings: scoped.settings,
+    sessions: scoped.sessions,
+    tasks: scoped.tasks,
+    taskLogs: scoped.logs,
+    memory: scoped.memory,
+    skills: scoped.skills,
+    files: scoped.files,
+  });
+}
+
+export async function exportUserSandbox(userId: number) {
+  return buildUserScopedExport(userId, await getDashboard(userId));
+}
