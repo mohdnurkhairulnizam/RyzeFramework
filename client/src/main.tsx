@@ -13,6 +13,7 @@ const queryClient = new QueryClient();
 const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
+  if (import.meta.env.VITE_LOCAL_MODE === "true") return;
 
   const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
 
@@ -43,6 +44,7 @@ const trpcClient = trpc.createClient({
       url: "/api/trpc",
       transformer: superjson,
       headers() {
+        if (import.meta.env.VITE_LOCAL_MODE === "true") return {};
         // Preview auto-login fallback: when the browser blocks iframe cookies
         // (Safari ITP / private browsing / WebView), the runtime mirrors the
         // session into sessionStorage so we can forward it as a Bearer token.

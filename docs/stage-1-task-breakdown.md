@@ -4,26 +4,32 @@ This checklist turns the origin blueprint and current repository status into an 
 
 ## Current status at a glance
 
-- [x] Authenticated hosted dashboard/task foundation exists.
+- [x] Password-protected localhost dashboard, local SQLite database, and safe demo task foundation exist.
 - [x] Per-user data scoping, task logs, bounded retries, safe demo routing, file metadata, and portable export exist.
 - [x] Local Telethon user-account worker and authenticated worker API code exist.
-- [x] Current code passes TypeScript check, 14 Vitest tests, 3 worker tests, and production build.
+- [x] Automatic Telegram replies are disabled pending an owner-approval workflow; a regression test now guards this fail-closed state.
+- [x] Build a Windows installer/launcher/stop/backup package using local SQLite and a protected local file directory.
+- [x] Add a first-run scrypt owner password, localhost/Origin checks, rate limiting, and Windows install/backup guidance.
+- [x] Current code passes TypeScript check, 20 Vitest tests across 10 files, 4 worker tests, and the local production build; a sandbox smoke test verified health, login, migration, and owner bootstrap.
+- [ ] Install and verify the ZIP on the physical HP Windows 10 laptop.
 - [ ] OpenCode execution is connected and verified.
 - [ ] FreeLLMAPI model gateway is configured and verified.
 - [ ] Telegram setup and live communication are verified.
-- [ ] Owner approval is enforced for outbound Telegram actions; the current inbound path can queue a reply without per-message approval.
+- [ ] Owner approval is implemented and enforced for outbound Telegram actions; outbound sending currently remains disabled.
 - [ ] All nine Stage 1 origin completion criteria pass in the intended deployment environment.
 
 ## Workstream 0 — Establish a safe implementation baseline
 
-- [ ] Record the intended Stage 1 deployment target: owner computer/OS, hosted runtime URL, database, storage provider, and who administers each. Confirm whether the owner’s Windows laptop remains the target, since the sandbox build is not that deployment environment.
-- [ ] Pin and document runtime versions for Node.js, pnpm, Python, and Telethon. Confirm the supported installation procedure for the target OS.
+- [x] Confirm the execution target and local data architecture: the owner selected the HP Windows 10 laptop; this package uses local SQLite and a local files directory, so it does not require hosted database/object storage endpoints.
+- [x] Document supported installer runtimes: 64-bit Windows 10+, Node.js 22 or 24 LTS, pnpm 10.4.1. The optional Python/Telethon worker is not installed by this ZIP.
+- [ ] Verify installed runtime versions and the install/run/backup scripts on the actual HP laptop.
 - [ ] Create a reviewed baseline commit/tag before changing execution, worker, or configuration behavior. Preserve a way to restore the current safe-demo behavior.
-- [ ] Inventory all existing environment variables and configuration consumers. Separate non-secret settings from secrets; do not print secret values into logs or reports.
-- [ ] Write a local deployment runbook that identifies where secrets and Telegram session files live, who can access them, how they are backed up, and how to revoke them.
-- [ ] Confirm production database and object-storage requirements and verify that the intended environment is available. Do not run schema migrations against an unknown or production database as an exploratory step.
+- [x] Inventory local installer settings without reading secret values; keep the generated `.env`, database, file bytes, and Telegram session data out of Git.
+- [x] Document local config/data paths, Windows account ACLs, stop-before-backup steps, and a database/files/config backup helper in `docs/windows-installation.md`.
+- [x] Choose local SQLite plus a local files directory instead of a hosted database/object store for this laptop install; no hosted endpoints are configured by the package.
+- [ ] Verify Windows ACL behavior and restore procedure on the HP laptop; create and verify the first user-controlled backup.
 
-**Exit condition:** The target environment, safe rollback point, configuration owner, and secret-storage method are known.
+**Exit condition:** The target architecture and secret location are documented; Workstream 0 remains open until laptop runtime/ACL/backup verification and a reviewed code rollback point are complete.
 
 ## Workstream 1 — Define runtime configuration and feature gates
 
@@ -44,7 +50,8 @@ This checklist turns the origin blueprint and current repository status into an 
 - [ ] Require approval immediately before any Telegram outbound message or other externally visible action. Approval must bind to the actual recipient and message/action content; changes after approval invalidate it.
 - [ ] Implement pause/stop and suppression checks immediately before every outbound send, not only when the command is first queued.
 - [ ] Keep the current safe action allowlist and arbitrary shell prohibition. Add tests proving model prompts cannot bypass blocked actions, approval state, allowlists, or pause/stop controls.
-- [ ] Review the current `server/workerApi.ts` inbound route: it currently processes the inbound text and queues a `send_message` summary. Change the path so no reply is delivered until the approval policy is satisfied. Keep live outbound disabled until this change is deployed and tested.
+- [x] Disable automatic sending in the current `server/workerApi.ts` inbound route and remove `send_message` from the worker allowlist. Regression tests prove the route does not queue replies and the worker cannot send them.
+- [ ] Implement the real approval flow and re-enable outbound delivery only after approval, pause/stop, suppression, and duplicate-send protections are tested. Keep live outbound disabled until then.
 - [ ] Add replay/idempotency protection so repeated inbound events or command polling cannot create duplicate tasks or duplicate external sends.
 
 **Exit condition:** Unauthorized actions are denied server-side, all externally visible effects require the defined approval, and negative tests prove the controls cannot be bypassed.
@@ -132,11 +139,11 @@ The origin blueprint's nine completion criteria must each have evidence:
 
 ## Progress checkpoint — 15 November 2026
 
-Completed in the current sandbox: confirmed the repository baseline commit `45921c9` (`feat: connect telegram user worker to runtime`); recorded the current sandbox tool versions (Node.js `v22.23.4`, pnpm `10.4.1`, Python `3.12.3`, Git `2.43.0`); inventoried the variable names in `.env.example` without reading secret values; and confirmed `.env` files plus Telegram session files are covered by `.gitignore` rules. The previously run type check, application/worker tests, and production build also passed.
+Completed in the current sandbox: preserved the origin blueprint and checklist; confirmed the HP Windows 10 laptop target and local storage choice; converted the runtime schema/driver to SQLite with a separate first-run migration; replaced hosted file storage with atomic writes in a local directory plus authenticated owner-scoped downloads; added localhost-only server binding, scrypt owner-password bootstrap, Host/Origin checks, lockout, and Windows install/start/stop/backup helpers; removed analytics from the local build; disabled automatic Telegram replies; and wrote the installation/backup guide. `pnpm install --frozen-lockfile`, `pnpm check`, 20 Vitest tests across 10 files, 4 worker tests, and `pnpm build:local` pass. A disposable production smoke test verified localhost health, login, SQLite migration, local owner creation, and default safe settings.
 
-These checks describe the cloud sandbox only. Workstream 0 is still open: the actual deployment target and its runtime versions have not been confirmed; a reviewed recovery commit/tag for the current documentation changes has not been created; production database/object storage availability is unverified; and the secret-store/deployment runbook still needs an owner decision. No credentials were read or changed, and no external integration was enabled.
+The package has **not** been run on the physical HP laptop; Windows PowerShell scripts and ACL behavior are therefore unverified on target. The generated ZIP will contain source/scripts only (no credentials or user data); installation builds dependencies on the laptop and needs internet access. OpenCode/FreeLLMAPI endpoints and model, optional Telegram API/session setup, explicit outbound approval, and live end-to-end checks remain incomplete. No credentials were read or changed, and no external integrations were enabled.
 
-**Next action:** confirm whether the original HP Windows 10 laptop remains the local worker/deployment target and identify the intended hosted runtime/database/storage environment. After that, finish the Workstream 0 deployment baseline, then proceed to Workstream 1 configuration/feature gates and Workstream 2 outbound approval enforcement before enabling any live Telegram reply.
+**Next action:** manually install the delivered ZIP on the HP laptop, use the first-run owner password setup, and verify start/sign-in/backup. Share any error here without sending `.env`, passwords, Telegram session files, or database contents. After the local starter is verified, decide the OpenCode/FreeLLMAPI endpoint and model and complete the Telegram approval safeguards before enabling any external action.
 
 ## Suggested execution order
 

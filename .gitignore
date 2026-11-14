@@ -66,6 +66,9 @@ worker/data/
 worker/*.session
 worker/*.session-journal
 worker/*.lock
+data/
+local-storage/
+ryze.sqlite*
 
 # Optional npm cache directory
 .npm

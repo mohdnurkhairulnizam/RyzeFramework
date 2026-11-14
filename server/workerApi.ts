@@ -8,7 +8,6 @@ import {
   ensureSession,
   getUserByOpenId,
   listWorkerCommands,
-  queueWorkerCommand,
   updateWorkerCommand,
   upsertWorkerHeartbeat,
 } from "./db";
@@ -129,8 +128,8 @@ export function registerWorkerRoutes(app: Express) {
     const action = determineDemoAction(input.data.text);
     const task = await createTask(userId, session.id, input.data.text, action);
     await addTaskLog(userId, task.id, "system", "info", "Task accepted from the authorized Telegram user-account worker.");
-    const summary = await runSafeDemo(userId, { ...task, action });
-    await queueWorkerCommand(userId, input.data.workerId, "send_message", { chatId: input.data.chatId, text: summary });
+    await runSafeDemo(userId, { ...task, action });
+    await addTaskLog(userId, task.id, "system", "warning", "No Telegram reply was sent: the owner-approval gate is not implemented yet.");
     res.status(202).json({ taskId: task.id, accepted: true });
   }));
 }

@@ -6,7 +6,7 @@ The origin blueprint defines Stage 1 as the operational foundation for a persona
 
 This document maps that Stage 1 design to the code currently in this repository. It distinguishes code that exists from code that has been configured and live-verified. A passing build or a test of the safe demo does not prove that the live Telegram, OpenCode, or model-provider path is operational. The origin blueprint itself says a stage is not complete until its acceptance criteria have passed.
 
-**Assessment:** Stage 1 has a substantial, tested hosted foundation and a local Telegram user-account worker/API implementation. It is **partially implemented, not operationally complete**. The live external model path is not implemented/enabled here, and live Telegram delivery still depends on owner-controlled setup and safety verification.
+**Assessment:** Stage 1 has a tested local dashboard/database/file-storage foundation and a Windows ZIP installation path. It is **partially implemented, not operationally complete**. The production package has not been installed on the HP laptop, the live external model path is not implemented/enabled, and live Telegram delivery remains unavailable pending owner setup and safety verification.
 
 ## What Stage 1 means in the origin blueprint
 
@@ -33,7 +33,7 @@ The four principal components have distinct responsibilities:
 - **Telegram user-account client / Python worker** is the initial interface. The origin specifically calls for the owner's authorized user account through Telethon, not a bot. The worker owns Telegram API credentials and local session files. It handles supported incoming files/messages, passes requests over a sanitized authenticated bridge, reports progress, and returns results/files.
 - **Python** provides supporting file processing, conversion, API integration, automation, and system utilities where the execution engine's tools are insufficient. **Git** tracks source and configuration revisions, but is not a backup for live memory or operational data.
 
-The origin blueprint's initial infrastructure was an owner HP laptop running Windows 10, with cloud inference preferred due to hardware constraints. Docker was excluded from that initial plan. Telegram login is an explicit owner action, and the worker must refuse to operate if its local session is not authorized. Dashboard/bridge data must not expose Telegram credentials, raw phone numbers, session paths/bytes, message bodies, or raw Telegram objects as telemetry.
+The origin blueprint's initial infrastructure was an owner HP laptop running Windows 10, with cloud inference preferred due to hardware constraints. The owner confirmed that laptop as the application target and asked for database/files to be arranged locally. This package therefore selects embedded SQLite plus a protected local files directory; no hosted database or object store is required by the ZIP. The laptop's installed runtime versions are still unverified. Docker was excluded from the initial plan. Telegram login remains an explicit owner action; the optional worker is not provisioned by this installer and must refuse to operate if its local session is unauthorized. Dashboard/bridge data must not expose Telegram credentials, raw phone numbers, session paths/bytes, message bodies, or raw Telegram objects as telemetry.
 
 ### Required task lifecycle
 
@@ -61,9 +61,9 @@ The target outcome is an agent that performs authorized tasks, rather than only 
 
 ## What is ready in this implementation
 
-### Hosted task and account foundation — implemented and tested
+### Local task and account foundation — implemented and tested in the sandbox
 
-Authenticated tRPC procedures use the signed-in user's ID when listing the dashboard, creating sessions, submitting tasks, uploading files, updating safe settings, and exporting data (`server/routers/ryze.ts`). Database reads and writes are scoped to the owner/user; tests exercise the ownership boundary (`server/db.ts`, `server/ryzeOwnership.ts`, and server tests). Sessions, tasks, task logs, memory, skill XP, file metadata, worker heartbeats, commands, and events have persistence support in the Drizzle schema/database layer.
+The standalone build binds only to `127.0.0.1` and uses a local owner password whose salted scrypt hash is generated during install. The password is not stored as plain text; login checks loopback address, Host/Origin, and failed-attempt lockout. Authenticated tRPC procedures use the signed-in user's ID for dashboard, sessions, tasks, uploads, safe settings, and export. Data remains owner-scoped (`server/db.ts`, `server/ryzeOwnership.ts`). The SQLite schema persists sessions, tasks, logs, memory, skills, file metadata, worker records, and safe settings.
 
 This provides the hosted product shell and per-user task history. It is not yet equivalent to OpenCode's general-purpose planning/orchestration capability.
 
@@ -79,35 +79,35 @@ The hosted procedure creates a task, records acceptance, sets it in progress, re
 
 The completion record is a safe-demo result. It does not currently mean an external model or real-world operation was independently checked. Validation is presently workflow-level (allowlisted action completed and records persisted), not a general validator for arbitrary tool outputs.
 
-### File intake and generated artifact path — partially implemented
+### File intake and generated artifact path — locally implemented; further validation pending
 
-The hosted upload route validates a fixed MIME-type allowlist, enforces a 5 MiB limit, checks decoded bytes against the declared size, sanitizes the file name, stores bytes through the storage service, and persists user-scoped file metadata (`server/routers/ryze.ts`, `server/storage.ts`, and `server/db.ts`). The safe workflow can inspect the latest file's metadata without executing file contents. It can generate a deterministic Markdown note and save it through the same storage/metadata path.
+The local upload route validates a fixed MIME-type allowlist, enforces a 5 MiB limit, checks decoded bytes against the declared size, sanitizes the file name, writes bytes atomically under the local storage root, and persists SQLite metadata (`server/routers/ryze.ts`, `server/storage.ts`, and `server/db.ts`). File downloads are authenticated, owner-scoped, and path-traversal checked (`server/_core/storageProxy.ts`). The safe workflow can inspect file metadata and generate a deterministic Markdown note without executing file contents.
 
-This establishes safe upload and artifact storage. The current safe action does not parse or analyze document contents, nor does it offer a complete report-delivery/attachment flow through Telegram. The tested upload was a small Markdown fixture; broader format, size, malware/content, and deployed storage behavior require explicit environment testing.
+This establishes a safe local upload/artifact path. The current safe action does not parse or analyze document contents, does not scan uploads for malware, and does not offer report delivery through Telegram. SQLite/files are ordinary local files protected by Windows account permissions, not application-encrypted data. The integration tests exercise local persistence, safe-path handling, and ownership filtering, but broad file types/sizes and physical-device behavior require target-laptop testing.
 
 ### Telegram user-account bridge — code implemented, live gate not passed
 
 The local worker is a Telethon user-account client, not a bot. It includes explicit login and checks `is_user_authorized()`, a local session lock, mandatory allowed-chat configuration, inbound filtering, a small literal command allowlist, bearer-token API requests, heartbeat reporting, command acknowledgements, and sanitized event messages (`worker/ryze_telegram_worker.py`). The hosted API authenticates the worker token using constant-time comparison, resolves a configured owner, validates payload schemas, and stores user-scoped worker status/commands/events (`server/workerApi.ts`). The blueprint and worker docs prescribe keeping Telegram API credentials and `.session` files local.
 
-The code is not proof of a live connection. It still needs the owner's server-side worker token and owner ID, local Telegram API ID/hash and phone, authorized session, explicit approved chat ID, reachable deployment URL, and a real end-to-end authorization/inbound/reply test. None of those secrets should be put in Git, this document, exports, or chat.
+The code is not proof of a live connection and the standalone installer does not create worker credentials. It still needs the owner's local Telegram API ID/hash and phone, authorized session, explicit approved chat ID, matching worker/server configuration, and a real end-to-end authorization/inbound test. None of those secrets should be put in Git, this document, exports, or chat.
 
-**Safety issue to resolve before live delivery:** the current inbound endpoint creates and runs a safe-demo task, then automatically queues a `send_message` reply (`server/workerApi.ts`, inbound route). The worker checks pause state and approved chat ID before sending, but the code shown does not implement a per-message owner approval gate or suppression check immediately before sending. The integration guidance requires explicit approval for outbound actions and checks pause/stop/suppression before every outbound message. Until that mismatch is fixed and tested, do not configure live inbound forwarding to produce real outbound replies.
+**Safety status:** the automatic reply path has been disabled. Inbound worker messages can create and run safe-demo tasks, but the server no longer queues a `send_message` command; the worker no longer allows or executes that command. This fail-closed mitigation prevents automatic sends; it is **not** an approval workflow. Explicit per-action owner approval, pause/stop and suppression checks at send time, and an approved outbound test remain unfinished. Do not enable live replies until those controls are implemented and tested.
 
 ### Tests and build evidence — passed in this workspace
 
-At the current checkout, the documented checks passed: `pnpm check`; seven Vitest files with 14 tests; three Python worker safety tests; and `pnpm build`. The worker tests cover the literal command allowlist, phone masking, and rejecting a second process lock owner. Existing verification notes also describe authenticated UI and safe demo/file/export checks. These results establish a functioning build and covered safe paths, but they do not verify live OpenCode, FreeLLMAPI, Telegram credentials/session, production database/storage, approval gates, or report delivery to a real account.
+At the current checkout, `pnpm install --frozen-lockfile`, `pnpm check`, 20 Vitest tests across 10 files, 4 Python worker safety tests, and `pnpm build:local` passed. An isolated production-process smoke test exercised localhost health, password login, SQLite migrations, owner creation, and default settings. The build has one non-fatal large JavaScript chunk warning. These results do not verify installation on the HP Windows laptop, live OpenCode/FreeLLMAPI, Telegram credentials/session, an approval workflow, or report delivery to a real account.
 
 ## Origin-to-implementation readiness map
 
 | Stage 1 requirement | Current implementation | Readiness |
 | --- | --- | --- |
-| Receive instructions and establish sessions | Authenticated dashboard procedures and the worker inbound endpoint create user-scoped tasks/sessions | Hosted/dashboard path implemented; live Telegram path awaits configuration and end-to-end verification |
+| Receive instructions and establish sessions | Password-protected localhost dashboard and worker inbound endpoint create scoped tasks/sessions | Local dashboard tested in sandbox; physical Windows and Telegram paths await verification |
 | Interpret objectives and plan/decompose tasks | Fixed safe action classifier and one-step Ryze/Nerd demonstration logs | Demo-only; OpenCode orchestration and general task planning are not implemented/enabled |
 | Select and call AI model through gateway | Settings UI/schema has safe display/provider fields, but external LLM is forced disabled | Not ready; no verified OpenCode–FreeLLMAPI–model path in this implementation |
 | Check authorization/permissions | Safe action classifier blocks selected risky categories; user ownership enforced | Partial; no complete L0–L4 policy engine or explicit approval flow for consequential operations |
 | Execute approved tools | Safe local demo operations: memory note/search, metadata inspection, deterministic Markdown generation | Partial; no general approved-tools runner; shell and integrations intentionally unavailable |
 | Telegram user-account communication | Telethon worker, worker API, authentication/allowlist/session-lock code | Code ready for configured testing; live operation not yet proven. Resolve outbound approval/suppression gap first |
-| File upload and processing | Validated 5 MiB allowlisted upload, storage-backed bytes, metadata inspection, generated Markdown note | Upload/storage and metadata path implemented; semantic content processing is limited/not implemented |
+| File upload and processing | Validated 5 MiB allowlisted upload, local filesystem bytes, owner-scoped download, metadata inspection, generated Markdown note | Local storage code and ownership tests pass; semantic processing and physical Windows storage behavior remain unverified |
 | Return reports/files | Dashboard task summaries, file manifest, portable export, generated note storage | Dashboard/export path implemented; end-to-end Telegram report/file delivery not verified |
 | Monitor and recover errors | Status transitions, persisted logs, bounded retries | Implemented for hosted safe-demo workflow; not an independent production supervisor/watchdog |
 | Validate actual result | Status/log persistence and deterministic demo outcome tests | Partial; no general tool result validation or live-provider result validation |
@@ -126,7 +126,7 @@ At the current checkout, the documented checks passed: `pnpm check`; seven Vites
 
 ## Current disposition
 
-Continue Stage 1 work from the hosted safe foundation, but do not claim Stage 1 complete and do not enable live external integrations yet. The most immediate implementation gate is the Telegram outbound approval/suppression mismatch. The next major functional gap is the absence of the origin's OpenCode–FreeLLMAPI execution chain. The remaining hosted task, identity scoping, safe demo, persistence, retry, upload metadata, export, and build/test foundations are useful and already present, with the limitations stated above.
+Continue Stage 1 from the local safe starter: install and validate the ZIP on the HP laptop, then implement the origin's OpenCode–FreeLLMAPI execution chain with explicit feature gates. Do not claim Stage 1 complete or enable external actions. A separate server-enforced Telegram approval/pause/stop/suppression workflow must pass before any outbound message is possible. Current local password auth, SQLite persistence, file storage, demo tasks, retries, export, and build/test foundations are present; live integrations and target-device validation are not.
 
 ## Source documents
 

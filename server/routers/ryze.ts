@@ -66,9 +66,9 @@ export async function runSafeDemo(userId: number, task: { id: string; prompt: st
       } else if (action === "generate_note") {
         const content = makeGeneratedNote(task.prompt, task.id);
         const filename = `ryze-note-${task.id}.md`;
-        const { key, url } = await storagePut(`ryze/${userId}/generated/${filename}`, Buffer.from(content, "utf8"), "text/markdown");
-        await saveFileMetadata(userId, { taskId: task.id, storageKey: key, url, originalName: filename, mimeType: "text/markdown", byteSize: Buffer.byteLength(content), category: "documents", source: "generated" });
-        summary = "Nerd generated a portable Markdown note and saved its metadata to the sandbox file manifest.";
+        const { key } = await storagePut(`ryze/${userId}/generated/${filename}`, Buffer.from(content, "utf8"), "text/markdown");
+        await saveFileMetadata(userId, { taskId: task.id, storageKey: key, originalName: filename, mimeType: "text/markdown", byteSize: Buffer.byteLength(content), category: "documents", source: "generated" });
+        summary = "Nerd generated a Markdown note and saved it to the local file store.";
         skillDomain = "files";
       }
       return { summary, skillDomain };
@@ -112,8 +112,8 @@ export const ryzeRouter = router({
     const bytes = Buffer.from(input.base64, "base64");
     if (!bytes.length || bytes.length > maxUploadBytes || bytes.length !== input.byteSize) throw new TRPCError({ code: "BAD_REQUEST", message: "The upload did not pass size validation." });
     const filename = cleanFilename(input.fileName);
-    const { key, url } = await storagePut(`ryze/${ctx.user.id}/uploads/${Date.now()}-${filename}`, bytes, input.mimeType);
-    return saveFileMetadata(ctx.user.id, { storageKey: key, url, originalName: filename, mimeType: input.mimeType, byteSize: bytes.length, category: "uploads", source: "upload" });
+    const { key } = await storagePut(`ryze/${ctx.user.id}/uploads/${Date.now()}-${filename}`, bytes, input.mimeType);
+    return saveFileMetadata(ctx.user.id, { storageKey: key, originalName: filename, mimeType: input.mimeType, byteSize: bytes.length, category: "uploads", source: "upload" });
   }),
   updateSettings: protectedProcedure.input(z.object({ provider: z.enum(["local-demo", "ollama-ready", "external-disabled"]), ryzeModel: z.string().trim().min(2).max(120), nerdModel: z.string().trim().min(2).max(120), demoMode: z.boolean() })).mutation(({ ctx, input }) => updateSafeSettings(ctx.user.id, input)),
   exportData: protectedProcedure.query(({ ctx }) => exportUserSandbox(ctx.user.id)),

@@ -2,6 +2,8 @@
 
 RyzeFramework’s planned Telegram interface uses the user-account pattern from the connected **ryzetel** repository. It does **not** use a Telegram bot token or bot webhook.
 
+**Current package boundary:** the Windows ZIP does not install Telethon, create worker credentials, or authorize a Telegram session. The server may record/run a safe demo for an inbound message but does not queue a reply; outbound sending is disabled until an owner-approval workflow with pause/stop and suppression checks is implemented and tested.
+
 ## Architecture
 
 ```text
@@ -52,4 +54,4 @@ The worker must reject unknown commands and must never interpret a command paylo
 
 ## Current status
 
-The pattern is selected as the replacement for the earlier Telegram bot proposal. The Python worker package and hosted worker API are implemented in this repository. Live operation still requires local Telethon installation, owner-provided Telegram API credentials, session authorization, an approved chat ID, and server-side worker-token configuration.
+The pattern is selected as the replacement for the earlier Telegram bot proposal. The Python worker package and hosted worker API are implemented in this repository. Automatic outbound replies are currently disabled: the server does not queue `send_message`, and the worker rejects that command until a server-enforced owner-approval workflow is implemented and tested. Live inbound operation still requires local Telethon installation, owner-provided Telegram API credentials, session authorization, an approved chat ID, and server-side worker-token configuration. Do not enable live replies before the approval, pause/stop, and suppression checks above are implemented and verified.

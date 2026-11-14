@@ -24,7 +24,7 @@ from telethon import TelegramClient, events
 from telethon.errors import SessionPasswordNeededError
 
 LOGGER = logging.getLogger("ryze.telegram")
-ALLOWED_COMMANDS = {"pause", "resume", "reload_config", "request_status", "send_message"}
+ALLOWED_COMMANDS = {"pause", "resume", "reload_config", "request_status"}
 
 
 def required_env(name: str) -> str:
@@ -216,15 +216,6 @@ class Worker:
                             self.paused = True
                         elif name == "resume":
                             self.paused = False
-                        elif name == "send_message":
-                            if self.paused:
-                                raise RuntimeError("Worker is paused")
-                            payload = command.get("payload") or {}
-                            chat_id = str(payload.get("chatId", ""))
-                            text = str(payload.get("text", ""))
-                            if chat_id not in self.allowed_chats or not text or len(text) > 5000:
-                                raise RuntimeError("Invalid send_message payload")
-                            await client.send_message(chat_id, text)
                         await asyncio.to_thread(self.api.acknowledge, command_id, "completed", "Command completed")
                     except Exception as exc:
                         await asyncio.to_thread(self.api.acknowledge, command_id, "failed", str(exc))

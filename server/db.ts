@@ -1,5 +1,8 @@
 import { and, desc, eq, like, sql } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import Database from "better-sqlite3";
+import { mkdirSync } from "node:fs";
+import path from "node:path";
 import { nanoid } from "nanoid";
 import {
   ryzeFiles,
@@ -20,12 +23,26 @@ import { buildPortableExport } from "./ryzeExport";
 import { filterOwnedRecords, requireOwnedRecord } from "./ryzeOwnership";
 
 let _db: ReturnType<typeof drizzle> | null = null;
+let _sqlite: Database.Database | null = null;
 
 export async function getDb() {
-  if (!_db && process.env.DATABASE_URL) {
-    _db = drizzle(process.env.DATABASE_URL);
+  if (!_db) {
+    mkdirSync(path.dirname(ENV.databasePath), { recursive: true });
+    _sqlite = new Database(ENV.databasePath);
+    _sqlite.pragma("foreign_keys = ON");
+    _sqlite.pragma("journal_mode = WAL");
+    _sqlite.pragma("busy_timeout = 5000");
+    _db = drizzle(_sqlite);
+    const { migrate } = await import("drizzle-orm/better-sqlite3/migrator");
+    migrate(_db, { migrationsFolder: path.resolve(process.cwd(), "drizzle/sqlite") });
   }
   return _db;
+}
+
+export async function closeDb() {
+  _sqlite?.close();
+  _sqlite = null;
+  _db = null;
 }
 
 async function requireDb() {
@@ -40,12 +57,15 @@ export async function upsertUser(user: typeof users.$inferInsert): Promise<void>
     ...user,
     role: user.role ?? (user.openId === ENV.ownerOpenId ? "admin" : "user"),
     lastSignedIn: new Date(),
-  }).onDuplicateKeyUpdate({
+    updatedAt: new Date(),
+  }).onConflictDoUpdate({
+    target: users.openId,
     set: {
       name: user.name ?? null,
       email: user.email ?? null,
       loginMethod: user.loginMethod ?? null,
       lastSignedIn: new Date(),
+      updatedAt: new Date(),
     },
   });
 }
@@ -56,9 +76,22 @@ export async function getUserByOpenId(openId: string) {
   return rows[0];
 }
 
+export async function ensureLocalOwner() {
+  await upsertUser({
+    openId: ENV.localOwnerOpenId,
+    name: ENV.localOwnerName,
+    loginMethod: "local-password",
+    role: "admin",
+  });
+  const owner = await getUserByOpenId(ENV.localOwnerOpenId);
+  if (!owner) throw new Error("Could not initialize the local owner account.");
+  await ensureSettings(owner.id);
+  return owner;
+}
+
 export async function ensureSettings(userId: number) {
   const db = await requireDb();
-  await db.insert(ryzeSettings).values({ userId }).onDuplicateKeyUpdate({ set: { updatedAt: new Date() } });
+  await db.insert(ryzeSettings).values({ userId }).onConflictDoUpdate({ target: ryzeSettings.userId, set: { updatedAt: new Date() } });
   const rows = await db.select().from(ryzeSettings).where(eq(ryzeSettings.userId, userId)).limit(1);
   return rows[0]!;
 }
@@ -154,9 +187,10 @@ export async function awardSkill(userId: number, domain: string, success: boolea
   await db.update(ryzeSkills).set({ xp, level: 1 + Math.floor(xp / 100), successCount: existing[0].successCount + (success ? 1 : 0), failCount: existing[0].failCount + (success ? 0 : 1), updatedAt: new Date() }).where(eq(ryzeSkills.id, existing[0].id));
 }
 
-export async function saveFileMetadata(userId: number, input: { taskId?: string; storageKey: string; url: string; originalName: string; mimeType: string; byteSize: number; category: string; source: "upload" | "generated" }) {
+export async function saveFileMetadata(userId: number, input: { taskId?: string; storageKey: string; originalName: string; mimeType: string; byteSize: number; category: string; source: "upload" | "generated" }) {
   const db = await requireDb();
-  const file = { id: `file_${nanoid(14)}`, userId, taskId: input.taskId ?? null, ...input };
+  const id = `file_${nanoid(14)}`;
+  const file = { id, userId, taskId: input.taskId ?? null, storageKey: input.storageKey, url: `/api/files/${id}/download`, originalName: input.originalName, mimeType: input.mimeType, byteSize: input.byteSize, category: input.category, source: input.source };
   await db.insert(ryzeFiles).values(file);
   return file;
 }
@@ -164,6 +198,12 @@ export async function saveFileMetadata(userId: number, input: { taskId?: string;
 export async function listFiles(userId: number) {
   const db = await requireDb();
   return db.select().from(ryzeFiles).where(eq(ryzeFiles.userId, userId)).orderBy(desc(ryzeFiles.createdAt));
+}
+
+export async function getFileForUser(fileId: string, userId: number) {
+  const db = await requireDb();
+  const rows = await db.select().from(ryzeFiles).where(and(eq(ryzeFiles.id, fileId), eq(ryzeFiles.userId, userId))).limit(1);
+  return rows[0] ?? null;
 }
 
 export async function getDashboard(userId: number) {
@@ -249,7 +289,8 @@ export async function upsertWorkerHeartbeat(userId: number, input: {
     status: input.status,
     automationPaused: input.automationPaused,
     lastHeartbeatAt: new Date(),
-  }).onDuplicateKeyUpdate({ set: {
+    updatedAt: new Date(),
+  }).onConflictDoUpdate({ target: ryzeWorkers.id, set: {
     userId,
     hostname: input.hostname,
     version: input.version,

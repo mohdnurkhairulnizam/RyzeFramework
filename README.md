@@ -1,39 +1,38 @@
 # RyzeFramework
 
-RyzeFramework is a secure hosted foundation for a personal, goal-driven AI agent. It currently provides an authenticated Ryze → Nerd sandbox with user-scoped sessions, controlled task routing, persistent memory, file metadata, bounded retries, portable export and verification coverage.
+RyzeFramework is a single-owner local starter for the HP Windows 10 laptop. The local build uses an embedded SQLite database, stores file bytes in the user's local application-data folder, and binds the server to `127.0.0.1`. It does not require Docker or a cloud database.
 
-The supplied four-stage technical design baseline is preserved in [`docs/origin-blueprint.md`](docs/origin-blueprint.md). The implementation status and deliberate deferrals are tracked in [`docs/blueprint-implementation.md`](docs/blueprint-implementation.md).
+The four-stage source design is in [`docs/origin-blueprint.md`](docs/origin-blueprint.md). The current readiness assessment and ordered Stage 1 checklist are in [`docs/blueprint-implementation.md`](docs/blueprint-implementation.md) and [`docs/stage-1-task-breakdown.md`](docs/stage-1-task-breakdown.md).
 
-## Safety boundary
+## Windows installation
 
-The current hosted runtime does not enable arbitrary shell execution, credential handling, external LLM calls, email, or Telegram delivery. The planned Telegram interface is an owner-authorised user account managed by a local Telethon worker, not a bot account; that worker is not yet connected to this hosted sandbox. Unsupported or risky instructions are recorded as blocked tasks. Provider credentials and other secrets must be configured locally and are excluded from portable exports.
+See [`docs/windows-installation.md`](docs/windows-installation.md). Extract the ZIP and run `Install-Ryze.cmd`; after setup, run `Start-Ryze.cmd` and open `http://127.0.0.1:3777/`. The installer requires 64-bit Windows 10 or newer, Node.js 22 or 24 LTS, and internet access while it installs locked packages. It prompts for a strong owner password and stores only a salted scrypt hash plus a random signing secret.
+
+Application data is kept outside the program folder under `%LOCALAPPDATA%\RyzeFramework`. Run `Stop-Ryze.cmd` before backing up. The backup helper saves the database, local files, and protected config separately from Git.
+
+## Current capability boundary
+
+The dashboard currently runs a safe demonstration workflow. This ZIP does not configure OpenCode, FreeLLMAPI, or another external model provider; it does not authorize a Telegram session; and it does not enable outbound Telegram replies. Those capabilities remain off until their endpoints/credentials are supplied, the server-side approval boundary is completed, and the target laptop is tested. The ZIP contains no credentials or user data.
 
 ## Development
+
+Use Node.js 22 or 24 and pnpm 10.4.1:
 
 ```bash
 pnpm install --frozen-lockfile
 pnpm check
 pnpm test
-pnpm build
+pnpm worker:test
+pnpm build:local
 ```
 
-Database migrations use the existing Drizzle workflow:
+The SQLite schema and first-run migration live in `drizzle/schema.ts` and `drizzle/sqlite/`. The original MySQL migration history is retained as historical material but is not used by the local installer. The local file adapter is in `server/storage.ts`; file downloads require an authenticated session and a user-owned metadata row.
 
-```bash
-pnpm db:push
-```
+## Layout
 
-The application expects the host environment to provide authentication, database and managed storage variables. Copy `.env.example` as a reference only; never commit a populated `.env` file.
-
-## Project layout
-
-- `client/` — authenticated dashboard UI
-- `server/` — routers, persistence, storage and safe execution workflow
-- `worker/` — local Python/Telethon user-account worker and safety tests
-- `drizzle/` — database schema and migrations
-- `docs/` — blueprint source, implementation map and verification notes
-- `shared/` — shared constants and types
-
-## Telegram worker
-
-The local worker in [`worker/`](worker/) connects an owner-authorised Telegram user account to the hosted runtime. Configure `RYZE_WORKER_TOKEN` and `RYZE_WORKER_OWNER_OPEN_ID` on the server, then follow [`worker/README.md`](worker/README.md) to install Telethon, authorize the local session and run the worker. Telegram API credentials and `.session` files remain local to the worker.
+- `client/`: Ryze dashboard and local owner sign-in.
+- `server/`: local auth, SQLite persistence, local file storage, safe demo execution, and worker API.
+- `worker/`: optional Python/Telethon worker. The installer does not provision its credentials or session.
+- `drizzle/`: SQLite schema/migrations plus retained historical MySQL migrations.
+- `scripts/windows/`: installer, launcher, stop, backup, and local config helpers.
+- `docs/`: source blueprint, stage status, and Windows install/backup guide.

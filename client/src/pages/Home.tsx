@@ -32,7 +32,7 @@ import {
   TerminalSquare,
   XCircle,
 } from "lucide-react";
-import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 type View = "workspace" | "memory" | "files" | "settings";
@@ -61,8 +61,49 @@ function taskIcon(status: string) {
   return <Loader2 className="size-4 animate-spin text-cyan-300" />;
 }
 
+function LocalLogin() {
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      const response = await fetch("/api/local-auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ password }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Sign-in failed.");
+      window.location.reload();
+    } catch (loginError) {
+      setError(loginError instanceof Error ? loginError.message : "Sign-in failed.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return <main className="flex min-h-screen items-center justify-center bg-[#070b14] px-5 text-white">
+    <form onSubmit={submit} className="w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.04] p-8 shadow-2xl">
+      <div className="mb-6 flex size-12 items-center justify-center rounded-2xl bg-cyan-300/10"><LockKeyhole className="size-6 text-cyan-200" /></div>
+      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200">Ryze · local computer</p>
+      <h1 className="mt-3 text-3xl font-semibold">Unlock your workspace</h1>
+      <p className="mt-3 text-sm leading-6 text-slate-400">Enter the owner password you set during installation. This local app is available only on this computer.</p>
+      <label htmlFor="local-owner-password" className="mt-7 block text-sm font-medium text-slate-200">Owner password</label>
+      <Input id="local-owner-password" autoComplete="current-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="mt-2 h-12 border-white/10 bg-slate-950/70" required minLength={12} maxLength={1024} />
+      {error ? <p role="alert" className="mt-3 text-sm text-rose-300">{error}</p> : null}
+      <Button type="submit" disabled={busy || password.length < 12} className="mt-5 h-12 w-full bg-cyan-500 text-slate-950 hover:bg-cyan-400">{busy ? "Checking…" : "Unlock locally"}</Button>
+      <p className="mt-5 text-xs leading-5 text-slate-500">Use the app through its localhost address. Do not expose this port to your network.</p>
+    </form>
+  </main>;
+}
+
 export default function Home() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const utils = trpc.useUtils();
   const { data, isLoading, error } = trpc.ryze.dashboard.useQuery(undefined, { enabled: isAuthenticated, refetchInterval: 2200 });
   const exportQuery = trpc.ryze.exportData.useQuery(undefined, { enabled: false });
@@ -71,6 +112,7 @@ export default function Home() {
   const [prompt, setPrompt] = useState("");
   const [settings, setSettings] = useState({ provider: "local-demo" as "local-demo" | "ollama-ready" | "external-disabled", ryzeModel: "ryze-safe-demo", nerdModel: "nerd-safe-demo", demoMode: true });
   const uploadInput = useRef<HTMLInputElement>(null);
+  const localBuild = import.meta.env.VITE_LOCAL_MODE === "true";
 
   useEffect(() => {
     if (!activeSessionId && data?.sessions[0]) setActiveSessionId(data.sessions[0].id);
@@ -191,6 +233,7 @@ export default function Home() {
     </div>
   );
 
+  if (localBuild && !isAuthenticated) return authLoading ? <main className="flex min-h-screen items-center justify-center bg-[#070b14]"><Loader2 className="size-7 animate-spin text-cyan-300" /></main> : <LocalLogin />;
   if (isLoading && isAuthenticated) return <DashboardLayout sidebar={sidebar}><div className="flex min-h-[70vh] items-center justify-center"><Loader2 className="size-7 animate-spin text-cyan-300" /></div></DashboardLayout>;
   if (error && isAuthenticated) return <DashboardLayout sidebar={sidebar}><div className="ryze-glass mx-auto mt-16 max-w-2xl rounded-3xl p-8"><CircleAlert className="mb-4 size-7 text-rose-300" /><h1 className="text-2xl font-semibold text-white">Sandbox connection needs attention</h1><p className="mt-3 text-slate-400">{error.message}</p><Button onClick={() => refresh()} className="mt-6">Retry connection</Button></div></DashboardLayout>;
 

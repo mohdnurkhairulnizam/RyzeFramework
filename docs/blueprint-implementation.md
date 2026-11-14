@@ -1,6 +1,6 @@
 # Blueprint implementation map
 
-The repository currently implements a secure hosted foundation for the supplied four-stage design. The origin document is preserved in [`origin-blueprint.md`](./origin-blueprint.md). This map distinguishes implemented behavior from architectural intent that still requires technical decisions.
+The repository now builds a single-owner, localhost-only Windows starter on top of the safe task foundation. The origin document is preserved in [`origin-blueprint.md`](./origin-blueprint.md). This map distinguishes implemented behavior from architectural intent that still requires technical decisions.
 
 For a detailed Stage 1 requirement-by-requirement readiness assessment, see [`stage-1-readiness.md`](./stage-1-readiness.md).
 For the sequenced implementation plan and acceptance checklist, see [`stage-1-task-breakdown.md`](./stage-1-task-breakdown.md).
@@ -11,23 +11,23 @@ For the sequenced implementation plan and acceptance checklist, see [`stage-1-ta
 | --- | --- |
 | Controlled task lifecycle, validation, logging and result reporting | `server/routers/ryze.ts`, `server/ryzeExecution.ts`, `server/ryzeDemo.ts` |
 | Permission boundary outside model reasoning | The safe action classifier blocks shell, credential, email and Telegram requests; arbitrary shell execution is not exposed |
-| User authentication and ownership enforcement | `server/_core`, `server/ryzeOwnership.ts`, scoped queries in `server/db.ts` |
-| Persistent sessions, tasks, logs, memory, skills and file metadata | `drizzle/schema.ts` and `server/db.ts` |
+| Local owner authentication and ownership enforcement | Scrypt-hash password login, rate limiting, localhost origin checks, and scoped queries in `server/_core/localAuth.ts`, `server/ryzeOwnership.ts`, and `server/db.ts` |
+| Persistent sessions, tasks, logs, memory, skills and file metadata | Local SQLite schema/migrations in `drizzle/schema.ts`, `drizzle/sqlite/`, and `server/db.ts` |
 | Experience-memory search and learning | `searchMemory`, task summaries, memory writes and skill XP updates in `server/db.ts` |
-| Original file bytes kept outside the database | `server/storage.ts`; database stores validated file metadata only |
+| Original file bytes kept outside the database | `server/storage.ts` stores bytes under the current Windows user's app-data directory; authenticated downloads verify the owner in `server/_core/storageProxy.ts` |
 | Portable export and credential-safe migration | `server/ryzeExport.ts`; provider and integration flags export disabled |
 | Bounded recovery attempts and diagnostic audit trail | `server/ryzeExecution.ts` and persisted task logs |
 | Telegram user-account transport | `worker/ryze_telegram_worker.py`; local Telethon login/session worker with heartbeat, inbound forwarding, approved command polling and session locking |
-| Hosted worker connection | `server/workerApi.ts`; bearer-authenticated heartbeat, inbound, command, acknowledgement and sanitized event endpoints |
+| Worker API | `server/workerApi.ts` code remains, but the Windows ZIP does not configure worker credentials or authorize Telegram |
 | Verification before claiming completion | Vitest coverage in `server/*.test.ts`, plus `docs/verification.md` |
 
 ## Stage status
 
 ### Stage 1 — Foundation and execution engine
 
-The repository has a safe hosted implementation of the task lifecycle, authenticated communication through the web dashboard, file intake, persistence, logging, retries and export. The Telethon user-account worker and hosted worker API are now implemented, but require local Telegram credentials/session authorization and server-side `RYZE_WORKER_TOKEN`/owner configuration before live delivery is enabled. OpenCode, FreeLLMAPI, email and Telegram outbound actions remain disabled by default until their approval and deployment settings are configured.
+The repository has a safe local task lifecycle, password-protected dashboard, SQLite persistence, local file storage, logging, bounded retries, and export. The Windows installer and localhost-only launcher are built, but the package has only been tested in the sandbox—not installed on the HP laptop. The optional Telethon worker/API code is not provisioned by this ZIP. OpenCode, FreeLLMAPI, email, and Telegram outbound actions remain unavailable; in particular, no owner-approval workflow exists for externally visible actions.
 
-**Progress checkpoint (15 November 2026):** The repository baseline is `45921c9`; current sandbox runtime versions and non-secret configuration key names have been inventoried. This is not a production environment verification. Before enabling Telegram replies, implement and test server-enforced per-action owner approval plus pause/stop and suppression checks immediately before sending; the present inbound worker route can queue a reply without that approval gate.
+**Progress checkpoint (15 November 2026):** The owner selected the HP Windows 10 laptop and requested local data. The implementation now uses SQLite and a protected local files folder, with a first-run owner password setup, scrypt verification, localhost binding, Origin/Host checks, lockout, and Windows install/start/stop/backup helpers. A production local build and disposable health/login/database smoke test pass; the test suite now has 20 Vitest tests across 10 files and 4 worker tests. The ZIP installer is built here but not run on the physical laptop. OpenCode/FreeLLMAPI connectivity, Windows-target verification, live Telegram setup, and per-action outbound approval/pause/stop/suppression checks remain incomplete; therefore Stage 1 is not complete and external actions stay unavailable.
 
 ### Stage 2 — Identity and advanced memory
 
@@ -62,4 +62,4 @@ Before enabling the deferred integrations, create separate reviewed changes for:
 6. A signed portable-package format with unique installation identity and explicit Master/Slave policy.
 7. An append-first synchronisation queue with duplicate and conflict handling.
 
-Until those gates are approved and tested, the current safe hosted sandbox is the authoritative runtime behavior.
+Until those gates are approved and tested, the current local build remains a safe demo, not the origin blueprint's operational AI agent. The original MySQL migration files are retained as history, but the Windows ZIP uses the separate SQLite migration directory.
