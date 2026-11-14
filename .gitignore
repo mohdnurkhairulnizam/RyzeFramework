@@ -59,6 +59,14 @@ jspm_packages/
 # TypeScript cache
 *.tsbuildinfo
 
+# Python worker cache and private Telegram session data
+__pycache__/
+*.pyc
+worker/data/
+worker/*.session
+worker/*.session-journal
+worker/*.lock
+
 # Optional npm cache directory
 .npm
 

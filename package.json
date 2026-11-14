@@ -10,6 +10,7 @@
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest run",
+    "worker:test": "python3 -m unittest discover -s worker -p 'test_*.py' -v",
     "db:push": "drizzle-kit generate && drizzle-kit migrate"
   },
   "dependencies": {

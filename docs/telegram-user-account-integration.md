@@ -14,6 +14,8 @@ RyzeFramework dashboard / execution engine
 
 The local worker is the only component that may access Telegram API credentials and Telethon `.session` files. The hosted dashboard receives sanitized health and activity data, not Telegram secrets or raw Telegram objects.
 
+The worker requires an explicit `TELEGRAM_ALLOWED_CHAT_IDS` allowlist. It ignores inbound messages from unapproved chats and rejects outbound commands targeting them.
+
 ## Login flow
 
 1. The owner starts account setup from an authenticated dashboard.
@@ -50,4 +52,4 @@ The worker must reject unknown commands and must never interpret a command paylo
 
 ## Current status
 
-The pattern is documented and selected as the replacement for the earlier Telegram bot proposal. It is not yet connected to the current hosted RyzeFramework sandbox. Implementation requires a Python worker package, Telethon dependency management, a dashboard login subprocess/API, local secret/session storage, owner identity binding, and integration tests for authorization, locking, pause behavior and sanitized telemetry.
+The pattern is selected as the replacement for the earlier Telegram bot proposal. The Python worker package and hosted worker API are implemented in this repository. Live operation still requires local Telethon installation, owner-provided Telegram API credentials, session authorization, an approved chat ID, and server-side worker-token configuration.

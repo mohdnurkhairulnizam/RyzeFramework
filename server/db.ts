@@ -9,6 +9,9 @@ import {
   ryzeSkills,
   ryzeTaskLogs,
   ryzeTasks,
+  ryzeWorkerCommands,
+  ryzeWorkerEvents,
+  ryzeWorkers,
   type User,
   users,
 } from "../drizzle/schema";
@@ -228,4 +231,58 @@ export function buildUserScopedExport(userId: number, dashboard: any) {
 
 export async function exportUserSandbox(userId: number) {
   return buildUserScopedExport(userId, await getDashboard(userId));
+}
+
+export async function upsertWorkerHeartbeat(userId: number, input: {
+  workerId: string;
+  hostname: string;
+  version: string;
+  status: "online" | "paused" | "degraded" | "offline";
+  automationPaused: boolean;
+}) {
+  const db = await requireDb();
+  await db.insert(ryzeWorkers).values({
+    id: input.workerId,
+    userId,
+    hostname: input.hostname,
+    version: input.version,
+    status: input.status,
+    automationPaused: input.automationPaused,
+    lastHeartbeatAt: new Date(),
+  }).onDuplicateKeyUpdate({ set: {
+    userId,
+    hostname: input.hostname,
+    version: input.version,
+    status: input.status,
+    automationPaused: input.automationPaused,
+    lastHeartbeatAt: new Date(),
+    updatedAt: new Date(),
+  } });
+  const rows = await db.select().from(ryzeWorkers).where(and(eq(ryzeWorkers.id, input.workerId), eq(ryzeWorkers.userId, userId))).limit(1);
+  return requireOwnedRecord(rows[0], userId);
+}
+
+export async function listWorkerCommands(userId: number, workerId: string, afterId: number) {
+  const db = await requireDb();
+  return db.select().from(ryzeWorkerCommands)
+    .where(and(eq(ryzeWorkerCommands.userId, userId), eq(ryzeWorkerCommands.workerId, workerId), sql`${ryzeWorkerCommands.id} > ${afterId}`))
+    .orderBy(ryzeWorkerCommands.id).limit(50);
+}
+
+export async function updateWorkerCommand(userId: number, workerId: string, commandId: number, status: "acknowledged" | "completed" | "failed") {
+  const db = await requireDb();
+  await db.update(ryzeWorkerCommands).set({ status, updatedAt: new Date() }).where(and(eq(ryzeWorkerCommands.id, commandId), eq(ryzeWorkerCommands.userId, userId), eq(ryzeWorkerCommands.workerId, workerId)));
+}
+
+export async function queueWorkerCommand(userId: number, workerId: string, command: string, payload?: Record<string, unknown>) {
+  const db = await requireDb();
+  const row = { workerId, userId, command, payload: payload ? JSON.stringify(payload) : null };
+  await db.insert(ryzeWorkerCommands).values(row);
+  const rows = await db.select().from(ryzeWorkerCommands).where(and(eq(ryzeWorkerCommands.userId, userId), eq(ryzeWorkerCommands.workerId, workerId))).orderBy(desc(ryzeWorkerCommands.id)).limit(1);
+  return rows[0];
+}
+
+export async function addWorkerEvent(userId: number, input: { workerId: string; level: "info" | "warning" | "error"; eventType: string; message: string }) {
+  const db = await requireDb();
+  await db.insert(ryzeWorkerEvents).values({ userId, workerId: input.workerId, level: input.level, eventType: input.eventType, message: input.message.slice(0, 2000) });
 }

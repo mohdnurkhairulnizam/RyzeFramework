@@ -105,4 +105,36 @@ export const ryzeSettings = mysqlTable("ryze_settings", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
+export const ryzeWorkers = mysqlTable("ryze_workers", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  hostname: varchar("hostname", { length: 120 }).notNull(),
+  version: varchar("version", { length: 64 }).notNull(),
+  status: mysqlEnum("status", ["online", "paused", "degraded", "offline"]).default("offline").notNull(),
+  automationPaused: boolean("automationPaused").default(false).notNull(),
+  lastHeartbeatAt: timestamp("lastHeartbeatAt"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export const ryzeWorkerCommands = mysqlTable("ryze_worker_commands", {
+  id: int("id").autoincrement().primaryKey(),
+  workerId: varchar("workerId", { length: 64 }).notNull().references(() => ryzeWorkers.id, { onDelete: "cascade" }),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  command: varchar("command", { length: 32 }).notNull(),
+  payload: text("payload"),
+  status: mysqlEnum("status", ["queued", "acknowledged", "completed", "failed"]).default("queued").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export const ryzeWorkerEvents = mysqlTable("ryze_worker_events", {
+  id: int("id").autoincrement().primaryKey(),
+  workerId: varchar("workerId", { length: 64 }).notNull().references(() => ryzeWorkers.id, { onDelete: "cascade" }),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  level: mysqlEnum("level", ["info", "warning", "error"]).default("info").notNull(),
+  eventType: varchar("eventType", { length: 100 }).notNull(),
+  message: text("message").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 export type User = typeof users.$inferSelect;

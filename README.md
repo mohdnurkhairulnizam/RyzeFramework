@@ -29,6 +29,11 @@ The application expects the host environment to provide authentication, database
 
 - `client/` — authenticated dashboard UI
 - `server/` — routers, persistence, storage and safe execution workflow
+- `worker/` — local Python/Telethon user-account worker and safety tests
 - `drizzle/` — database schema and migrations
 - `docs/` — blueprint source, implementation map and verification notes
 - `shared/` — shared constants and types
+
+## Telegram worker
+
+The local worker in [`worker/`](worker/) connects an owner-authorised Telegram user account to the hosted runtime. Configure `RYZE_WORKER_TOKEN` and `RYZE_WORKER_OWNER_OPEN_ID` on the server, then follow [`worker/README.md`](worker/README.md) to install Telethon, authorize the local session and run the worker. Telegram API credentials and `.session` files remain local to the worker.

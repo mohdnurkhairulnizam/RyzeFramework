@@ -15,6 +15,13 @@
       "when": 1787775633249,
       "tag": "0001_third_shocker",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1794674115319,
+      "tag": "0002_icy_tempest",
+      "breakpoints": true
     }
   ]
 }

@@ -14,13 +14,15 @@ The repository currently implements a secure hosted foundation for the supplied 
 | Original file bytes kept outside the database | `server/storage.ts`; database stores validated file metadata only |
 | Portable export and credential-safe migration | `server/ryzeExport.ts`; provider and integration flags export disabled |
 | Bounded recovery attempts and diagnostic audit trail | `server/ryzeExecution.ts` and persisted task logs |
+| Telegram user-account transport | `worker/ryze_telegram_worker.py`; local Telethon login/session worker with heartbeat, inbound forwarding, approved command polling and session locking |
+| Hosted worker connection | `server/workerApi.ts`; bearer-authenticated heartbeat, inbound, command, acknowledgement and sanitized event endpoints |
 | Verification before claiming completion | Vitest coverage in `server/*.test.ts`, plus `docs/verification.md` |
 
 ## Stage status
 
 ### Stage 1 — Foundation and execution engine
 
-The repository has a safe hosted implementation of the task lifecycle, authenticated communication through the web dashboard, file intake, persistence, logging, retries and export. OpenCode, FreeLLMAPI and the Telethon user-account worker are not enabled in the hosted sandbox yet: the blueprint marks their exact configuration as unresolved and the current product deliberately keeps external LLM, email and Telegram operations disabled.
+The repository has a safe hosted implementation of the task lifecycle, authenticated communication through the web dashboard, file intake, persistence, logging, retries and export. The Telethon user-account worker and hosted worker API are now implemented, but require local Telegram credentials/session authorization and server-side `RYZE_WORKER_TOKEN`/owner configuration before live delivery is enabled. OpenCode, FreeLLMAPI, email and Telegram outbound actions remain disabled by default until their approval and deployment settings are configured.
 
 ### Stage 2 — Identity and advanced memory
 
@@ -48,7 +50,7 @@ Portable JSON export and laptop-localization guidance are present, but they are 
 Before enabling the deferred integrations, create separate reviewed changes for:
 
 1. A versioned runtime configuration schema and secret-provider contract.
-2. A local Telethon user-account worker and dashboard login subprocess following [`telegram-user-account-integration.md`](./telegram-user-account-integration.md).
+2. Configure and deploy the local Telethon user-account worker following [`telegram-user-account-integration.md`](./telegram-user-account-integration.md), then verify live authorization and reply delivery.
 3. A memory migration that adds provenance and branch fields without data loss.
 4. An independently deployed watchdog with bounded restart and rollback tests.
 5. A signed portable-package format with unique installation identity and explicit Master/Slave policy.

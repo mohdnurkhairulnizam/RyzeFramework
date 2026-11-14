@@ -30,7 +30,7 @@ function cleanFilename(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]/g, "_").replace(/^_+/, "").slice(0, 120) || "upload.bin";
 }
 
-async function runSafeDemo(userId: number, task: { id: string; prompt: string; action: DemoAction }) {
+export async function runSafeDemo(userId: number, task: { id: string; prompt: string; action: DemoAction }): Promise<string> {
   const action = task.action;
   await updateTask(userId, task.id, { status: "IN_PROGRESS" });
   await addTaskLog(userId, task.id, "ryze", "info", `Plan selected: ${action.replace(/_/g, " ")}.`);
@@ -41,7 +41,7 @@ async function runSafeDemo(userId: number, task: { id: string; prompt: string; a
     await addTaskLog(userId, task.id, "system", "warning", summary);
     await awardSkill(userId, "safety", false);
     await updateTask(userId, task.id, { status: "FAILED", summary, completedAt: new Date() });
-    return;
+    return summary;
   }
 
   try {
@@ -86,11 +86,13 @@ async function runSafeDemo(userId: number, task: { id: string; prompt: string; a
     await addTaskLog(userId, task.id, "nerd", "success", summary);
     await addTaskLog(userId, task.id, "ryze", "success", "Verified safe completion and persisted learning to the sandbox.");
     await updateTask(userId, task.id, { status: "COMPLETED", summary, completedSteps: 1, completedAt: new Date() });
+    return summary;
   } catch (error) {
     const summary = error instanceof Error ? `The safe workflow stopped after its bounded retry policy: ${error.message}` : "The safe workflow stopped after its bounded retry policy.";
     await addTaskLog(userId, task.id, "system", "error", summary);
     await awardSkill(userId, "general", false);
     await updateTask(userId, task.id, { status: "FAILED", summary, completedAt: new Date() });
+    return summary;
   }
 }
 
