@@ -2,6 +2,9 @@
 
 The repository currently implements a secure hosted foundation for the supplied four-stage design. The origin document is preserved in [`origin-blueprint.md`](./origin-blueprint.md). This map distinguishes implemented behavior from architectural intent that still requires technical decisions.
 
+For a detailed Stage 1 requirement-by-requirement readiness assessment, see [`stage-1-readiness.md`](./stage-1-readiness.md).
+For the sequenced implementation plan and acceptance checklist, see [`stage-1-task-breakdown.md`](./stage-1-task-breakdown.md).
+
 ## Current implementation
 
 | Blueprint requirement | Repository implementation |
@@ -23,6 +26,8 @@ The repository currently implements a secure hosted foundation for the supplied 
 ### Stage 1 — Foundation and execution engine
 
 The repository has a safe hosted implementation of the task lifecycle, authenticated communication through the web dashboard, file intake, persistence, logging, retries and export. The Telethon user-account worker and hosted worker API are now implemented, but require local Telegram credentials/session authorization and server-side `RYZE_WORKER_TOKEN`/owner configuration before live delivery is enabled. OpenCode, FreeLLMAPI, email and Telegram outbound actions remain disabled by default until their approval and deployment settings are configured.
+
+**Progress checkpoint (15 November 2026):** The repository baseline is `45921c9`; current sandbox runtime versions and non-secret configuration key names have been inventoried. This is not a production environment verification. Before enabling Telegram replies, implement and test server-enforced per-action owner approval plus pause/stop and suppression checks immediately before sending; the present inbound worker route can queue a reply without that approval gate.
 
 ### Stage 2 — Identity and advanced memory
 
@@ -50,10 +55,11 @@ Portable JSON export and laptop-localization guidance are present, but they are 
 Before enabling the deferred integrations, create separate reviewed changes for:
 
 1. A versioned runtime configuration schema and secret-provider contract.
-2. Configure and deploy the local Telethon user-account worker following [`telegram-user-account-integration.md`](./telegram-user-account-integration.md), then verify live authorization and reply delivery.
-3. A memory migration that adds provenance and branch fields without data loss.
-4. An independently deployed watchdog with bounded restart and rollback tests.
-5. A signed portable-package format with unique installation identity and explicit Master/Slave policy.
-6. An append-first synchronisation queue with duplicate and conflict handling.
+2. Implement and test an outbound approval gate, including pause/stop and suppression checks at send time; keep live Telegram delivery disabled until this passes.
+3. Configure and deploy the local Telethon user-account worker following [`telegram-user-account-integration.md`](./telegram-user-account-integration.md), then verify live authorization and approved reply delivery.
+4. A memory migration that adds provenance and branch fields without data loss.
+5. An independently deployed watchdog with bounded restart and rollback tests.
+6. A signed portable-package format with unique installation identity and explicit Master/Slave policy.
+7. An append-first synchronisation queue with duplicate and conflict handling.
 
 Until those gates are approved and tested, the current safe hosted sandbox is the authoritative runtime behavior.

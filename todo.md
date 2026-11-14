@@ -16,3 +16,16 @@
 - [x] Add procedure-level Vitest tests using authenticated router callers to prove dashboard and export data are scoped to the signed-in user.
 - [x] Exercise a non-retry-demo supported action through the routed sandbox flow with a simulated recoverable failure, then verify persisted retry logs and count.
 - [x] Add an integration-style routed test that reads back the non-retry recoverable workflow’s persisted retry count and retry logs through dashboard data.
+
+## Stage 1 progress — 15 November 2026
+
+- [x] Record current repository baseline: `45921c9` (`feat: connect telegram user worker to runtime`).
+- [x] Inventory current sandbox runtimes: Node.js `v22.23.4`, pnpm `10.4.1`, Python `3.12.3`, Git `2.43.0`.
+- [x] Inspect `.env.example` variable names without reading secret values; confirm `.env` and Telegram session files are ignored by Git.
+- [x] Run Stage 1 readiness and task-breakdown documentation checks; `git diff --check` passes.
+- [ ] Confirm actual deployment target and hosted database/object-storage environment. The versions above are sandbox versions, not a confirmed production/local target.
+- [ ] Complete reviewed recovery point and deployment/secret-storage runbook before live configuration.
+- [ ] Implement server-enforced outbound Telegram approval and pause/stop/suppression checks before any live reply is enabled.
+- [ ] Specify runtime configuration/feature gates, then connect and test OpenCode–FreeLLMAPI; complete Telegram setup and Stage 1 acceptance evidence only after the safety gates pass.
+
+Detailed Stage 1 progress and sequencing: [`docs/stage-1-task-breakdown.md`](docs/stage-1-task-breakdown.md). Current requirement-by-requirement readiness: [`docs/stage-1-readiness.md`](docs/stage-1-readiness.md).
