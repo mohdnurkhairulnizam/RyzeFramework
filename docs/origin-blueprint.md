@@ -54,7 +54,7 @@ Architecture| 64-bit
 Initial model execution| Cloud-based
 Initial AI engine| OpenCode
 Model gateway| FreeLLMAPI
-Initial interface| Telegram bot
+Initial interface| Telegram user account through a local Telethon worker
 Version control| Git
 Supporting automation| Python
 
@@ -62,7 +62,7 @@ Confirmed development constraints
 
 - Docker is excluded.
 - Initial development must remain relatively simple.
-- Telegram is the initial communication interface.
+- Telegram is the initial communication interface through the owner-authorised user account and local worker.
 - Cloud AI inference is preferred initially because of hardware limitations.
 - Installation and implementation will follow architecture approval.
 - Permissions must be controlled.
@@ -90,14 +90,14 @@ The initial architecture consists of four principal components.
 Component| Responsibility
 OpenCode| Main AI execution and orchestration
 FreeLLMAPI| AI model gateway
-Telegram Bot| User communication interface
+Telegram user-account client / Python worker| User communication interface and Telegram integration
 Python| Supporting automation and integration
 
 Git provides version control for the system's source code, scripts and configuration.
 
 Architecture workflow
 
-Android Telegram → Telegram Bot → OpenCode → FreeLLMAPI → AI Model → Approved Tools → Result Validation → Telegram Response.
+Android Telegram account ↔ Telethon user-account worker → authenticated worker bridge → OpenCode → FreeLLMAPI → AI Model → Approved Tools → Result Validation → worker → Telegram account.
 
 1.3 Component Responsibilities
 
@@ -134,20 +134,24 @@ Its responsibilities include:
 
 The initial direction is cloud-based model inference.
 
-C. Telegram Bot — User Interface
+C. Telegram User-Account Client — User Interface
 
-Telegram is the initial communication channel.
+Telegram remains the initial communication channel, using the owner-authorised Telegram user account rather than a Telegram bot account.
 
 Required functions:
 
-1. Receive user instructions.
-2. Authenticate the authorised user.
-3. Accept supported file uploads.
-4. Forward requests to the execution engine.
+1. Receive user instructions through the owner-authorised Telegram user account.
+2. Authenticate the account through Telethon using phone code and, when enabled, Telegram two-step password.
+3. Accept supported file uploads through the worker.
+4. Forward requests to the execution engine through a sanitized authenticated worker bridge.
 5. Return progress information where appropriate.
 6. Return generated reports.
 7. Return processed documents and files.
 8. Receive follow-up instructions.
+
+The Telegram API credentials and Telethon session files remain local to the Python worker. The dashboard must never receive API hashes, raw phone numbers, session paths, session bytes, message bodies or raw Telegram objects. Login is an explicit owner action; the worker must refuse to operate when the local session is not authorized.
+
+The worker-to-dashboard protocol is limited to sanitized heartbeats, approved control commands, acknowledgements and activity events. Arbitrary shell commands, file paths, Python expressions and Telegram credentials are not protocol fields.
 
 The initial objective is to communicate with the AI through an Android device without requiring a separate dashboard.
 
@@ -218,7 +222,7 @@ The AI model must not be able to override the permission system through its own 
 
 Stage 1 must demonstrate:
 
-- Telegram communication.
+- Telegram user-account communication through the authorized Telethon worker.
 - OpenCode execution.
 - FreeLLMAPI connectivity.
 - File upload and processing.
@@ -1080,7 +1084,7 @@ PART F — IMPLEMENTATION SEQUENCE
 Order| Activity| Completion requirement
 1| Inspect existing HP environment| Confirm actual software and dependencies
 2| Implement Stage 1| Working execution engine
-3| Test Stage 1| Telegram, model, tools and permissions
+3| Test Stage 1| Telegram user-account worker, model, tools and permissions
 4| Finalise Stage 2| Confirm memory technology
 5| Implement Stage 2| Persistent structured memory
 6| Test Stage 2| Retrieval, export and restoration
@@ -1100,7 +1104,7 @@ The following matters must not be treated as finalised:
 Subject| Outstanding decision
 Stage 1| Exact OpenCode configuration
 Stage 1| FreeLLMAPI endpoint and model selection
-Stage 1| Telegram bot implementation details
+Stage 1| Telegram user-account worker implementation details
 Stage 2| Final memory platform
 Stage 2| Database and retrieval integration
 Stage 2| Automated memory reporting schedule
@@ -1151,7 +1155,7 @@ Stage 2| Identity & Advanced Memory
 Stage 3| Autonomous Skills & Self-Recovery
 Stage 4| Master–Slave System, Duplication, Migration & Memory Branching
 
-The initial implementation direction is OpenCode, FreeLLMAPI and Telegram, with a controlled permission system.
+The initial implementation direction is OpenCode, FreeLLMAPI and Telegram through an owner-authorised user-account worker, with a controlled permission system.
 
 The memory research includes OpenCode Memory, MemSearch and Mem0, with OpenCode Memory as the earlier preferred candidate for further evaluation.
 
@@ -1162,3 +1166,13 @@ Stage 4 introduces complete system duplication, Master and Slave copy selection,
 No stage is considered implemented merely because its architecture has been documented.
 
 This document is the working technical design baseline. Any future revision must preserve the decisions already established, explicitly record changes, and distinguish confirmed implementation from proposed improvements.
+
+---
+
+TELEGRAM USER-ACCOUNT INTEGRATION ADDENDUM
+
+The Telegram interface is based on the connected RyzeTel implementation, not a bot token. A local Python worker uses Telethon's `TelegramClient` with a stable per-account session name. The owner completes login through a dashboard-controlled subprocess: the worker requests a phone code, accepts the code, handles `SessionPasswordNeededError` by requesting the two-step password, verifies `is_user_authorized()`, and then disconnects. Subsequent worker startup connects to the existing local session and refuses to continue when authorization is absent.
+
+The worker is the only component allowed to access Telegram API credentials and session files. It sends only sanitized telemetry to the dashboard over an authenticated worker API. The worker must have a process lock so two instances cannot open the same Telethon SQLite session concurrently. Outbound actions require explicit approval, honour pause/stop state and suppression rules, use bounded retry/backoff for transient worker-to-dashboard failures, and log sanitized identifiers only.
+
+This replaces the earlier Telegram bot proposal. Bot tokens, bot webhooks and bot-specific authentication are not part of the current design. The exact Telethon worker deployment, local session protection, owner identity binding, data retention, rate limits and approval UX remain implementation decisions subject to technical verification.

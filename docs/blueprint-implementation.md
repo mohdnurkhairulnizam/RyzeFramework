@@ -20,7 +20,7 @@ The repository currently implements a secure hosted foundation for the supplied 
 
 ### Stage 1 — Foundation and execution engine
 
-The repository has a safe hosted implementation of the task lifecycle, authenticated communication through the web dashboard, file intake, persistence, logging, retries and export. OpenCode, FreeLLMAPI and Telegram are not enabled: the blueprint marks their exact configuration as unresolved and the current product deliberately keeps external LLM, email and Telegram operations disabled.
+The repository has a safe hosted implementation of the task lifecycle, authenticated communication through the web dashboard, file intake, persistence, logging, retries and export. OpenCode, FreeLLMAPI and the Telethon user-account worker are not enabled in the hosted sandbox yet: the blueprint marks their exact configuration as unresolved and the current product deliberately keeps external LLM, email and Telegram operations disabled.
 
 ### Stage 2 — Identity and advanced memory
 
@@ -48,9 +48,10 @@ Portable JSON export and laptop-localization guidance are present, but they are 
 Before enabling the deferred integrations, create separate reviewed changes for:
 
 1. A versioned runtime configuration schema and secret-provider contract.
-2. A memory migration that adds provenance and branch fields without data loss.
-3. An independently deployed watchdog with bounded restart and rollback tests.
-4. A signed portable-package format with unique installation identity and explicit Master/Slave policy.
-5. An append-first synchronisation queue with duplicate and conflict handling.
+2. A local Telethon user-account worker and dashboard login subprocess following [`telegram-user-account-integration.md`](./telegram-user-account-integration.md).
+3. A memory migration that adds provenance and branch fields without data loss.
+4. An independently deployed watchdog with bounded restart and rollback tests.
+5. A signed portable-package format with unique installation identity and explicit Master/Slave policy.
+6. An append-first synchronisation queue with duplicate and conflict handling.
 
 Until those gates are approved and tested, the current safe hosted sandbox is the authoritative runtime behavior.

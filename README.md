@@ -6,7 +6,7 @@ The supplied four-stage technical design baseline is preserved in [`docs/origin-
 
 ## Safety boundary
 
-The current runtime does not enable arbitrary shell execution, credential handling, external LLM calls, email, Telegram delivery or autonomous production changes. Unsupported or risky instructions are recorded as blocked tasks. Provider credentials and other secrets must be configured locally and are excluded from portable exports.
+The current hosted runtime does not enable arbitrary shell execution, credential handling, external LLM calls, email, or Telegram delivery. The planned Telegram interface is an owner-authorised user account managed by a local Telethon worker, not a bot account; that worker is not yet connected to this hosted sandbox. Unsupported or risky instructions are recorded as blocked tasks. Provider credentials and other secrets must be configured locally and are excluded from portable exports.
 
 ## Development
 
