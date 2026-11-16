@@ -19,6 +19,10 @@ Use 64-bit Windows 10 or newer. Install Node.js 22 or 24 LTS if needed; the inst
 
 If Node.js is missing or unsupported, install Node.js 22 or 24 LTS from the official Node.js website and run the installer again. Do not send your owner password or any future API keys in chat.
 
+## Update an existing installation
+
+Do not run `Install-Ryze.cmd` over an existing installation; it intentionally refuses to replace the existing `.env`. Instead, run `Stop-Ryze.cmd` from the installed folder and create a fresh backup. Extract the new ZIP to a temporary folder, then double-click `Update-Ryze.cmd` inside that extracted folder. The updater copies application files, installs the locked dependencies, and rebuilds Ryze while preserving the installed `.env`, SQLite database, files, and logs. It refuses to update while a recorded Ryze/OpenCode process is still running. When it finishes, launch `Start-Ryze.cmd` from `%LOCALAPPDATA%\Programs\RyzeFramework`.
+
 ## Start, sign in, and stop
 
 Double-click `Start-Ryze.cmd` in the **installed folder**. It starts OpenCode and the Ryze server in the background, waits for their local health checks, and opens `http://127.0.0.1:3777/`. The command window intentionally remains open with startup status or errors; press a key to close the diagnostic window. Closing that window does not stop the background services. Use `Stop-Ryze.cmd` to stop them.

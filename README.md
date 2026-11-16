@@ -6,7 +6,7 @@ The four-stage source design is in [`docs/origin-blueprint.md`](docs/origin-blue
 
 ## Windows installation
 
-See [`docs/windows-installation.md`](docs/windows-installation.md). Extract the ZIP and run `Install-Ryze.cmd`; then double-click `Start-Ryze.cmd` in the installed folder. The launcher leaves a diagnostic console open and opens `http://127.0.0.1:3777/` when startup succeeds. Stop background services with `Stop-Ryze.cmd`. The installer requires 64-bit Windows 10 or newer, Node.js 22 or 24 LTS, and internet access while it installs locked packages. It prompts for a strong owner password and stores a salted scrypt hash plus a random signing secret.
+See [`docs/windows-installation.md`](docs/windows-installation.md). For a new setup, extract the ZIP and run `Install-Ryze.cmd`. To update an existing installation without overwriting its `.env` or local data, extract the new ZIP to a temporary folder and run `Update-Ryze.cmd` there after stopping Ryze and taking a backup. Then double-click `Start-Ryze.cmd` in the installed folder. The launcher leaves a diagnostic console open and opens `http://127.0.0.1:3777/` when startup succeeds. Stop background services with `Stop-Ryze.cmd`. The installer requires 64-bit Windows 10 or newer, Node.js 22 or 24 LTS, and internet access while it installs locked packages. It prompts for a strong owner password and stores a salted scrypt hash plus a random signing secret.
 
 Application data is kept outside the program folder under `%LOCALAPPDATA%\RyzeFramework`. Run `Stop-Ryze.cmd` before backing up. A backup includes local data and configuration, which may include your FreeLLMAPI key; keep it private.
 
