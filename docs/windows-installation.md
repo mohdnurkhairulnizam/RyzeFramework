@@ -15,7 +15,7 @@ Use 64-bit Windows 10 or newer. Install Node.js 22 or 24 LTS if it is not alread
 1. Extract the ZIP to a temporary folder such as Downloads. Do not extract it into the final install directory.
 2. Double-click `Install-Ryze.cmd`. If Windows asks for permission, allow the script to run for your user account; it does not require administrator rights or change the machine-wide execution policy.
 3. When asked, enter the same owner password twice. Use at least 16 characters. The password is not saved in plain text; the installer stores a salted hash and a random session-signing secret in the local configuration.
-4. The installer copies the program to `%LOCALAPPDATA%\Programs\RyzeFramework`, installs the locked dependencies, builds the local version, and restricts access to its local config/data folders to your Windows account. It may take several minutes and requires internet access for package installation.
+4. The installer copies the program to `%LOCALAPPDATA%\Programs\RyzeFramework`, installs the locked dependencies, rebuilds and verifies the native SQLite driver, builds the local version, and restricts access to its local config/data folders to your Windows account. It may take several minutes and requires internet access for package installation.
 
 If the script reports that Node.js is missing or unsupported, install Node.js 22 or 24 LTS from the official Node.js website and run the installer again. Do not send your password or any future API keys in chat.
 

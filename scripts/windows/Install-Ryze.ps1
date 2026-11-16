@@ -35,7 +35,7 @@ if ($LASTEXITCODE -ge 8) { throw "Copying the installer files failed (robocopy e
 
 function Invoke-Pnpm {
   param([Parameter(ValueFromRemainingArguments = $true)][string[]]$PnpmArgs)
-  & npx.cmd --yes pnpm@10.4.1 @PnpmArgs
+  & npx.cmd --yes pnpm@10.18.0 @PnpmArgs
   if ($LASTEXITCODE -ne 0) { throw "pnpm command failed with exit code $LASTEXITCODE." }
 }
 
@@ -43,6 +43,9 @@ Push-Location $InstallDirectory
 try {
   Write-Host 'Installing locked application dependencies. Internet access is required for this step.'
   Invoke-Pnpm install --frozen-lockfile
+  Invoke-Pnpm rebuild better-sqlite3
+  & node -e "const Database = require('better-sqlite3'); const db = new Database(':memory:'); db.close();"
+  if ($LASTEXITCODE -ne 0) { throw 'The SQLite native driver did not build correctly.' }
   Invoke-Pnpm run build:local
 
   if (Test-Path '.env') { throw 'Refusing to replace an existing local .env file.' }

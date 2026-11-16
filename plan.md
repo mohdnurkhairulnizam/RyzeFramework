@@ -16,7 +16,7 @@ Prepare a manual-install ZIP for the owner's HP Windows 10 laptop. It contains t
 
 ## Windows installation behavior
 
-- Require 64-bit Windows 10+, Node.js 22 or 24 LTS, and internet access during install. Use pnpm 10.4.1 and the committed lockfile.
+- Require 64-bit Windows 10+, Node.js 22 or 24 LTS, and internet access during install. Use pnpm 10.18.0 and the committed lockfile; explicitly rebuild and verify the native SQLite binding.
 - Run `Install-Ryze.cmd` to copy the package to `%LOCALAPPDATA%\Programs\RyzeFramework`, install dependencies, build the local production app, create the owner config, and restrict config/data folder ACLs.
 - Run `Start-Ryze.cmd` to launch in the background and open the browser on localhost; use `Stop-Ryze.cmd` before `Backup-Ryze.cmd`.
 - Back up the SQLite database, WAL sidecars, local files, and protected config to a user-only ZIP under Documents. The guide explains manual restore and warns that a backup includes the signing secret.
