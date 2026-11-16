@@ -2,6 +2,7 @@ packages:
   - .
 onlyBuiltDependencies:
   - better-sqlite3
+  - '@opencode/cli'
 overrides:
   tailwindcss>nanoid: 3.3.7
 patchedDependencies:

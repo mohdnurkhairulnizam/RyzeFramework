@@ -101,7 +101,7 @@ describe("authenticated PROJECT RYZE procedures", () => {
     const result = await caller.ryze.submitTask({ prompt: "create a briefing note" });
     const dashboard = await caller.ryze.dashboard();
 
-    expect(result).toEqual({ taskId: "task-generated" });
+    expect(result).toEqual({ taskId: "task-generated", mode: "demo", success: true });
     expect(storageMocks.storagePut).toHaveBeenCalledTimes(2);
     expect(dbMocks.updateTask).toHaveBeenCalledWith(1, "task-generated", expect.objectContaining({ retryCount: 1 }));
     expect(dbMocks.addTaskLog).toHaveBeenCalledWith(1, "task-generated", "nerd", "warning", expect.stringContaining("Attempt 1/3"));

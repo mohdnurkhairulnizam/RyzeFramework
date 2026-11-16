@@ -32,6 +32,17 @@ export const ryzeSessions = sqliteTable("ryze_sessions", {
   updatedAt: timestampMs("updatedAt"),
 }, (table) => [uniqueIndex("ryze_sessions_user_name_uq").on(table.userId, table.name)]);
 
+export const ryzeOpenCodeSessions = sqliteTable("ryze_opencode_sessions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  ryzeSessionId: text("ryzeSessionId").notNull().references(() => ryzeSessions.id, { onDelete: "cascade" }),
+  openCodeSessionId: text("openCodeSessionId").notNull(),
+  createdAt: timestampMs("createdAt"),
+}, (table) => [
+  uniqueIndex("ryze_opencode_sessions_user_session_uq").on(table.userId, table.ryzeSessionId),
+  uniqueIndex("ryze_opencode_sessions_opencode_id_uq").on(table.openCodeSessionId),
+]);
+
 export const ryzeTasks = sqliteTable("ryze_tasks", {
   id: text("id").primaryKey(),
   userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),

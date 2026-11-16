@@ -8,16 +8,20 @@ import {
   createTask,
   ensureSession,
   exportUserSandbox,
+  getOpenCodeSessionId,
   getDashboard,
   listFiles,
   saveFileMetadata,
   searchMemory,
+  saveOpenCodeSessionId,
   updateSafeSettings,
   updateTask,
 } from "../db";
 import { storagePut } from "../storage";
 import { determineDemoAction, makeGeneratedNote, memoryQuery, type DemoAction } from "../ryzeDemo";
 import { executeWithBoundedRetry, RecoverableDemoError } from "../ryzeExecution";
+import { createOpenCodeConversation, getIntegrationStatus, sendOpenCodePrompt } from "../openCode";
+import { ENV } from "../_core/env";
 import { protectedProcedure, router } from "../_core/trpc";
 
 const maxUploadBytes = 5 * 1024 * 1024;
@@ -30,7 +34,7 @@ function cleanFilename(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]/g, "_").replace(/^_+/, "").slice(0, 120) || "upload.bin";
 }
 
-export async function runSafeDemo(userId: number, task: { id: string; prompt: string; action: DemoAction }): Promise<string> {
+export async function runSafeDemo(userId: number, task: { id: string; prompt: string; action: DemoAction }): Promise<{ summary: string; success: boolean }> {
   const action = task.action;
   await updateTask(userId, task.id, { status: "IN_PROGRESS" });
   await addTaskLog(userId, task.id, "ryze", "info", `Plan selected: ${action.replace(/_/g, " ")}.`);
@@ -41,7 +45,7 @@ export async function runSafeDemo(userId: number, task: { id: string; prompt: st
     await addTaskLog(userId, task.id, "system", "warning", summary);
     await awardSkill(userId, "safety", false);
     await updateTask(userId, task.id, { status: "FAILED", summary, completedAt: new Date() });
-    return summary;
+    return { summary, success: false };
   }
 
   try {
@@ -86,26 +90,53 @@ export async function runSafeDemo(userId: number, task: { id: string; prompt: st
     await addTaskLog(userId, task.id, "nerd", "success", summary);
     await addTaskLog(userId, task.id, "ryze", "success", "Verified safe completion and persisted learning to the sandbox.");
     await updateTask(userId, task.id, { status: "COMPLETED", summary, completedSteps: 1, completedAt: new Date() });
-    return summary;
+    return { summary, success: true };
   } catch (error) {
     const summary = error instanceof Error ? `The safe workflow stopped after its bounded retry policy: ${error.message}` : "The safe workflow stopped after its bounded retry policy.";
     await addTaskLog(userId, task.id, "system", "error", summary);
     await awardSkill(userId, "general", false);
     await updateTask(userId, task.id, { status: "FAILED", summary, completedAt: new Date() });
-    return summary;
+    return { summary, success: false };
+  }
+}
+
+async function runOpenCodeChat(userId: number, sessionId: string, task: { id: string; prompt: string }): Promise<boolean> {
+  await updateTask(userId, task.id, { status: "IN_PROGRESS" });
+  await addTaskLog(userId, task.id, "ryze", "info", "Ryze routed this chat to the local OpenCode service and FreeLLMAPI gateway.");
+  await addTaskLog(userId, task.id, "system", "warning", "Chat-only mode is active: OpenCode tool permissions are denied, and the prompt is sent to the configured FreeLLMAPI model providers.");
+  try {
+    let openCodeSessionId = await getOpenCodeSessionId(userId, sessionId);
+    if (!openCodeSessionId) {
+      openCodeSessionId = await createOpenCodeConversation(`Ryze ${sessionId}`);
+      await saveOpenCodeSessionId(userId, sessionId, openCodeSessionId);
+    }
+    const answer = await sendOpenCodePrompt(openCodeSessionId, task.prompt);
+    await addTaskLog(userId, task.id, "nerd", "success", answer);
+    await addTaskLog(userId, task.id, "ryze", "success", "OpenCode returned a model response; no local tool or external-delivery action was run.");
+    await updateTask(userId, task.id, { status: "COMPLETED", summary: answer, completedSteps: 1, totalSteps: 1, completedAt: new Date() });
+    return true;
+  } catch (error) {
+    const summary = error instanceof Error ? error.message : "OpenCode chat failed. Check the local integration status and logs.";
+    await addTaskLog(userId, task.id, "system", "error", summary);
+    await updateTask(userId, task.id, { status: "FAILED", summary, completedAt: new Date() });
+    return false;
   }
 }
 
 export const ryzeRouter = router({
   dashboard: protectedProcedure.query(({ ctx }) => getDashboard(ctx.user.id)),
+  integrationStatus: protectedProcedure.query(() => getIntegrationStatus()),
   createSession: protectedProcedure.input(z.object({ name: z.string().trim().min(1).max(80).optional() })).mutation(({ ctx, input }) => createSession(ctx.user.id, input.name)),
   submitTask: protectedProcedure.input(z.object({ sessionId: z.string().max(40).optional(), prompt: z.string().trim().min(2).max(5000) })).mutation(async ({ ctx, input }) => {
     const session = await ensureSession(ctx.user.id, input.sessionId);
     const action = determineDemoAction(input.prompt);
     const task = await createTask(ctx.user.id, session.id, input.prompt, action);
-    await addTaskLog(ctx.user.id, task.id, "system", "info", "Task accepted by the PROJECT RYZE hosted sandbox.");
-    await runSafeDemo(ctx.user.id, { ...task, action });
-    return { taskId: task.id };
+    await addTaskLog(ctx.user.id, task.id, "system", "info", ENV.localMode ? "Task accepted by the local Ryze dashboard." : "Task accepted by the PROJECT RYZE hosted sandbox.");
+    const useOpenCode = ENV.localMode && Boolean(ENV.freeLlmApiKey) && action === "safe_analysis";
+    const success = useOpenCode
+      ? await runOpenCodeChat(ctx.user.id, session.id, task)
+      : (await runSafeDemo(ctx.user.id, { ...task, action })).success;
+    return { taskId: task.id, mode: useOpenCode ? "opencode" as const : "demo" as const, success };
   }),
   upload: protectedProcedure.input(z.object({ fileName: z.string().min(1).max(255), mimeType: z.string().min(1).max(120), base64: z.string().min(4), byteSize: z.number().int().positive().max(maxUploadBytes) })).mutation(async ({ ctx, input }) => {
     if (!allowedMimeTypes.has(input.mimeType)) throw new TRPCError({ code: "BAD_REQUEST", message: "That file type is not permitted in the safe sandbox." });

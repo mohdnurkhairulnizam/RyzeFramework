@@ -21,7 +21,7 @@ This checklist turns the origin blueprint and current repository status into an 
 ## Workstream 0 — Establish a safe implementation baseline
 
 - [x] Confirm the execution target and local data architecture: the owner selected the HP Windows 10 laptop; this package uses local SQLite and a local files directory, so it does not require hosted database/object storage endpoints.
-- [x] Document supported installer runtimes: 64-bit Windows 10+, Node.js 22 or 24 LTS, pnpm 10.4.1. The optional Python/Telethon worker is not installed by this ZIP.
+- [x] Document supported installer runtimes: 64-bit Windows 10+, Node.js 22 or 24 LTS, pnpm 10.18.0. The optional Python/Telethon worker is not installed by this ZIP.
 - [ ] Verify installed runtime versions and the install/run/backup scripts on the actual HP laptop.
 - [ ] Create a reviewed baseline commit/tag before changing execution, worker, or configuration behavior. Preserve a way to restore the current safe-demo behavior.
 - [x] Inventory local installer settings without reading secret values; keep the generated `.env`, database, file bytes, and Telegram session data out of Git.
@@ -58,17 +58,19 @@ This checklist turns the origin blueprint and current repository status into an 
 
 ## Workstream 3 — Connect OpenCode and FreeLLMAPI
 
-- [ ] Decide and document the exact supported OpenCode version, execution interface, model gateway endpoint, model identifier, authentication method, and request/response limits. These are unresolved in the origin blueprint.
-- [ ] Implement a provider adapter behind a narrow interface so the task workflow does not depend on provider-specific response shapes.
-- [ ] Configure FreeLLMAPI as a replaceable gateway; keep its credentials server-side and redact authorization material from errors and traces.
+- [x] Define the supported integration contract: OpenCode CLI 2.3.0; authenticated loopback OpenCode HTTP API; an owner-supplied OpenAI-compatible FreeLLMAPI base URL/model ID; a server-side bearer key; 5-second gateway probe, 15-second prompt-acceptance timeout, 8-second poll timeout, and 120-second completion window. The actual URL/model/key remain owner-supplied and are not in Git or the ZIP.
+- [x] Implement `server/openCode.ts` as a narrow provider adapter so the task workflow does not depend on provider-specific response shapes; unit tests cover the current session/model request and assistant-message response.
+- [x] Generate FreeLLMAPI as a replaceable OpenCode provider; keep its key server-side, return only status labels, and use generic errors that do not echo authorization material.
 - [ ] Add request timeouts, bounded retries only for appropriate transient failures, rate-limit behavior, cancellation, and clear terminal failure states. Avoid retrying unsafe side effects automatically.
 - [ ] Keep planning separate from execution. Convert the plan into a structured action proposal that passes the permission/approval checks before tools run.
 - [ ] Validate model responses against a strict schema. Reject malformed, overlong, unsupported, or unauthorized tool/action requests rather than interpreting them as executable commands.
-- [ ] Preserve the current safe demo as an explicit local/test mode. Never imply that a demo answer came from OpenCode or FreeLLMAPI.
+- [x] Preserve the current safe demo as an explicit local mode. Dashboard labels distinguish a safe demo, ready OpenCode chat, and configured-but-offline chat; a demo answer is not labeled as a model response.
 - [ ] Add tests with stubbed provider responses for success, timeout, rate limit, malformed output, refusals, unsupported tools, and provider failure. Ensure the tests do not require real credentials.
 - [ ] Run one owner-approved integration test against the configured gateway using a harmless prompt; record model/gateway versions and observed behavior without recording secrets.
 
 **Exit condition:** A harmless task demonstrably travels through OpenCode → FreeLLMAPI → selected model, returns a validated result, obeys permissions, and records success or failure accurately.
+
+The implementation currently provides text-only chat and denies all OpenCode tool permissions. It does not yet satisfy the full Workstream 3 exit condition: the endpoint/model/key have not been supplied, the live model request has not been run, structured action proposals are not enabled, and no real-laptop verification has occurred.
 
 ## Workstream 4 — Complete Telegram user-account setup safely
 
@@ -143,7 +145,15 @@ Completed in the current sandbox: preserved the origin blueprint and checklist; 
 
 The package has **not** been run on the physical HP laptop; Windows PowerShell scripts and ACL behavior are therefore unverified on target. The generated ZIP will contain source/scripts only (no credentials or user data); installation builds dependencies on the laptop and needs internet access. OpenCode/FreeLLMAPI endpoints and model, optional Telegram API/session setup, explicit outbound approval, and live end-to-end checks remain incomplete. No credentials were read or changed, and no external integrations were enabled.
 
-**Next action:** manually install the delivered ZIP on the HP laptop, use the first-run owner password setup, and verify start/sign-in/backup. Share any error here without sending `.env`, passwords, Telegram session files, or database contents. After the local starter is verified, decide the OpenCode/FreeLLMAPI endpoint and model and complete the Telegram approval safeguards before enabling any external action.
+**Historical next action (15 November):** install the initial ZIP and verify start/sign-in/backup on the HP laptop.
+
+## Progress checkpoint — 17 November 2026
+
+Implemented the OpenCode sidecar lifecycle alongside the Ryze Node server; local authenticated health checks, safe stop handling, and separate logs; a managed chat-only OpenCode config with global and agent-level deny-all permissions; a local SQLite mapping between Ryze and OpenCode sessions; and a FreeLLMAPI adapter that reads the current OpenCode session API model-reference and assistant-content shapes. Added a hidden-key Windows setup flow that asks for the actual gateway URL and model ID instead of assuming a localhost gateway. Hosted URLs must use HTTPS; only loopback endpoints may use HTTP. Dashboard status now distinguishes “safe demo,” “OpenCode chat ready,” and “chat offline.” Both Start-Ryze wrappers keep their diagnostic window open after double-click, including on success, so the user can see startup status and failure output.
+
+Verification in the sandbox: `pnpm check`, 32 Vitest tests, 4 worker tests, and `pnpm build:local` pass. OpenCode CLI 2.3.0 `debug config` accepts the managed config and recognizes the dedicated system instruction plus deny-all tool permissions. A separate OpenCode-to-mock-FreeLLMAPI smoke test authenticated on the loopback API, created a session, sent a streamed OpenAI-compatible request, and received the mock assistant reply. A live request against the user's real FreeLLMAPI endpoint has **not** been tested; no real endpoint/model/key has been supplied, and the physical HP laptop is not connected to this session. No real gateway credentials were used.
+
+**Next action:** when you have the FreeLLMAPI API base URL and exact model ID, enter them and the key privately on the HP laptop with `Configure-FreeLLMAPI.cmd`, then use a harmless test prompt and share only the status/error text. Install the revised ZIP and test double-click startup on that laptop; do not send the key or `.env`. Telegram outbound remains disabled until the owner-approval workflow is implemented.
 
 ## Suggested execution order
 

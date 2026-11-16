@@ -7,6 +7,7 @@ import { nanoid } from "nanoid";
 import {
   ryzeFiles,
   ryzeMemory,
+  ryzeOpenCodeSessions,
   ryzeSessions,
   ryzeSettings,
   ryzeSkills,
@@ -132,6 +133,27 @@ export async function ensureSession(userId: number, preferredSessionId?: string)
   }
   const sessions = await listSessions(userId);
   return sessions[0] ?? createSession(userId);
+}
+
+export async function getOpenCodeSessionId(userId: number, ryzeSessionId: string) {
+  const db = await requireDb();
+  const rows = await db.select({ openCodeSessionId: ryzeOpenCodeSessions.openCodeSessionId })
+    .from(ryzeOpenCodeSessions)
+    .where(and(eq(ryzeOpenCodeSessions.userId, userId), eq(ryzeOpenCodeSessions.ryzeSessionId, ryzeSessionId)))
+    .limit(1);
+  return rows[0]?.openCodeSessionId ?? null;
+}
+
+export async function saveOpenCodeSessionId(userId: number, ryzeSessionId: string, openCodeSessionId: string) {
+  const db = await requireDb();
+  const ownedSession = await db.select({ id: ryzeSessions.id }).from(ryzeSessions)
+    .where(and(eq(ryzeSessions.id, ryzeSessionId), eq(ryzeSessions.userId, userId))).limit(1);
+  if (!ownedSession[0]) throw new Error("Cannot link an OpenCode session to a Ryze session owned by another user.");
+  await db.insert(ryzeOpenCodeSessions).values({ userId, ryzeSessionId, openCodeSessionId })
+    .onConflictDoUpdate({
+      target: [ryzeOpenCodeSessions.userId, ryzeOpenCodeSessions.ryzeSessionId],
+      set: { openCodeSessionId },
+    });
 }
 
 export async function createTask(userId: number, sessionId: string, prompt: string, action: string) {

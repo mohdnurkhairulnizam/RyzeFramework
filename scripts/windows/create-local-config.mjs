@@ -47,6 +47,9 @@ const contents = [
   `RYZE_DATA_DIR=${dotenvValue(localDataDir)}`,
   `RYZE_DATABASE_PATH=${dotenvValue(databasePath)}`,
   `RYZE_STORAGE_DIR=${dotenvValue(storageDir)}`,
+  "RYZE_FREELLMAPI_BASE_URL=",
+  "RYZE_FREELLMAPI_API_KEY=",
+  "RYZE_FREELLMAPI_MODEL=auto",
   "",
 ].join("\n");
 writeFileSync(envPath, contents, { flag: "wx", mode: 0o600 });
