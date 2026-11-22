@@ -128,18 +128,17 @@ export function registerWorkerRoutes(app: Express) {
     const input = inboundSchema.safeParse(parsePayload(req.body));
     if (!input.success) return void jsonError(res, 400, "INVALID_INBOUND", "Inbound Telegram message is invalid.");
     const userId = await ownerId();
-    const codeMatch = /^RYZE-AUTH\s+(.{6,128})$/i.exec(input.data.text);
-    const codeAttempt = codeMatch?.[1] ?? null;
+    const codeAttempt = input.data.text;
+    const temporarilyAuthorized = await authorizeTelegramSender(userId, input.data.senderId, codeAttempt);
     await addTelegramLog(userId, {
       direction: "incoming",
       telegramUserId: input.data.senderId,
       chatId: input.data.chatId,
-      messagePreview: codeAttempt ? "RYZE-AUTH [redacted]" : input.data.text,
-      status: codeAttempt ? "authorization-attempt" : "received",
+      messagePreview: temporarilyAuthorized ? "[recovery code redacted]" : input.data.text,
+      status: temporarilyAuthorized ? "temporary-authorized" : "received",
     });
-    if (codeAttempt) {
-      const authorized = await authorizeTelegramSender(userId, input.data.senderId, codeAttempt);
-      return void res.status(202).json({ accepted: authorized, temporaryAuthorized: authorized, replySent: false });
+    if (temporarilyAuthorized) {
+      return void res.status(202).json({ accepted: true, temporaryAuthorized: true, replySent: false });
     }
     if (!(await isTelegramSenderAllowed(userId, input.data.senderId, input.data.senderUsername))) {
       await addTelegramLog(userId, { direction: "system", telegramUserId: input.data.senderId, chatId: input.data.chatId, messagePreview: "Message ignored because sender is not authorized.", status: "ignored-unauthorized" });

@@ -152,7 +152,7 @@ export async function setTelegramPermanentCode(userId: number, code: string) {
 
 export async function issueTelegramSecretCode(userId: number) {
   const db = await requireDb();
-  const code = `RYZE-AUTH-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
+  const code = crypto.randomBytes(6).toString("hex").toUpperCase();
   const expires = new Date(Date.now() + 15 * 60 * 1000);
   await db.insert(ryzeTelegramAccess).values({ userId, secretCodeHash: hashTelegramCode(code), secretCodeExpiresAt: expires }).onConflictDoUpdate({ target: ryzeTelegramAccess.userId, set: { secretCodeHash: hashTelegramCode(code), secretCodeExpiresAt: expires, updatedAt: new Date() } });
   await addTelegramLog(userId, { direction: "system", messagePreview: "Temporary Telegram authorization code generated.", status: "code-issued" });
