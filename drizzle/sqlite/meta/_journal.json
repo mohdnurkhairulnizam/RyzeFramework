@@ -15,6 +15,13 @@
       "when": 1794870431816,
       "tag": "0001_dusty_alex_wilder",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1795369451861,
+      "tag": "0002_marvelous_supernaut",
+      "breakpoints": true
     }
   ]
 }

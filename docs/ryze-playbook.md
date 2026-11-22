@@ -43,7 +43,7 @@ The current system provides:
 - A one-click operational baseline check with a copyable diagnostic console.
 - Optional OpenCode + FreeLLMAPI text chat when configured.
 
-The following remain incomplete or disabled: arbitrary shell commands, Telegram outbound replies, email delivery, unsupervised external actions, and general-purpose tool execution.
+The following remain incomplete or disabled: arbitrary shell commands, Telegram outbound replies, email delivery, unsupervised external actions, and general-purpose tool execution. Telegram account control is available in the local Settings panel, but Telethon login and persistent worker lifecycle remain staged until the dashboard process bridge is completed.
 
 As the system progresses, this manual will gain new sections for each user-facing feature. Technical status belongs in the updated blueprint, not in this manual.
 
@@ -161,7 +161,15 @@ This stage uses the private RyzeTel bridge pattern for local secret handling and
 
 The worker session and `worker.env` are stored below `%LOCALAPPDATA%\RyzeFramework\telegram-worker` and protected for the current Windows user. Never include that folder, the session file, `worker.env`, API hash, phone code, or two-step password in a support message.
 
-### 3.8 Stop/restart test
+### 3.8 Telegram account controls in Settings
+
+Open **Settings → Telegram account bridge** on the local dashboard. The panel supports one active account record at a time. **Add account** creates the record; **Replace / save account** updates it; and **Remove account** marks it removed from Ryze control. The account record is separate from the protected Telethon session and does not by itself claim that Telegram login has completed.
+
+Set the permanent admin Telegram user ID in the same panel. Ryze accepts messages from that ID by default and ignores other sender IDs. Use **Generate one-time code** when another specific sender needs temporary access. The code is shown only on the local dashboard and expires after 15 minutes; when that sender sends it to the connected account, that sender is accepted for one hour, then the permanent admin-only rule returns. Incoming, ignored, authorization, and system events appear in the local Telegram channel log. Outbound replies remain disabled.
+
+Gmail is planned as a separate OAuth setup panel. The Gmail account will be authorized through Google consent rather than by storing a Gmail password. Drive and Photos access will be optional scopes and will not be enabled merely because Gmail is connected.
+
+### 3.9 Stop/restart test
 
 1. Run `Stop-Ryze.cmd`.
 2. Confirm the dashboard is unavailable.

@@ -150,4 +150,37 @@ export const ryzeWorkerEvents = sqliteTable("ryze_worker_events", {
   createdAt: timestampMs("createdAt"),
 });
 
+export const ryzeTelegramAccounts = sqliteTable("ryze_telegram_accounts", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  label: text("label").notNull(),
+  phoneMasked: text("phoneMasked").notNull(),
+  telegramUserId: text("telegramUserId"),
+  status: text("status", { enum: ["configured", "authorized", "paused", "removed"] }).default("configured").notNull(),
+  createdAt: timestampMs("createdAt"),
+  updatedAt: timestampMs("updatedAt"),
+}, (table) => [uniqueIndex("ryze_telegram_accounts_user_uq").on(table.userId)]);
+
+export const ryzeTelegramAccess = sqliteTable("ryze_telegram_access", {
+  userId: integer("userId").primaryKey().references(() => users.id, { onDelete: "cascade" }),
+  adminTelegramUserId: text("adminTelegramUserId"),
+  temporaryTelegramUserId: text("temporaryTelegramUserId"),
+  temporaryExpiresAt: integer("temporaryExpiresAt", { mode: "timestamp_ms" }),
+  secretCodeHash: text("secretCodeHash"),
+  secretCodeExpiresAt: integer("secretCodeExpiresAt", { mode: "timestamp_ms" }),
+  updatedAt: timestampMs("updatedAt"),
+});
+
+export const ryzeTelegramLogs = sqliteTable("ryze_telegram_logs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  accountId: integer("accountId").references(() => ryzeTelegramAccounts.id, { onDelete: "set null" }),
+  direction: text("direction", { enum: ["incoming", "outgoing", "system"] }).notNull(),
+  telegramUserId: text("telegramUserId"),
+  chatId: text("chatId"),
+  messagePreview: text("messagePreview").notNull(),
+  status: text("status").notNull(),
+  createdAt: timestampMs("createdAt"),
+});
+
 export type User = typeof users.$inferSelect;

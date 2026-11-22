@@ -4,9 +4,12 @@ import { z } from "zod";
 import {
   addTaskLog,
   addWorkerEvent,
+  addTelegramLog,
+  authorizeTelegramSender,
   createTask,
   ensureSession,
   getUserByOpenId,
+  isTelegramSenderAllowed,
   listWorkerCommands,
   updateWorkerCommand,
   upsertWorkerHeartbeat,
@@ -124,12 +127,29 @@ export function registerWorkerRoutes(app: Express) {
     const input = inboundSchema.safeParse(parsePayload(req.body));
     if (!input.success) return void jsonError(res, 400, "INVALID_INBOUND", "Inbound Telegram message is invalid.");
     const userId = await ownerId();
+    const codeAttempt = /^RYZE-AUTH-[A-Z0-9]{8}$/i.test(input.data.text) ? input.data.text : null;
+    await addTelegramLog(userId, {
+      direction: "incoming",
+      telegramUserId: input.data.senderId,
+      chatId: input.data.chatId,
+      messagePreview: input.data.text,
+      status: codeAttempt ? "authorization-attempt" : "received",
+    });
+    if (codeAttempt) {
+      const authorized = await authorizeTelegramSender(userId, input.data.senderId, codeAttempt);
+      return void res.status(202).json({ accepted: authorized, temporaryAuthorized: authorized, replySent: false });
+    }
+    if (!(await isTelegramSenderAllowed(userId, input.data.senderId))) {
+      await addTelegramLog(userId, { direction: "system", telegramUserId: input.data.senderId, chatId: input.data.chatId, messagePreview: "Message ignored because sender is not authorized.", status: "ignored-unauthorized" });
+      return void res.status(202).json({ accepted: false, ignored: true, replySent: false });
+    }
     const session = await ensureSession(userId, undefined);
     const action = determineDemoAction(input.data.text);
     const task = await createTask(userId, session.id, input.data.text, action);
     await addTaskLog(userId, task.id, "system", "info", "Task accepted from the authorized Telegram user-account worker.");
     await runSafeDemo(userId, { ...task, action });
     await addTaskLog(userId, task.id, "system", "warning", "No Telegram reply was sent: the owner-approval gate is not implemented yet.");
+    await addTelegramLog(userId, { direction: "system", telegramUserId: input.data.senderId, chatId: input.data.chatId, messagePreview: "Inbound task accepted; outbound reply remains disabled.", status: "accepted-no-reply" });
     res.status(202).json({ taskId: task.id, accepted: true });
   }));
 }

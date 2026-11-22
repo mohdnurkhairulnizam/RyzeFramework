@@ -10,6 +10,11 @@ import {
   exportUserSandbox,
   getOpenCodeSessionId,
   getDashboard,
+  getTelegramControl,
+  issueTelegramSecretCode,
+  removeTelegramAccount,
+  saveTelegramAccount,
+  setTelegramAdminUserId,
   listFiles,
   saveFileMetadata,
   searchMemory,
@@ -376,6 +381,20 @@ export const ryzeRouter = router({
       })
     )
     .mutation(({ ctx, input }) => updateSafeSettings(ctx.user.id, input)),
+  telegramControl: protectedProcedure.query(({ ctx }) => getTelegramControl(ctx.user.id)),
+  saveTelegramAccount: protectedProcedure
+    .input(z.object({
+      label: z.string().trim().min(1).max(80),
+      phoneMasked: z.string().trim().min(3).max(32),
+      telegramUserId: z.string().trim().regex(/^\d{1,32}$/).optional(),
+      status: z.enum(["configured", "authorized", "paused", "removed"]).optional(),
+    }))
+    .mutation(({ ctx, input }) => saveTelegramAccount(ctx.user.id, input)),
+  removeTelegramAccount: protectedProcedure.mutation(({ ctx }) => removeTelegramAccount(ctx.user.id)),
+  setTelegramAdminUserId: protectedProcedure
+    .input(z.object({ telegramUserId: z.string().trim().regex(/^\d{1,32}$/) }))
+    .mutation(({ ctx, input }) => setTelegramAdminUserId(ctx.user.id, input.telegramUserId)),
+  issueTelegramSecretCode: protectedProcedure.mutation(({ ctx }) => issueTelegramSecretCode(ctx.user.id)),
   exportData: protectedProcedure.query(({ ctx }) =>
     exportUserSandbox(ctx.user.id)
   ),

@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/better-sqlite3";
 import Database from "better-sqlite3";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
 import { nanoid } from "nanoid";
 import {
   ryzeFiles,
@@ -16,6 +17,9 @@ import {
   ryzeWorkerCommands,
   ryzeWorkerEvents,
   ryzeWorkers,
+  ryzeTelegramAccounts,
+  ryzeTelegramAccess,
+  ryzeTelegramLogs,
   type User,
   users,
 } from "../drizzle/schema";
@@ -95,6 +99,78 @@ export async function ensureSettings(userId: number) {
   await db.insert(ryzeSettings).values({ userId }).onConflictDoUpdate({ target: ryzeSettings.userId, set: { updatedAt: new Date() } });
   const rows = await db.select().from(ryzeSettings).where(eq(ryzeSettings.userId, userId)).limit(1);
   return rows[0]!;
+}
+
+function hashTelegramCode(code: string) {
+  return crypto.createHash("sha256").update(code).digest("hex");
+}
+
+function safeTelegramEqual(left: string, right: string) {
+  const a = Buffer.from(left); const b = Buffer.from(right);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+export async function getTelegramControl(userId: number) {
+  const db = await requireDb();
+  await db.insert(ryzeTelegramAccess).values({ userId }).onConflictDoNothing();
+  const [account] = await db.select().from(ryzeTelegramAccounts).where(eq(ryzeTelegramAccounts.userId, userId)).limit(1);
+  const [access] = await db.select().from(ryzeTelegramAccess).where(eq(ryzeTelegramAccess.userId, userId)).limit(1);
+  const logs = await db.select().from(ryzeTelegramLogs).where(eq(ryzeTelegramLogs.userId, userId)).orderBy(desc(ryzeTelegramLogs.createdAt)).limit(100);
+  return { account: account ?? null, access: access ?? null, logs };
+}
+
+export async function saveTelegramAccount(userId: number, input: { label: string; phoneMasked: string; telegramUserId?: string; status?: "configured" | "authorized" | "paused" | "removed" }) {
+  const db = await requireDb();
+  const existing = await db.select({ id: ryzeTelegramAccounts.id }).from(ryzeTelegramAccounts).where(eq(ryzeTelegramAccounts.userId, userId)).limit(1);
+  if (existing[0]) await db.update(ryzeTelegramAccounts).set({ ...input, updatedAt: new Date() }).where(and(eq(ryzeTelegramAccounts.id, existing[0].id), eq(ryzeTelegramAccounts.userId, userId)));
+  else await db.insert(ryzeTelegramAccounts).values({ userId, label: input.label, phoneMasked: input.phoneMasked, telegramUserId: input.telegramUserId ?? null, status: input.status ?? "configured" });
+  const [account] = await db.select().from(ryzeTelegramAccounts).where(eq(ryzeTelegramAccounts.userId, userId)).limit(1);
+  return account!;
+}
+
+export async function removeTelegramAccount(userId: number) {
+  const db = await requireDb();
+  await db.update(ryzeTelegramAccounts).set({ status: "removed", updatedAt: new Date() }).where(eq(ryzeTelegramAccounts.userId, userId));
+  await db.update(ryzeTelegramAccess).set({ temporaryTelegramUserId: null, temporaryExpiresAt: null, secretCodeHash: null, secretCodeExpiresAt: null, updatedAt: new Date() }).where(eq(ryzeTelegramAccess.userId, userId));
+  return getTelegramControl(userId);
+}
+
+export async function setTelegramAdminUserId(userId: number, adminTelegramUserId: string) {
+  const db = await requireDb();
+  await db.insert(ryzeTelegramAccess).values({ userId, adminTelegramUserId }).onConflictDoUpdate({ target: ryzeTelegramAccess.userId, set: { adminTelegramUserId, updatedAt: new Date() } });
+  return getTelegramControl(userId);
+}
+
+export async function issueTelegramSecretCode(userId: number) {
+  const db = await requireDb();
+  const code = `RYZE-AUTH-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
+  const expires = new Date(Date.now() + 15 * 60 * 1000);
+  await db.insert(ryzeTelegramAccess).values({ userId, secretCodeHash: hashTelegramCode(code), secretCodeExpiresAt: expires }).onConflictDoUpdate({ target: ryzeTelegramAccess.userId, set: { secretCodeHash: hashTelegramCode(code), secretCodeExpiresAt: expires, updatedAt: new Date() } });
+  await addTelegramLog(userId, { direction: "system", messagePreview: "Temporary Telegram authorization code generated.", status: "code-issued" });
+  return { code, expiresAt: expires };
+}
+
+export async function authorizeTelegramSender(userId: number, telegramUserId: string, codeText: string) {
+  const db = await requireDb();
+  const [access] = await db.select().from(ryzeTelegramAccess).where(eq(ryzeTelegramAccess.userId, userId)).limit(1);
+  const valid = Boolean(access?.secretCodeHash && access.secretCodeExpiresAt && access.secretCodeExpiresAt.getTime() > Date.now() && safeTelegramEqual(hashTelegramCode(codeText.trim()), access.secretCodeHash));
+  if (!valid) return false;
+  const expires = new Date(Date.now() + 60 * 60 * 1000);
+  await db.update(ryzeTelegramAccess).set({ temporaryTelegramUserId: telegramUserId, temporaryExpiresAt: expires, secretCodeHash: null, secretCodeExpiresAt: null, updatedAt: new Date() }).where(eq(ryzeTelegramAccess.userId, userId));
+  await addTelegramLog(userId, { direction: "system", telegramUserId, messagePreview: "Temporary Telegram sender authorization accepted.", status: "temporary-authorized" });
+  return true;
+}
+
+export async function isTelegramSenderAllowed(userId: number, telegramUserId: string) {
+  const db = await requireDb();
+  const [access] = await db.select().from(ryzeTelegramAccess).where(eq(ryzeTelegramAccess.userId, userId)).limit(1);
+  if (access?.adminTelegramUserId === telegramUserId) return true;
+  return Boolean(access?.temporaryTelegramUserId === telegramUserId && access.temporaryExpiresAt && access.temporaryExpiresAt.getTime() > Date.now());
+}
+
+export async function addTelegramLog(userId: number, input: { direction: "incoming" | "outgoing" | "system"; telegramUserId?: string; chatId?: string; messagePreview: string; status: string; accountId?: number }) {
+  const db = await requireDb();
+  await db.insert(ryzeTelegramLogs).values({ userId, accountId: input.accountId ?? null, direction: input.direction, telegramUserId: input.telegramUserId ?? null, chatId: input.chatId ?? null, messagePreview: input.messagePreview.slice(0, 500), status: input.status });
 }
 
 export async function updateSafeSettings(userId: number, input: { provider: string; ryzeModel: string; nerdModel: string; demoMode: boolean }) {
