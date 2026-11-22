@@ -2,7 +2,7 @@
 
 ## What this package does
 
-This is a local-first starter for the target Windows computer. The dashboard and SQLite database run on the laptop. Uploaded and generated file bytes are stored in a private local folder. The web server listens only on `127.0.0.1`; it does not open a Windows Firewall port. No Docker or hosted database/object storage is required.
+This is a local-first starter for the target Windows computer. The dashboard and SQLite database run on the computer. Uploaded and generated file bytes are stored in a private local folder. The web server listens only on `127.0.0.1`; it does not open a Windows Firewall port. No Docker or hosted database/object storage is required.
 
 The ZIP contains no owner password, FreeLLMAPI key, Telegram session, or other user credentials. Without gateway settings, the local safe demo is available. OpenCode + FreeLLMAPI text chat can be configured after installation using your actual gateway endpoint and key. Telegram account setup, live replies, and owner approval for outbound actions remain disabled/incomplete.
 
@@ -31,11 +31,11 @@ Do not run `Install-Ryze.cmd` over an existing installation; it intentionally re
 
 Double-click `Start-Ryze.cmd` in the **installed folder**. It starts OpenCode and the Ryze server in the background, waits for their local health checks, and opens `http://127.0.0.1:3777/`. The command window intentionally remains open with startup status or errors; press a key to close the diagnostic window. Closing that window does not stop the background services. Use `Stop-Ryze.cmd` to stop them.
 
-Enter the owner password you set during installation. Keep the address as `127.0.0.1`; do not replace it with the laptop's network IP or expose the port to other devices. Logs are under `%LOCALAPPDATA%\RyzeFramework\logs`.
+Enter the owner password you set during installation. Keep the address as `127.0.0.1`; do not replace it with the computer's network IP or expose the port to other devices. Logs are under `%LOCALAPPDATA%\RyzeFramework\logs`.
 
 ## Configure OpenCode + FreeLLMAPI text chat
 
-This step requires your own OpenAI-compatible FreeLLMAPI API base URL, model ID, and unified API key. The correct endpoint depends on your FreeLLMAPI account/service; this package does not guess it. For hosted gateways, use the HTTPS API base URL supplied by that service, including its API path (often `/v1`). HTTP is accepted only for a gateway running on this laptop's loopback address.
+This step requires your own OpenAI-compatible FreeLLMAPI API base URL, model ID, and unified API key. The correct endpoint depends on your FreeLLMAPI account/service; this package does not guess it. For hosted gateways, use the HTTPS API base URL supplied by that service, including its API path (often `/v1`). HTTP is accepted only for a gateway running on this computer's loopback address.
 
 1. Get the exact API base URL, model ID, and unified key from your FreeLLMAPI provider. Do not paste the key into this chat or a public document.
 2. Stop Ryze with `Stop-Ryze.cmd` if it is running.
@@ -81,4 +81,4 @@ To restore, stop Ryze and preserve the current `%LOCALAPPDATA%\RyzeFramework` fo
 - If port 3777 is occupied, stop the other program or ask for help before changing configuration. Do not delete the database to fix an integration issue.
 - If startup reports a migration error, stop and keep the data folder intact rather than deleting it.
 
-The owner has now confirmed successful startup, sign-in, and one model-backed OpenCode/FreeLLMAPI text-chat request on the physical target Windows computer. Repeat start/stop, backup/restore, and ACL behavior for newly created files remain to be verified from the laptop. After installation, share any error text here (remove personal paths if you prefer); do not share `.env`, the database, backups, Telegram session files, or passwords.
+The owner has now confirmed successful startup, sign-in, and one model-backed OpenCode/FreeLLMAPI text-chat request on the physical target Windows computer. Repeat start/stop, backup/restore, and ACL behavior for newly created files remain to be verified from the computer. After installation, share any error text here (remove personal paths if you prefer); do not share `.env`, the database, backups, Telegram session files, or passwords.

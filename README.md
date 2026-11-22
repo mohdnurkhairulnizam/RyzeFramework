@@ -2,7 +2,7 @@
 
 RyzeFramework is a single-owner local starter for the target Windows computer. The local build uses an embedded SQLite database, stores file bytes in the user's local application-data folder, and binds the server to `127.0.0.1`. It does not require Docker or a cloud database.
 
-The four-stage source design is in [`docs/origin-blueprint.md`](docs/origin-blueprint.md). The current readiness assessment and ordered Stage 1 checklist are in [`docs/blueprint-implementation.md`](docs/blueprint-implementation.md) and [`docs/stage-1-task-breakdown.md`](docs/stage-1-task-breakdown.md).
+The four-stage source design is in [`docs/origin-blueprint.md`](docs/origin-blueprint.md). The current readiness assessment and ordered Stage 1 checklist are in [`docs/blueprint-implementation.md`](docs/blueprint-implementation.md) and [`docs/stage-1-task-breakdown.md`](docs/stage-1-task-breakdown.md). The operating procedures and stage-by-stage verification guide are in [`docs/ryze-playbook.md`](docs/ryze-playbook.md).
 
 ## Windows installation
 
@@ -13,7 +13,7 @@ Application data is kept outside the program folder under `%LOCALAPPDATA%\RyzeFr
 ## Current capability boundary
 
 - **Safe local demo:** allowlisted memory, recall, metadata-inspection, generated-Markdown, and retry-demo workflows are available using local storage.
-- **OpenCode + FreeLLMAPI text chat:** the local OpenCode sidecar and Ryze adapter are implemented. The owner must enter the actual OpenAI-compatible gateway HTTPS base URL (or a loopback URL), exact model ID, and unified API key using `Configure-FreeLLMAPI.cmd`. This ZIP contains no gateway URL or credentials. The dashboard reports both service statuses. Chat prompts leave the laptop for the configured gateway. OpenCode tool permissions are denied, so chat cannot run shell commands, access local files, or send messages.
+- **OpenCode + FreeLLMAPI text chat:** the local OpenCode sidecar and Ryze adapter are implemented. The owner must enter the actual OpenAI-compatible gateway HTTPS base URL (or a loopback URL), exact model ID, and unified API key using `Configure-FreeLLMAPI.cmd`. This ZIP contains no gateway URL or credentials. The dashboard reports both service statuses. Chat prompts leave the computer for the configured gateway. OpenCode tool permissions are denied, so chat cannot run shell commands, access local files, or send messages.
 - **Not enabled:** Telegram account setup, inbound authorization, outbound replies, and owner approval for external actions remain incomplete. The ZIP does not configure a Telegram session. A demo result is not a live model answer or live Telegram result.
 
 The FreeLLMAPI key is stored in the protected local `.env`; it is not encrypted by Ryze and may be included in a user-created backup. Keep backups private.

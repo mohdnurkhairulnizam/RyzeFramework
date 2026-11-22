@@ -22,14 +22,14 @@ This checklist turns the origin blueprint and current repository status into an 
 
 - [x] Confirm the execution target and local data architecture: the owner selected the target Windows computer; this package uses local SQLite and a local files directory, so it does not require hosted database/object storage endpoints.
 - [x] Document supported installer runtimes: 64-bit Windows 10+, Node.js 22 or 24 LTS, pnpm 10.18.0. The optional Python/Telethon worker is not installed by this ZIP.
-- [ ] Complete remaining target-laptop validation: confirm runtime versions, repeat start/stop, backup, restore, and ACL inheritance for newly created files. Owner sign-in and one OpenCode/FreeLLMAPI chat request are now verified.
+- [ ] Complete remaining target-computer validation: confirm runtime versions, repeat start/stop, backup, restore, and ACL inheritance for newly created files. Owner sign-in and one OpenCode/FreeLLMAPI chat request are now verified.
 - [ ] Create a reviewed baseline commit/tag before changing execution, worker, or configuration behavior. Preserve a way to restore the current safe-demo behavior.
 - [x] Inventory local installer settings without reading secret values; keep the generated `.env`, database, file bytes, and Telegram session data out of Git.
 - [x] Document local config/data paths, Windows account ACLs, stop-before-backup steps, and a database/files/config backup helper in `docs/windows-installation.md`.
-- [x] Choose local SQLite plus a local files directory instead of a hosted database/object store for this laptop install; no hosted endpoints are configured by the package.
+- [x] Choose local SQLite plus a local files directory instead of a hosted database/object store for this computer install; no hosted endpoints are configured by the package.
 - [ ] Verify remaining Windows ACL behavior and the restore procedure on the target Windows computer; create and verify the first user-controlled backup. Existing DB/WAL/SHM files with missing effective ACL entries were repaired in place with `icacls /reset`.
 
-**Exit condition:** The target architecture and secret location are documented; Workstream 0 remains open until laptop runtime/ACL/backup verification and a reviewed code rollback point are complete.
+**Exit condition:** The target architecture and secret location are documented; Workstream 0 remains open until computer runtime/ACL/backup verification and a reviewed code rollback point are complete.
 
 ## Workstream 1 — Define runtime configuration and feature gates
 
@@ -71,7 +71,7 @@ This checklist turns the origin blueprint and current repository status into an 
 
 **Exit condition:** A harmless task demonstrably travels through OpenCode → FreeLLMAPI → selected model, returns a validated result, obeys permissions, and records success or failure accurately.
 
-The implementation now provides text-only chat and denies all OpenCode tool permissions. The endpoint and key are configured locally, and one real-laptop model request succeeded. Workstream 3 remains open: broad task planning/execution, structured action proposals, schema validation, transient-failure behavior, routing metadata, and the full permissions-aware acceptance path have not been demonstrated.
+The implementation now provides text-only chat and denies all OpenCode tool permissions. The endpoint and key are configured locally, and one real-computer model request succeeded. Workstream 3 remains open: broad task planning/execution, structured action proposals, schema validation, transient-failure behavior, routing metadata, and the full permissions-aware acceptance path have not been demonstrated.
 
 ## Workstream 4 — Complete Telegram user-account setup safely
 
@@ -144,7 +144,7 @@ The origin blueprint's nine completion criteria must each have evidence:
 
 Completed in the current sandbox: preserved the origin blueprint and checklist; confirmed the target Windows computer target and local storage choice; converted the runtime schema/driver to SQLite with a separate first-run migration; replaced hosted file storage with atomic writes in a local directory plus authenticated owner-scoped downloads; added localhost-only server binding, scrypt owner-password bootstrap, Host/Origin checks, lockout, and Windows install/start/stop/backup helpers; removed analytics from the local build; disabled automatic Telegram replies; and wrote the installation/backup guide. `pnpm install --frozen-lockfile`, `pnpm check`, 20 Vitest tests across 10 files, 4 worker tests, and `pnpm build:local` pass. A disposable production smoke test verified localhost health, login, SQLite migration, local owner creation, and default safe settings.
 
-The package has **not** been run on the physical target Windows computer; Windows PowerShell scripts and ACL behavior are therefore unverified on target. The generated ZIP will contain source/scripts only (no credentials or user data); installation builds dependencies on the laptop and needs internet access. OpenCode/FreeLLMAPI endpoints and model, optional Telegram API/session setup, explicit outbound approval, and live end-to-end checks remain incomplete. No credentials were read or changed, and no external integrations were enabled.
+The package has **not** been run on the physical target Windows computer; Windows PowerShell scripts and ACL behavior are therefore unverified on target. The generated ZIP will contain source/scripts only (no credentials or user data); installation builds dependencies on the computer and needs internet access. OpenCode/FreeLLMAPI endpoints and model, optional Telegram API/session setup, explicit outbound approval, and live end-to-end checks remain incomplete. No credentials were read or changed, and no external integrations were enabled.
 
 **Historical next action (15 November):** install the initial ZIP and verify start/sign-in/backup on the target Windows computer.
 
@@ -154,7 +154,7 @@ Implemented the OpenCode sidecar lifecycle alongside the Ryze Node server; local
 
 Verification in the sandbox: `pnpm check`, 32 Vitest tests, 4 worker tests, and `pnpm build:local` pass. OpenCode CLI 2.3.0 `debug config` accepts the managed config and recognizes the dedicated system instruction plus deny-all tool permissions. A separate OpenCode-to-mock-FreeLLMAPI smoke test authenticated on the loopback API, created a session, sent a streamed OpenAI-compatible request, and received the mock assistant reply. A live request against the user's real FreeLLMAPI endpoint has **not** been tested; no real endpoint/model/key has been supplied, and the physical target Windows computer is not connected to this session. No real gateway credentials were used.
 
-**Next action:** when you have the FreeLLMAPI API base URL and exact model ID, enter them and the key privately on the target Windows computer with `Configure-FreeLLMAPI.cmd`, then use a harmless test prompt and share only the status/error text. Install the revised ZIP and test double-click startup on that laptop; do not send the key or `.env`. Telegram outbound remains disabled until the owner-approval workflow is implemented.
+**Next action:** when you have the FreeLLMAPI API base URL and exact model ID, enter them and the key privately on the target Windows computer with `Configure-FreeLLMAPI.cmd`, then use a harmless test prompt and share only the status/error text. Install the revised ZIP and test double-click startup on that computer; do not send the key or `.env`. Telegram outbound remains disabled until the owner-approval workflow is implemented.
 
 ## Suggested execution order
 
@@ -178,8 +178,8 @@ The owner reports that the latest Windows ZIP installed and Ryze startup succeed
 
 ## Progress checkpoint — 22 November 2026: OpenCode–FreeLLMAPI chat verified
 
-The owner configured the HP installation to use the local FreeLLMAPI API base URL `http://127.0.0.1:31415/v1`; the model ID and unified key were saved only in the laptop's protected `.env`. The exact selected model ID was not shared, and no key value is recorded here. The owner reported OpenCode `Running` and FreeLLMAPI `Connected`, signed in, and submitted a harmless SQLite explanation request. Ryze marked the task `COMPLETED`; the activity log records routing through OpenCode and FreeLLMAPI, the chat-only deny-all tool policy, and the returned model text. This is evidence that a real model-backed text response traversed the configured path.
+The owner configured the HP installation to use the local FreeLLMAPI API base URL `http://127.0.0.1:31415/v1`; the model ID and unified key were saved only in the computer's protected `.env`. The exact selected model ID was not shared, and no key value is recorded here. The owner reported OpenCode `Running` and FreeLLMAPI `Connected`, signed in, and submitted a harmless SQLite explanation request. Ryze marked the task `COMPLETED`; the activity log records routing through OpenCode and FreeLLMAPI, the chat-only deny-all tool policy, and the returned model text. This is evidence that a real model-backed text response traversed the configured path.
 
 Two follow-up requests asked for two separate Markdown bullet lines; both replies placed the points on one line. The chat round-trip worked, but those tests did not pass the requested formatting. The exact upstream provider/model route was not identified; Ryze does not display the FreeLLMAPI `X-Routed-Via` response header, and no direct SDK test has yet been run.
 
-**Stage 1 remains incomplete.** This verifies text chat only, not OpenCode's goal-oriented planning/tool execution, safe file-content processing, Telegram, the outbound approval gate, or all nine origin acceptance criteria. The immediate next step is to finish Workstream 0 on the laptop: test repeat start/stop, create and verify a private backup, and confirm a restore procedure using a preserved copy. Then proceed through the checklist's runtime configuration and server-enforced permission/approval work before considering narrowly scoped tools. Keep Telegram outbound and arbitrary OpenCode tools disabled until those controls pass.
+**Stage 1 remains incomplete.** This verifies text chat only, not OpenCode's goal-oriented planning/tool execution, safe file-content processing, Telegram, the outbound approval gate, or all nine origin acceptance criteria. The immediate next step is to finish Workstream 0 on the computer: test repeat start/stop, create and verify a private backup, and confirm a restore procedure using a preserved copy. Then proceed through the checklist's runtime configuration and server-enforced permission/approval work before considering narrowly scoped tools. Keep Telegram outbound and arbitrary OpenCode tools disabled until those controls pass.

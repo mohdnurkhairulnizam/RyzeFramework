@@ -855,7 +855,7 @@ function Workspace({
             </div>
             <p className="mt-3 text-xs leading-5 text-slate-400">
               {localBuild
-                ? "OpenCode runs on this laptop with tool permissions denied. Model prompts are routed through FreeLLMAPI to its configured provider(s)."
+                ? "OpenCode runs on this computer with tool permissions denied. Model prompts are routed through FreeLLMAPI to its configured provider(s)."
                 : "This hosted environment intentionally never runs shell commands, exposes credentials, or contacts external delivery channels."}
             </p>
             <div className="mt-4 rounded-xl bg-black/20 px-3 py-2 text-[11px] leading-5 text-slate-500">
@@ -1275,7 +1275,7 @@ function SettingsView({
         title="Sandbox settings"
         copy={
           localBuild
-            ? "Configure the local OpenCode + FreeLLMAPI chat integration and review data/backup locations. API keys are entered on this laptop and are never shown in this dashboard."
+            ? "Configure the local OpenCode + FreeLLMAPI chat integration and review data/backup locations. API keys are entered on this computer and are never shown in this dashboard."
             : "This hosted test environment persists safe display settings only. Credentials, shell access, external LLM, email, and Telegram channels are intentionally not available here."
         }
       />
@@ -1389,8 +1389,8 @@ function SettingsView({
           </section>
           <section className="rounded-[1.5rem] border border-emerald-300/15 bg-emerald-300/[0.04] p-5">
             <div className="flex items-center gap-2 text-sm font-semibold text-emerald-100">
-              <ClipboardCheck className="size-4 text-emerald-300" /> target Windows computer
-              baseline
+              <ClipboardCheck className="size-4 text-emerald-300" /> target
+              Windows computer baseline
             </div>
             <p className="mt-3 text-xs leading-5 text-slate-400">
               One safe button creates a private backup, rehearses a restore
@@ -1445,7 +1445,7 @@ function SettingsView({
           ) : null}
           <section className="rounded-[1.5rem] border border-cyan-300/10 bg-cyan-300/[0.04] p-5">
             <div className="flex items-center gap-2 text-sm font-semibold text-cyan-100">
-              <Network className="size-4 text-cyan-300" /> Laptop migration
+              <Network className="size-4 text-cyan-300" /> Computer migration
             </div>
             <p className="mt-3 text-xs leading-5 text-slate-400">
               Export all database-backed sessions, tasks, logs, memory, skills,

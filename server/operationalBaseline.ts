@@ -98,9 +98,18 @@ async function aclReport(targets: string[]) {
 
 async function protectBackupDirectory(target: string) {
   if (process.platform !== "win32") return;
-  const identity = (process.env.USERDOMAIN ? `${process.env.USERDOMAIN}\\` : "") + (process.env.USERNAME || "");
-  if (!identity) throw new Error("Windows account identity was not available to protect the backup.");
-  await execFileAsync("icacls.exe", [target, "/inheritance:r", "/grant:r", `${identity}:(OI)(CI)F`, "/T", "/C"], { windowsHide: true, maxBuffer: 64 * 1024 });
+  const identity =
+    (process.env.USERDOMAIN ? `${process.env.USERDOMAIN}\\` : "") +
+    (process.env.USERNAME || "");
+  if (!identity)
+    throw new Error(
+      "Windows account identity was not available to protect the backup."
+    );
+  await execFileAsync(
+    "icacls.exe",
+    [target, "/inheritance:r", "/grant:r", `${identity}:(OI)(CI)F`, "/T", "/C"],
+    { windowsHide: true, maxBuffer: 64 * 1024 }
+  );
 }
 
 export async function runOperationalBaseline(userId: number) {
