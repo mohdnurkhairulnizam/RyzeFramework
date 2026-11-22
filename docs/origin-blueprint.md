@@ -46,7 +46,7 @@ The development approach is to establish the architecture and specifications fir
 The initial development environment is:
 
 Component| Specification
-Primary computer| HP laptop
+Primary computer| target Windows computer
 Operating system| Windows 10 Home Single Language
 Processor| Intel Core i5-7200U
 RAM| 12 GB
@@ -787,7 +787,7 @@ Its responsibilities include:
 - Managing duplication.
 - Recording the origin of each copy.
 
-The initial Master installation is intended to reside on the HP laptop.
+The initial Master installation is intended to reside on the target Windows computer.
 
 4.3 Copy Types
 

@@ -287,7 +287,7 @@ export async function runOperationalBaseline(userId: number) {
           ? "FAIL"
           : "PASS",
       detail: aclSkipped
-        ? "This sandbox is not Windows; run the same button on the HP laptop for the real icacls result."
+        ? "This sandbox is not Windows; run the same button on the target Windows computer for the real icacls result."
         : "icacls completed for the live data, database, logs, and test-file paths.",
     });
 

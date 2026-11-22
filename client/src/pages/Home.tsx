@@ -1389,7 +1389,7 @@ function SettingsView({
           </section>
           <section className="rounded-[1.5rem] border border-emerald-300/15 bg-emerald-300/[0.04] p-5">
             <div className="flex items-center gap-2 text-sm font-semibold text-emerald-100">
-              <ClipboardCheck className="size-4 text-emerald-300" /> HP laptop
+              <ClipboardCheck className="size-4 text-emerald-300" /> target Windows computer
               baseline
             </div>
             <p className="mt-3 text-xs leading-5 text-slate-400">

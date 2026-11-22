@@ -2,7 +2,7 @@
 
 ## What this package does
 
-This is a local-first starter for the HP Windows 10 laptop. The dashboard and SQLite database run on the laptop. Uploaded and generated file bytes are stored in a private local folder. The web server listens only on `127.0.0.1`; it does not open a Windows Firewall port. No Docker or hosted database/object storage is required.
+This is a local-first starter for the target Windows computer. The dashboard and SQLite database run on the laptop. Uploaded and generated file bytes are stored in a private local folder. The web server listens only on `127.0.0.1`; it does not open a Windows Firewall port. No Docker or hosted database/object storage is required.
 
 The ZIP contains no owner password, FreeLLMAPI key, Telegram session, or other user credentials. Without gateway settings, the local safe demo is available. OpenCode + FreeLLMAPI text chat can be configured after installation using your actual gateway endpoint and key. Telegram account setup, live replies, and owner approval for outbound actions remain disabled/incomplete.
 
@@ -81,4 +81,4 @@ To restore, stop Ryze and preserve the current `%LOCALAPPDATA%\RyzeFramework` fo
 - If port 3777 is occupied, stop the other program or ask for help before changing configuration. Do not delete the database to fix an integration issue.
 - If startup reports a migration error, stop and keep the data folder intact rather than deleting it.
 
-The owner has now confirmed successful startup, sign-in, and one model-backed OpenCode/FreeLLMAPI text-chat request on the physical HP laptop. Repeat start/stop, backup/restore, and ACL behavior for newly created files remain to be verified from the laptop. After installation, share any error text here (remove personal paths if you prefer); do not share `.env`, the database, backups, Telegram session files, or passwords.
+The owner has now confirmed successful startup, sign-in, and one model-backed OpenCode/FreeLLMAPI text-chat request on the physical target Windows computer. Repeat start/stop, backup/restore, and ACL behavior for newly created files remain to be verified from the laptop. After installation, share any error text here (remove personal paths if you prefer); do not share `.env`, the database, backups, Telegram session files, or passwords.

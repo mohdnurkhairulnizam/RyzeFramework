@@ -1,6 +1,6 @@
 # RyzeFramework
 
-RyzeFramework is a single-owner local starter for the HP Windows 10 laptop. The local build uses an embedded SQLite database, stores file bytes in the user's local application-data folder, and binds the server to `127.0.0.1`. It does not require Docker or a cloud database.
+RyzeFramework is a single-owner local starter for the target Windows computer. The local build uses an embedded SQLite database, stores file bytes in the user's local application-data folder, and binds the server to `127.0.0.1`. It does not require Docker or a cloud database.
 
 The four-stage source design is in [`docs/origin-blueprint.md`](docs/origin-blueprint.md). The current readiness assessment and ordered Stage 1 checklist are in [`docs/blueprint-implementation.md`](docs/blueprint-implementation.md) and [`docs/stage-1-task-breakdown.md`](docs/stage-1-task-breakdown.md).
 

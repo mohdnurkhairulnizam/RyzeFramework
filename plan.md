@@ -2,7 +2,7 @@
 
 ## Deliverable
 
-Prepare a manual-install ZIP for the owner's HP Windows 10 laptop. It contains the Ryze source tree, locked dependencies, and double-click Windows install/start/stop/backup helpers. The install script builds the production app on the laptop; the ZIP deliberately excludes sandbox `node_modules`, Linux `dist`, `.git`, credentials, and user data. It does not bundle Node.js or install system software. Internet access is required during dependency installation.
+Prepare a manual-install ZIP for the owner's target Windows computer. It contains the Ryze source tree, locked dependencies, and double-click Windows install/start/stop/backup helpers. The install script builds the production app on the laptop; the ZIP deliberately excludes sandbox `node_modules`, Linux `dist`, `.git`, credentials, and user data. It does not bundle Node.js or install system software. Internet access is required during dependency installation.
 
 ## Local-first architecture
 
@@ -24,4 +24,4 @@ Prepare a manual-install ZIP for the owner's HP Windows 10 laptop. It contains t
 
 ## Verification boundary
 
-The lockfile install, TypeScript check, 20 Vitest tests across 10 files, 4 worker safety tests, standalone build, local auth/config tests, and a disposable production health/login/SQLite smoke test passed in the cloud sandbox. The PowerShell scripts, Node native SQLite installation, ACLs, browser UI, backup/restore, and application behavior have not been exercised on the physical HP laptop. The package guide must retain this limitation until the owner runs it.
+The lockfile install, TypeScript check, 20 Vitest tests across 10 files, 4 worker safety tests, standalone build, local auth/config tests, and a disposable production health/login/SQLite smoke test passed in the cloud sandbox. The PowerShell scripts, Node native SQLite installation, ACLs, browser UI, backup/restore, and application behavior have not been exercised on the physical target Windows computer. The package guide must retain this limitation until the owner runs it.
