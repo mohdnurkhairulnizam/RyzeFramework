@@ -6,7 +6,7 @@ The origin blueprint defines Stage 1 as the operational foundation for a persona
 
 This document maps that Stage 1 design to the code currently in this repository. It distinguishes code that exists from code that has been configured and live-verified. A passing build or a test of the safe demo does not prove that the live Telegram, OpenCode, or model-provider path is operational. The origin blueprint itself says a stage is not complete until its acceptance criteria have passed.
 
-**Assessment:** Stage 1 has a tested local dashboard/database/file-storage foundation and a Windows ZIP installation path. The owner reports the latest package is installed on the HP laptop and the dashboard now starts after repairing ACLs on existing SQLite files. It is **partially implemented, not operationally complete**: sign-in, backup/restore, and repeat start/stop still need verification; the real external model path is not configured/tested; and live Telegram delivery remains unavailable pending owner setup and safety verification.
+**Assessment:** Stage 1 has a tested local dashboard/database/file-storage foundation and a Windows ZIP installation path. On the HP laptop the owner repaired ACLs on existing SQLite files, started Ryze, signed in, and received a real text response through OpenCode and the local FreeLLMAPI gateway. This verifies the text-chat path, not authorized task/tool execution. Stage 1 is **partially implemented, not operationally complete**: repeat start/stop, backup/restore, upstream provider identity, tool execution, Telegram communication, owner approvals, and the remaining acceptance checks are still open.
 
 ## What Stage 1 means in the origin blueprint
 
@@ -69,7 +69,7 @@ This provides the hosted product shell and per-user task history. It is not yet 
 
 ### Safe execution boundary — implemented for the demo allowlist
 
-`determineDemoAction` classifies supported demo intents (`remember`, `recall`, `inspect_upload`, `generate_note`, `retry_demo`, and `safe_analysis`) and blocks recognized shell, credential, and external-delivery requests (`server/ryzeDemo.ts`). The request path does not expose arbitrary shell execution or a general-purpose tool runner. External LLM, email, and Telegram capabilities are kept disabled in user-facing safe settings (`server/db.ts`); the classifier and tests confirm risky requests are blocked.
+`determineDemoAction` classifies supported demo intents (`remember`, `recall`, `inspect_upload`, `generate_note`, `retry_demo`, and `safe_analysis`) and blocks recognized shell, credential, and external-delivery requests (`server/ryzeDemo.ts`). The demo request path does not expose arbitrary shell execution or a general-purpose tool runner. Separately, a configured OpenCode adapter now handles text-only `safe_analysis` prompts through FreeLLMAPI; one real request returned a model answer on the HP laptop. OpenCode tools remain deny-all, and the safe settings do not enable general external actions.
 
 This is a deliberately constrained demo execution boundary, not a complete L0–L4 authorization framework for arbitrary tools. It does not yet provide a configurable per-tool permission registry or a general owner-approval workflow for high-impact actions.
 
@@ -95,15 +95,15 @@ The code is not proof of a live connection and the standalone installer does not
 
 ### Tests and build evidence — passed in this workspace
 
-At the current checkout, `pnpm install --frozen-lockfile`, `pnpm check`, 32 Vitest tests across 12 files, 4 Python worker safety tests, and `pnpm build:local` passed. An isolated production-process smoke test exercised localhost health, password login, SQLite migrations, owner creation, and default settings. The owner now reports successful dashboard startup on the HP laptop after correcting ACLs on existing SQLite files. This does not yet verify owner sign-in, backup/restore, real FreeLLMAPI, Telegram credentials/session, an approval workflow, or report delivery to a real account. The build has one non-fatal large JavaScript chunk warning.
+At the current checkout, `pnpm install --frozen-lockfile`, `pnpm check`, 32 Vitest tests across 12 files, 4 Python worker safety tests, and `pnpm build:local` passed. An isolated production-process smoke test exercised localhost health, password login, SQLite migrations, owner creation, and default settings. On the HP laptop, the owner reports successful startup after correcting existing SQLite file ACLs, signed in, and completed one harmless model-backed chat through OpenCode and the configured local FreeLLMAPI gateway; the resulting task and assistant answer appeared in the activity log. Repeat start/stop, backup/restore, exact upstream model/provider identity, provider-failure handling, tool execution, Telegram credentials/session, owner approval, and report delivery remain unverified. The build has one non-fatal large JavaScript chunk warning.
 
 ## Origin-to-implementation readiness map
 
 | Stage 1 requirement | Current implementation | Readiness |
 | --- | --- | --- |
-| Receive instructions and establish sessions | Password-protected localhost dashboard and worker inbound endpoint create scoped tasks/sessions | Local dashboard tested in sandbox; physical Windows and Telegram paths await verification |
-| Interpret objectives and plan/decompose tasks | Fixed safe action classifier and one-step Ryze/Nerd demonstration logs | Demo-only; OpenCode orchestration and general task planning are not implemented/enabled |
-| Select and call AI model through gateway | Settings UI/schema has safe display/provider fields, but external LLM is forced disabled | Not ready; no verified OpenCode–FreeLLMAPI–model path in this implementation |
+| Receive instructions and establish sessions | Password-protected localhost dashboard and worker inbound endpoint create scoped tasks/sessions | HP install, startup, sign-in, and one chat-task submission are user-verified; repeat lifecycle/backup and Telegram paths remain open |
+| Interpret objectives and plan/decompose tasks | Fixed safe action classifier and one-step Ryze/Nerd demonstration logs; text-chat prompt routed to OpenCode | Demo classification and chat work; general OpenCode planning/decomposition and goal-oriented execution are not enabled |
+| Select and call AI model through gateway | Local OpenCode adapter points to the configured FreeLLMAPI loopback base URL; one real chat returned text | Text request verified on HP; exact model ID/upstream provider and `X-Routed-Via` metadata were not captured |
 | Check authorization/permissions | Safe action classifier blocks selected risky categories; user ownership enforced | Partial; no complete L0–L4 policy engine or explicit approval flow for consequential operations |
 | Execute approved tools | Safe local demo operations: memory note/search, metadata inspection, deterministic Markdown generation | Partial; no general approved-tools runner; shell and integrations intentionally unavailable |
 | Telegram user-account communication | Telethon worker, worker API, authentication/allowlist/session-lock code | Code ready for configured testing; live operation not yet proven. Resolve outbound approval/suppression gap first |
@@ -116,8 +116,8 @@ At the current checkout, `pnpm install --frozen-lockfile`, `pnpm check`, 32 Vite
 ## Stage 1 gates before calling it operational
 
 1. **Resolve outbound approval.** Implement and test explicit authorization for every Telegram outbound operation, including pause/stop and suppression checks immediately before sending. Until then, leave live Telegram reply delivery disabled.
-2. **Finalize Stage 1 runtime configuration.** Define versioned non-secret configuration for runtime/provider/model/worker values and a separate secret contract. The origin lists OpenCode configuration and FreeLLMAPI endpoint/model as unresolved. Do not silently substitute providers or default to external calls.
-3. **Implement and verify the chosen execution chain.** Connect OpenCode to the selected FreeLLMAPI model through a replaceable gateway, with explicit permission checks outside model output. Test controlled failures and refusal paths without granting shell access by default.
+2. **Finalize Stage 1 runtime configuration.** Define versioned non-secret configuration for runtime/provider/model/worker values and a separate secret contract. The owner's local FreeLLMAPI base URL and key are configured and one harmless text request succeeded; the exact model ID and routed provider were not recorded. Do not silently substitute providers or default to external calls.
+3. **Extend the verified chat path into safe task execution.** The OpenCode–FreeLLMAPI text-chat round trip now works. Keep permission checks outside model output; before any tools run, define structured action proposals, a narrowly scoped allowlist, approval requirements, and rejection behavior. Test controlled failures and refusals without granting shell access by default.
 4. **Complete worker deployment prerequisites.** Install Telethon in the owner's chosen local environment; configure the server owner/token values and local worker environment; authorize the owner account; configure approved chat IDs; verify session files stay local and are excluded from backups/exports unless encrypted migration is later approved.
 5. **Run a staged end-to-end acceptance test.** First exercise heartbeat/status and inbound test messages with outbound disabled. Then test a narrowly approved reply to an allowlisted chat. Test unauthorized chat rejection, missing/invalid worker token, unauthorized session, pause/stop, transient API failure/backoff, duplicate/replayed command behavior, sanitized logs, and outbound approval. Confirm actual delivered content and task status.
 6. **Verify file processing and delivery.** Exercise representative allowed formats and the size ceiling against the actual storage deployment; prove generated report retrieval/delivery and that uploaded content is treated as data, never executable instructions.
@@ -126,7 +126,7 @@ At the current checkout, `pnpm install --frozen-lockfile`, `pnpm check`, 32 Vite
 
 ## Current disposition
 
-Continue Stage 1 from the local safe starter: verify owner sign-in, repeat start/stop, backup, and restore on the HP laptop, then configure and test the origin's OpenCode–FreeLLMAPI execution chain with explicit feature gates. Do not claim Stage 1 complete or enable external actions. A separate server-enforced Telegram approval/pause/stop/suppression workflow must pass before any outbound message is possible. Current local password auth, SQLite persistence, file storage, demo tasks, retries, export, and build/test foundations are present; the first successful laptop startup is reported, but live integrations and remaining target-device acceptance checks are not.
+Immediate next step: finish Workstream 0 on the HP laptop by testing repeat start/stop and creating/verifying a private backup and a restore procedure using a preserved copy. Owner sign-in and one model-backed OpenCode–FreeLLMAPI chat have already been verified. Then follow the workstream order: finalize versioned runtime settings/feature gates, and implement server-side action permissions and owner approvals before considering narrowly scoped tools. Do not claim Stage 1 complete or enable Telegram outbound. The current build provides real text chat plus safe local demo actions, not the origin blueprint's authorized goal-oriented agent; the remaining deployment and all other acceptance checks must still pass.
 
 ## Source documents
 

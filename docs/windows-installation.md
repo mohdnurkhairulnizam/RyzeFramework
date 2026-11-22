@@ -81,4 +81,4 @@ To restore, stop Ryze and preserve the current `%LOCALAPPDATA%\RyzeFramework` fo
 - If port 3777 is occupied, stop the other program or ask for help before changing configuration. Do not delete the database to fix an integration issue.
 - If startup reports a migration error, stop and keep the data folder intact rather than deleting it.
 
-The Windows scripts and ACL behavior have not yet been verified on the physical HP laptop because that laptop is not connected to this task. After installation, share any error text here (remove personal paths if you prefer); do not share `.env`, the database, backups, Telegram session files, or passwords.
+The owner has now confirmed successful startup, sign-in, and one model-backed OpenCode/FreeLLMAPI text-chat request on the physical HP laptop. Repeat start/stop, backup/restore, and ACL behavior for newly created files remain to be verified from the laptop. After installation, share any error text here (remove personal paths if you prefer); do not share `.env`, the database, backups, Telegram session files, or passwords.
