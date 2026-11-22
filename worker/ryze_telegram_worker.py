@@ -250,13 +250,23 @@ class Worker:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="RyzeFramework Telegram user-account worker")
-    parser.add_argument("command", choices=("login", "run"))
+    parser.add_argument("command", choices=("check", "login", "run"))
     return parser.parse_args()
 
 
 async def main() -> None:
     args = parse_args()
-    if args.command == "login":
+    if args.command == "check":
+        api = RuntimeApi(RuntimeConfig.from_env())
+        result = await asyncio.to_thread(
+            api.heartbeat,
+            hostname=os.environ.get("HOSTNAME", "local-worker"),
+            version=os.environ.get("RYZE_WORKER_VERSION", "0.1.0"),
+            status="preflight",
+            paused=True,
+        )
+        print(json.dumps({"event": "worker_api_ok", "result": result}), flush=True)
+    elif args.command == "login":
         await authenticate()
     else:
         worker = Worker(RuntimeApi(RuntimeConfig.from_env()))

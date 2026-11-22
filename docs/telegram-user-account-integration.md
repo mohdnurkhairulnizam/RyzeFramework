@@ -2,7 +2,7 @@
 
 RyzeFramework’s planned Telegram interface uses the user-account pattern from the connected **ryzetel** repository. It does **not** use a Telegram bot token or bot webhook.
 
-**Current package boundary:** the Windows ZIP does not install Telethon, create worker credentials, or authorize a Telegram session. The server may record/run a safe demo for an inbound message but does not queue a reply; outbound sending is disabled until an owner-approval workflow with pause/stop and suppression checks is implemented and tested.
+**Current package boundary:** the Windows ZIP now includes an optional, manually started worker setup path. A fresh local install generates a separate worker token; `Configure-TelegramWorker.ps1` stores a protected local `worker.env`; and `Start-TelegramWorker.ps1 check` verifies the local worker API before any Telegram login. The worker still does not send replies. It only forwards allowlisted inbound messages after the owner completes local Telethon authorization.
 
 ## Architecture
 
@@ -54,4 +54,4 @@ The worker must reject unknown commands and must never interpret a command paylo
 
 ## Current status
 
-The pattern is selected as the replacement for the earlier Telegram bot proposal. The Python worker package and hosted worker API are implemented in this repository. Automatic outbound replies are currently disabled: the server does not queue `send_message`, and the worker rejects that command until a server-enforced owner-approval workflow is implemented and tested. Live inbound operation still requires local Telethon installation, owner-provided Telegram API credentials, session authorization, an approved chat ID, and server-side worker-token configuration. Do not enable live replies before the approval, pause/stop, and suppression checks above are implemented and verified.
+The pattern is selected as the replacement for the earlier Telegram bot proposal, using the private RyzeTel bridge as an implementation reference for protected worker environment files, preflight heartbeat, session handling, and explicit worker lifecycle stages. The Python worker package and worker API are implemented, and the local Windows setup path is now staged but not yet validated on the target computer. Automatic outbound replies are disabled: the server does not queue `send_message`, and the worker rejects that command. Live inbound operation still requires the owner to run local setup, enter Telegram API credentials privately on the target computer, authorize the session, configure an approved chat ID, pass the heartbeat check, and manually start the worker. Do not register a persistent Windows task or enable live replies before the approval, pause/stop, suppression, duplicate-send, and result-validation controls are implemented and tested.

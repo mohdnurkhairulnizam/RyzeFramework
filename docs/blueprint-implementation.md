@@ -18,7 +18,7 @@ For the sequenced implementation plan and acceptance checklist, see [`stage-1-ta
 | Portable export and credential-safe migration | `server/ryzeExport.ts`; provider and integration flags export disabled |
 | Bounded recovery attempts and diagnostic audit trail | `server/ryzeExecution.ts` and persisted task logs |
 | Telegram user-account transport | `worker/ryze_telegram_worker.py`; local Telethon login/session worker with heartbeat, inbound forwarding, approved command polling and session locking |
-| Worker API | `server/workerApi.ts` code remains, but the Windows ZIP does not configure worker credentials or authorize Telegram |
+| Worker API | `server/workerApi.ts` plus generated local worker token; Windows setup scripts create a protected worker environment and provide a heartbeat preflight, but do not authorize or persistently start Telegram |
 | Verification before claiming completion | Vitest coverage in `server/*.test.ts`, plus `docs/verification.md` |
 
 ## Stage status
@@ -34,6 +34,8 @@ The repository has a safe local task lifecycle, password-protected dashboard, SQ
 **Confirmed recovery checkpoint (22 November 2026):** The owner later reproduced `EPERM` on both the existing OpenCode configuration and an existing Ryze log file. Those files had protected empty file-level DACLs even though their parent folders appeared writable; a newly created ACL probe received normal inherited access. This confirmed stale Windows security descriptors in the existing data tree as the root cause of the repeated startup failures. Removing the old `%LOCALAPPDATA%\\RyzeFramework` data tree and `%LOCALAPPDATA%\\Programs\\RyzeFramework` installation, then installing the stable-preserving merged package fresh, restored successful installation and launch. Future upgrades must preserve the stable startup scripts, avoid reintroducing protected empty ACLs, and keep this incident in the regression checklist.
 
 **Operational baseline checkpoint (23 November 2026):** The owner ran the dashboard's one-button baseline on the target Windows installation. Private backup, restore rehearsal, persisted database/log test record, local test-file record, and ACL checks for the data root, database, WAL/SHM files, logs, files directory, and generated test file all returned `PASS`. The owner also reported successful stop/start restart behavior. This is deployment evidence for the local baseline and restart path; Stage 1 remains incomplete because deferred worker, approval, external-action, and full acceptance requirements are not yet complete.
+
+**Telegram bridge checkpoint (23 November 2026):** Using the private RyzeTel repository as the implementation reference, Ryze now has a staged local Windows path: a separate generated worker token, protected `%LOCALAPPDATA%\\RyzeFramework\\telegram-worker\\worker.env`, Telethon virtual-environment installation, `check` heartbeat preflight, local `login`, and manual inbound-only `run`. This stage is not yet target-Windows verified. Outbound replies, scheduled-task supervision, owner approval at send time, pause/stop persistence, suppression checks, duplicate-send prevention, and result validation remain disabled or incomplete.
 
 ### Stage 2 — Identity and advanced memory
 

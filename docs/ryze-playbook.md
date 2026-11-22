@@ -2,8 +2,8 @@
 
 A simple user manual for installing, starting, using, verifying, and troubleshooting RyzeFramework. This is a living document and will be updated progressively as new features are completed.
 
-**Current revision:** `fc1cd92`
-**Current stage:** Stage 1 foundation in progress.
+**Current revision:** `Telegram staged worker setup`
+**Current stage:** Stage 1 foundation; Telegram inbound-only deployment is staged for target-Windows testing.
 
 Use the three project documents this way:
 
@@ -26,7 +26,7 @@ RyzeFramework is currently a local Windows application with:
 - Safe allowlisted demo actions for memory, recall, file metadata, Markdown generation, and retry testing.
 - Optional OpenCode + FreeLLMAPI text chat.
 - OpenCode tools denied by default.
-- Telegram worker code present but not provisioned by the installer.
+- Optional Telegram inbound-only worker setup with a protected local worker environment and preflight check.
 - Telegram outbound replies, arbitrary shell execution, email delivery, and unsupervised external actions disabled.
 
 A successful chat response is evidence of the text-chat path only. It is not evidence that Ryze can safely plan and execute arbitrary real-world operations.
@@ -43,7 +43,7 @@ The current system provides:
 - A one-click operational baseline check with a copyable diagnostic console.
 - Optional OpenCode + FreeLLMAPI text chat when configured.
 
-The following remain incomplete or disabled: arbitrary shell commands, Telegram messaging, email delivery, unsupervised external actions, and general-purpose tool execution.
+The following remain incomplete or disabled: arbitrary shell commands, Telegram outbound replies, email delivery, unsupervised external actions, and general-purpose tool execution.
 
 As the system progresses, this manual will gain new sections for each user-facing feature. Technical status belongs in the updated blueprint, not in this manual.
 
@@ -145,7 +145,23 @@ Only perform this if a valid FreeLLMAPI gateway is available:
 
 Record the model ID and gateway/provider metadata separately if available. Never record the API key.
 
-### 3.7 Stop/restart test
+### 3.7 Optional Telegram inbound-only test
+
+This stage uses the private RyzeTel bridge pattern for local secret handling and worker lifecycle, but it does not enable outbound Telegram replies.
+
+1. Start Ryze with `Start-Ryze.cmd` and sign in.
+2. Open PowerShell in the installed `scripts\windows` folder.
+3. Run `.\Configure-TelegramWorker.ps1` and enter the Telegram API ID, API hash, phone number, and approved chat ID(s) privately on the target Windows computer. Do not paste any of these values into chat.
+4. Run `.\Start-TelegramWorker.ps1 check`. It must report `worker_api_ok`.
+5. Run `.\Start-TelegramWorker.ps1 login`. Enter the Telegram phone code and, if requested, the two-step password in that local PowerShell window.
+6. Run `.\Start-TelegramWorker.ps1 run`.
+7. Send a harmless test message from an approved chat. Confirm that Ryze records an inbound task or activity event and that no Telegram reply is sent.
+8. Send a message from a non-approved chat, if available. Confirm that Ryze ignores it.
+9. Stop the worker with `Ctrl+C`, then run the check again if needed. Do not register a Windows scheduled task yet.
+
+The worker session and `worker.env` are stored below `%LOCALAPPDATA%\RyzeFramework\telegram-worker` and protected for the current Windows user. Never include that folder, the session file, `worker.env`, API hash, phone code, or two-step password in a support message.
+
+### 3.8 Stop/restart test
 
 1. Run `Stop-Ryze.cmd`.
 2. Confirm the dashboard is unavailable.

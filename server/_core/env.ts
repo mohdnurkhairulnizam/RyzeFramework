@@ -44,6 +44,7 @@ export const ENV = {
   isProduction: process.env.NODE_ENV === "production",
   forgeApiUrl: localMode ? "" : process.env.BUILT_IN_FORGE_API_URL ?? "",
   forgeApiKey: localMode ? "" : process.env.BUILT_IN_FORGE_API_KEY ?? "",
-  workerToken: localMode ? "" : process.env.RYZE_WORKER_TOKEN ?? "",
+  // Local mode remains worker-disabled unless a caller explicitly presents this private token.
+  workerToken: process.env.RYZE_WORKER_TOKEN ?? "",
   workerOwnerOpenId: process.env.RYZE_WORKER_OWNER_OPEN_ID ?? process.env.OWNER_OPEN_ID ?? process.env.RYZE_LOCAL_OWNER_OPEN_ID ?? "",
 };

@@ -18,6 +18,6 @@ describe("standalone local environment boundary", () => {
     expect(ENV.databaseUrl).toBe("");
     expect(ENV.forgeApiUrl).toBe("");
     expect(ENV.forgeApiKey).toBe("");
-    expect(ENV.workerToken).toBe("");
+    expect(ENV.workerToken).toBe("inherited-test-worker-token");
   });
 });

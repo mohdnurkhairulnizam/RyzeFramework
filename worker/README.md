@@ -1,6 +1,6 @@
 # RyzeFramework Telegram user-account worker
 
-This optional package can connect an owner-authorised Telegram **user account** to a configured RyzeFramework worker API. It uses Telethon, not a bot token or webhook. The Windows dashboard ZIP does not provision the worker token or authorize a Telegram session; the worker is not enabled by that installer.
+This optional package can connect an owner-authorised Telegram **user account** to a configured RyzeFramework worker API. It uses Telethon, not a bot token or webhook. The staged Windows flow is adapted from the private RyzeTel bridge pattern: a separate protected `worker.env`, an owner-controlled session directory, a preflight heartbeat, and explicit `check → login → run` stages.
 
 ## Local-only secrets
 
@@ -17,20 +17,22 @@ TELEGRAM_SESSION_PATH=./data/ryze-user
 TELEGRAM_ALLOWED_CHAT_IDS=123456789
 ```
 
-The server must be configured with the matching `RYZE_WORKER_TOKEN` and `RYZE_WORKER_OWNER_OPEN_ID`. The owner must already have a registered RyzeFramework account. The standalone local installer does not create these worker credentials.
+For a fresh local Ryze install, the installer creates a separate random `RYZE_WORKER_TOKEN` in the protected application `.env`. `scripts/windows/Configure-TelegramWorker.ps1` copies only that token into a separately protected local worker environment and prompts for Telegram values on the Windows computer. The token is not the owner password and must not be pasted into chat.
 
 `TELEGRAM_ALLOWED_CHAT_IDS` is mandatory and comma-separated. The worker ignores inbound messages and rejects outbound commands for chats that are not explicitly listed.
 
 ## Install and authorize
 
-Run these commands from the `worker` directory. On Windows 10, use PowerShell:
+For the staged Windows flow, run these commands from the installed Ryze `scripts/windows` directory:
 
 ```bash
-py -3 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe .\ryze_telegram_worker.py login
-.\.venv\Scripts\python.exe .\ryze_telegram_worker.py run
+.\Configure-TelegramWorker.ps1
+.\Start-TelegramWorker.ps1 check
+.\Start-TelegramWorker.ps1 login
+.\Start-TelegramWorker.ps1 run
 ```
+
+`check` sends one paused heartbeat to the local Ryze server and must pass before Telegram login. `login` creates or reuses the protected Telethon session and requests the phone code and optional two-step password locally. `run` starts the inbound-only worker. Do not register a scheduled task yet; that supervision mechanism remains a later tested stage.
 
 On Linux or macOS:
 

@@ -92,4 +92,4 @@ Write-Host ''
 Write-Host 'Ryze local installation is prepared.' -ForegroundColor Green
 Write-Host "Start it with: $InstallDirectory\scripts\windows\Start-Ryze.cmd"
 Write-Host 'Ryze uses local SQLite and files. Configure optional FreeLLMAPI text chat with Configure-FreeLLMAPI.cmd.'
-Write-Host 'Telegram and outbound message actions remain disabled.' -ForegroundColor Yellow
+Write-Host 'Optional Telegram inbound-only setup is available from scripts\windows\Configure-TelegramWorker.ps1; outbound replies remain disabled.' -ForegroundColor Yellow

@@ -34,6 +34,7 @@ mkdirSync(storageDir, { recursive: true });
 const salt = randomBytes(32);
 const passwordHash = scryptSync(password, salt, 64);
 const jwtSecret = randomBytes(48).toString("hex");
+const workerToken = randomBytes(32).toString("hex");
 const dotenvValue = (value) => `"${value.replace(/\\/g, "/").replace(/"/g, "\\\"")}"`;
 const contents = [
   "NODE_ENV=production",
@@ -44,6 +45,8 @@ const contents = [
   "RYZE_LOCAL_OWNER_NAME=Local Owner",
   `RYZE_LOCAL_PASSWORD_SALT=${salt.toString("hex")}`,
   `RYZE_LOCAL_PASSWORD_HASH=${passwordHash.toString("hex")}`,
+  `RYZE_WORKER_TOKEN=${workerToken}`,
+  "RYZE_WORKER_OWNER_OPEN_ID=ryze-local-owner",
   `RYZE_DATA_DIR=${dotenvValue(localDataDir)}`,
   `RYZE_DATABASE_PATH=${dotenvValue(databasePath)}`,
   `RYZE_STORAGE_DIR=${dotenvValue(storageDir)}`,
