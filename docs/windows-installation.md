@@ -66,6 +66,16 @@ To restore, stop Ryze and preserve the current `%LOCALAPPDATA%\RyzeFramework` fo
 ## Troubleshooting
 
 - If Ryze does not start, the double-click window remains open and shows the PowerShell error. Also check `%LOCALAPPDATA%\RyzeFramework\logs\server-error.log` and `opencode-error.log`.
+- If startup reports `unable to open database file`, first stop Ryze. If the database folder is writable but `icacls` shows no permissions on the existing SQLite files, reset only their ACLs (this does not change file contents):
+
+  ```powershell
+  $dbPath = Join-Path $env:LOCALAPPDATA 'RyzeFramework\data\ryze.sqlite'
+  foreach ($file in @($dbPath, "$dbPath-wal", "$dbPath-shm")) {
+    if (Test-Path -LiteralPath $file) { icacls $file /reset }
+  }
+  ```
+
+  Then start Ryze again. Do not delete the database, WAL, or SHM files to address an access-control error.
 - If the dashboard opens but FreeLLMAPI is “Not reachable,” check the URL, internet connection, and whether the gateway is running. If it is “Key rejected,” stop Ryze and run `Configure-FreeLLMAPI.cmd` again.
 - If both services show connected but a chat fails, verify the exact model ID, key permissions/quota, and that the endpoint implements the compatible chat API. Check `opencode-error.log` and `server-error.log`; do not share the `.env` or key.
 - If port 3777 is occupied, stop the other program or ask for help before changing configuration. Do not delete the database to fix an integration issue.

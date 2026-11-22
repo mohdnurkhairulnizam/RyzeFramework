@@ -10,8 +10,8 @@ This checklist turns the origin blueprint and current repository status into an 
 - [x] Automatic Telegram replies are disabled pending an owner-approval workflow; a regression test now guards this fail-closed state.
 - [x] Build a Windows installer/launcher/stop/backup package using local SQLite and a protected local file directory.
 - [x] Add a first-run scrypt owner password, localhost/Origin checks, rate limiting, and Windows install/backup guidance.
-- [x] Current code passes TypeScript check, 20 Vitest tests across 10 files, 4 worker tests, and the local production build; a sandbox smoke test verified health, login, migration, and owner bootstrap.
-- [ ] Install and verify the ZIP on the physical HP Windows 10 laptop.
+- [x] Current code passes TypeScript check, 32 Vitest tests across 12 files, 4 worker tests, and the local production build; a sandbox smoke test verified health, login, migration, and owner bootstrap.
+- [x] Install the latest ZIP on the physical HP Windows 10 laptop and verify that Ryze reaches its ready state; the user reports startup succeeded after resetting permissions on the existing SQLite database/WAL/SHM files without deleting their contents. Sign-in, backups, and restore remain unverified.
 - [ ] OpenCode execution is connected and verified.
 - [ ] FreeLLMAPI model gateway is configured and verified.
 - [ ] Telegram setup and live communication are verified.
@@ -22,12 +22,12 @@ This checklist turns the origin blueprint and current repository status into an 
 
 - [x] Confirm the execution target and local data architecture: the owner selected the HP Windows 10 laptop; this package uses local SQLite and a local files directory, so it does not require hosted database/object storage endpoints.
 - [x] Document supported installer runtimes: 64-bit Windows 10+, Node.js 22 or 24 LTS, pnpm 10.18.0. The optional Python/Telethon worker is not installed by this ZIP.
-- [ ] Verify installed runtime versions and the install/run/backup scripts on the actual HP laptop.
+- [ ] Complete target-laptop validation: confirm installed runtime versions, sign-in, repeat start/stop, backup, and restore. The user has confirmed startup works after correcting existing database-file permissions.
 - [ ] Create a reviewed baseline commit/tag before changing execution, worker, or configuration behavior. Preserve a way to restore the current safe-demo behavior.
 - [x] Inventory local installer settings without reading secret values; keep the generated `.env`, database, file bytes, and Telegram session data out of Git.
 - [x] Document local config/data paths, Windows account ACLs, stop-before-backup steps, and a database/files/config backup helper in `docs/windows-installation.md`.
 - [x] Choose local SQLite plus a local files directory instead of a hosted database/object store for this laptop install; no hosted endpoints are configured by the package.
-- [ ] Verify Windows ACL behavior and restore procedure on the HP laptop; create and verify the first user-controlled backup.
+- [ ] Verify remaining Windows ACL behavior and the restore procedure on the HP laptop; create and verify the first user-controlled backup. Existing DB/WAL/SHM files with missing effective ACL entries were repaired in place with `icacls /reset`.
 
 **Exit condition:** The target architecture and secret location are documented; Workstream 0 remains open until laptop runtime/ACL/backup verification and a reviewed code rollback point are complete.
 
@@ -168,3 +168,8 @@ Proceed in this order to avoid connecting live services to an incomplete safety 
 7. Workstream 4: Telegram setup and staged end-to-end verification.
 8. Workstream 7: full deployment rehearsal and acceptance evidence.
 9. Workstream 8: owner sign-off against the origin criteria.
+
+
+## Progress checkpoint — 22 November 2026
+
+The owner reports that the latest Windows ZIP installed and Ryze startup succeeded on the HP laptop after resetting ACLs on the existing SQLite database, WAL, and SHM files. The repair preserved the database contents; the previous `unable to open database file` error was consistent with the files having no effective ACL entries even though the containing directory was writable. This is evidence of a successful startup on the target laptop, not completion of Stage 1. Owner sign-in, repeat start/stop, backup/restore, and ACL inheritance for newly created files still need verification. FreeLLMAPI URL/model/key have not been supplied or live-tested, Telegram outbound remains disabled, and the OpenCode–FreeLLMAPI–Telegram path and the nine Stage 1 acceptance criteria remain incomplete.

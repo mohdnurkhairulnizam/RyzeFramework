@@ -6,7 +6,7 @@ The origin blueprint defines Stage 1 as the operational foundation for a persona
 
 This document maps that Stage 1 design to the code currently in this repository. It distinguishes code that exists from code that has been configured and live-verified. A passing build or a test of the safe demo does not prove that the live Telegram, OpenCode, or model-provider path is operational. The origin blueprint itself says a stage is not complete until its acceptance criteria have passed.
 
-**Assessment:** Stage 1 has a tested local dashboard/database/file-storage foundation and a Windows ZIP installation path. It is **partially implemented, not operationally complete**. The production package has not been installed on the HP laptop, the live external model path is not implemented/enabled, and live Telegram delivery remains unavailable pending owner setup and safety verification.
+**Assessment:** Stage 1 has a tested local dashboard/database/file-storage foundation and a Windows ZIP installation path. The owner reports the latest package is installed on the HP laptop and the dashboard now starts after repairing ACLs on existing SQLite files. It is **partially implemented, not operationally complete**: sign-in, backup/restore, and repeat start/stop still need verification; the real external model path is not configured/tested; and live Telegram delivery remains unavailable pending owner setup and safety verification.
 
 ## What Stage 1 means in the origin blueprint
 
@@ -33,7 +33,7 @@ The four principal components have distinct responsibilities:
 - **Telegram user-account client / Python worker** is the initial interface. The origin specifically calls for the owner's authorized user account through Telethon, not a bot. The worker owns Telegram API credentials and local session files. It handles supported incoming files/messages, passes requests over a sanitized authenticated bridge, reports progress, and returns results/files.
 - **Python** provides supporting file processing, conversion, API integration, automation, and system utilities where the execution engine's tools are insufficient. **Git** tracks source and configuration revisions, but is not a backup for live memory or operational data.
 
-The origin blueprint's initial infrastructure was an owner HP laptop running Windows 10, with cloud inference preferred due to hardware constraints. The owner confirmed that laptop as the application target and asked for database/files to be arranged locally. This package therefore selects embedded SQLite plus a protected local files directory; no hosted database or object store is required by the ZIP. The laptop's installed runtime versions are still unverified. Docker was excluded from the initial plan. Telegram login remains an explicit owner action; the optional worker is not provisioned by this installer and must refuse to operate if its local session is unauthorized. Dashboard/bridge data must not expose Telegram credentials, raw phone numbers, session paths/bytes, message bodies, or raw Telegram objects as telemetry.
+The origin blueprint's initial infrastructure was an owner HP laptop running Windows 10, with cloud inference preferred due to hardware constraints. The owner confirmed that laptop as the application target and asked for database/files to be arranged locally. This package therefore selects embedded SQLite plus a protected local files directory; no hosted database or object store is required by the ZIP. The installer output identified Windows PowerShell 5.1 and Node.js 24.19.0; repeatable runtime, ACL, backup, and restore verification is still pending. Docker was excluded from the initial plan. Telegram login remains an explicit owner action; the optional worker is not provisioned by this installer and must refuse to operate if its local session is unauthorized. Dashboard/bridge data must not expose Telegram credentials, raw phone numbers, session paths/bytes, message bodies, or raw Telegram objects as telemetry.
 
 ### Required task lifecycle
 
@@ -95,7 +95,7 @@ The code is not proof of a live connection and the standalone installer does not
 
 ### Tests and build evidence — passed in this workspace
 
-At the current checkout, `pnpm install --frozen-lockfile`, `pnpm check`, 20 Vitest tests across 10 files, 4 Python worker safety tests, and `pnpm build:local` passed. An isolated production-process smoke test exercised localhost health, password login, SQLite migrations, owner creation, and default settings. The build has one non-fatal large JavaScript chunk warning. These results do not verify installation on the HP Windows laptop, live OpenCode/FreeLLMAPI, Telegram credentials/session, an approval workflow, or report delivery to a real account.
+At the current checkout, `pnpm install --frozen-lockfile`, `pnpm check`, 32 Vitest tests across 12 files, 4 Python worker safety tests, and `pnpm build:local` passed. An isolated production-process smoke test exercised localhost health, password login, SQLite migrations, owner creation, and default settings. The owner now reports successful dashboard startup on the HP laptop after correcting ACLs on existing SQLite files. This does not yet verify owner sign-in, backup/restore, real FreeLLMAPI, Telegram credentials/session, an approval workflow, or report delivery to a real account. The build has one non-fatal large JavaScript chunk warning.
 
 ## Origin-to-implementation readiness map
 
@@ -126,7 +126,7 @@ At the current checkout, `pnpm install --frozen-lockfile`, `pnpm check`, 20 Vite
 
 ## Current disposition
 
-Continue Stage 1 from the local safe starter: install and validate the ZIP on the HP laptop, then implement the origin's OpenCode–FreeLLMAPI execution chain with explicit feature gates. Do not claim Stage 1 complete or enable external actions. A separate server-enforced Telegram approval/pause/stop/suppression workflow must pass before any outbound message is possible. Current local password auth, SQLite persistence, file storage, demo tasks, retries, export, and build/test foundations are present; live integrations and target-device validation are not.
+Continue Stage 1 from the local safe starter: verify owner sign-in, repeat start/stop, backup, and restore on the HP laptop, then configure and test the origin's OpenCode–FreeLLMAPI execution chain with explicit feature gates. Do not claim Stage 1 complete or enable external actions. A separate server-enforced Telegram approval/pause/stop/suppression workflow must pass before any outbound message is possible. Current local password auth, SQLite persistence, file storage, demo tasks, retries, export, and build/test foundations are present; the first successful laptop startup is reported, but live integrations and remaining target-device acceptance checks are not.
 
 ## Source documents
 
