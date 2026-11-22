@@ -31,6 +31,8 @@ RyzeFramework is currently a local Windows application with:
 
 A successful chat response is evidence of the text-chat path only. It is not evidence that Ryze can safely plan and execute arbitrary real-world operations.
 
+**Latest verification:** On 23 November 2026, the target Windows installation passed the one-button operational baseline. Backup creation, restore rehearsal, database/log records, uploaded-file record, and Windows ACL checks all returned `PASS`. Stop/start restart behavior was also reported good. This verifies the local baseline and restart path; it does not complete the broader Stage 1 integration and safety requirements.
+
 ## 2. What is available now
 
 The current system provides:
