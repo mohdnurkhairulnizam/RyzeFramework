@@ -81,4 +81,17 @@ To restore, stop Ryze and preserve the current `%LOCALAPPDATA%\RyzeFramework` fo
 - If port 3777 is occupied, stop the other program or ask for help before changing configuration. Do not delete the database to fix an integration issue.
 - If startup reports a migration error, stop and keep the data folder intact rather than deleting it.
 
+### Confirmed ACL incident and fresh installation recovery
+
+On 22 November 2026, repeated `EPERM` errors first affected `opencode-workspace\opencode.json` and then `logs\server-error.log`. Inspection showed the affected existing files had an owner but an empty protected DACL (`AccessToString` was blank and `AreAccessRulesProtected` was `True`). The parent directory ACL looked correct, and a newly created probe file received inherited access. This confirmed stale file-level Windows security descriptors in the existing `%LOCALAPPDATA%\RyzeFramework` tree, not a problem with the JSON contents, the operational baseline feature, or the stable startup scripts.
+
+For a deliberate fresh installation after preserving any needed backup, stop Ryze and remove only these folders:
+
+```text
+%LOCALAPPDATA%\Programs\RyzeFramework
+%LOCALAPPDATA%\RyzeFramework
+```
+
+Extract a fresh installer and run `Install-Ryze.cmd`. Do not restore the old `logs` or `opencode-workspace` directories into the new installation. Future update packages must retain the stable startup path and must not apply a file-level ACL that is protected with no allow entry.
+
 The owner has now confirmed successful startup, sign-in, and one model-backed OpenCode/FreeLLMAPI text-chat request on the physical target Windows computer. Repeat start/stop, backup/restore, and ACL behavior for newly created files remain to be verified from the computer. After installation, share any error text here (remove personal paths if you prefer); do not share `.env`, the database, backups, Telegram session files, or passwords.

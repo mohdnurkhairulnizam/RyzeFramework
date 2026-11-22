@@ -227,6 +227,19 @@ Never delete the database to solve a startup or ACL problem before preserving it
 4. If the files have no effective inherited permissions, use the targeted ACL repair documented in [`windows-installation.md`](./windows-installation.md).
 5. Start Ryze again and inspect the diagnostic console.
 
+### Repeated `EPERM` or access denied across Ryze files
+
+The confirmed Windows root cause for the November 2026 incident was not the operational baseline feature or the OpenCode JSON contents. Existing files under `%LOCALAPPDATA%\RyzeFramework` had protected, empty file-level ACLs, including `opencode.json` and the Ryze log files. The parent folders looked writable, but individual files could not be read, renamed, or updated. A newly created probe file received normal inherited access, confirming that the stale data tree—not the new installer code—was corrupted.
+
+If ACL reset repairs one file but another existing Ryze file immediately fails, stop troubleshooting the old data tree. First make or preserve a private backup if possible. For a deliberate fresh test installation, remove only these two folders after stopping Ryze:
+
+```text
+%LOCALAPPDATA%\Programs\RyzeFramework
+%LOCALAPPDATA%\RyzeFramework
+```
+
+Then run `Install-Ryze.cmd` from a newly extracted installer. Do not copy the old `data`, `logs`, or `opencode-workspace` folder into the fresh installation. Future upgrades must preserve the stable startup scripts and must not reintroduce a protected empty ACL on existing files.
+
 ### FreeLLMAPI is unavailable
 
 1. Confirm the gateway URL and model ID.
