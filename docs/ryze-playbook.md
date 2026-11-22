@@ -1,17 +1,17 @@
 # RyzeFramework Playbook
 
-**Purpose:** operational guide for installing, testing, using, and safely extending RyzeFramework.
+A simple user manual for installing, starting, using, verifying, and troubleshooting RyzeFramework. This is a living document and will be updated progressively as new features are completed.
 
-**Current revision:** `e8a97f0`  
-**Playbook status:** Stage 1 foundation in progress; local text chat is verified, but the complete authorized agent loop is not yet complete.
+**Current revision:** `905de16`  
+**Current stage:** Stage 1 foundation in progress.
 
-This playbook is maintained separately from the design documents:
+Use the three project documents this way:
 
-1. [`origin-blueprint.md`](./origin-blueprint.md) is the original direction and completion plan. It records what Ryze is intended to become.
-2. [`blueprint-implementation.md`](./blueprint-implementation.md) is the updated implementation map. It records what exists, what is verified, and what remains blocked.
-3. **This document** explains how to install, use, verify, troubleshoot, and operate the current RyzeFramework build.
+- [`origin-blueprint.md`](./origin-blueprint.md): the original project direction and completion plan.
+- [`blueprint-implementation.md`](./blueprint-implementation.md): the updated technical status and implementation details.
+- **This playbook:** the practical manual for using the current RyzeFramework system.
 
-Do not mark a stage complete because code exists. Mark it complete only when its acceptance checks pass in the intended deployment environment.
+The playbook describes only the capabilities that are available or explicitly marked as incomplete.
 
 ---
 
@@ -31,34 +31,19 @@ RyzeFramework is currently a local Windows application with:
 
 A successful chat response is evidence of the text-chat path only. It is not evidence that Ryze can safely plan and execute arbitrary real-world operations.
 
-## 2. Document maintenance model
+## 2. What is available now
 
-### Original blueprint
+The current system provides:
 
-Update [`origin-blueprint.md`](./origin-blueprint.md) only when the project’s intended architecture, principles, stage definitions, or completion criteria change. Preserve the original intent; do not use it as a live status report.
+- Local owner sign-in and a localhost dashboard.
+- Safe memory, recall, file-metadata, Markdown-note, and retry-demo actions.
+- Local SQLite data and local file storage.
+- A one-click operational baseline check with a copyable diagnostic console.
+- Optional OpenCode + FreeLLMAPI text chat when configured.
 
-### Updated blueprint
+The following remain incomplete or disabled: arbitrary shell commands, Telegram messaging, email delivery, unsupervised external actions, and general-purpose tool execution.
 
-Update [`blueprint-implementation.md`](./blueprint-implementation.md), [`stage-1-readiness.md`](./stage-1-readiness.md), and [`stage-1-task-breakdown.md`](./stage-1-task-breakdown.md) when implementation status changes. Every status claim should identify whether it is:
-
-- implemented in code;
-- covered by automated tests;
-- verified in the sandbox;
-- verified on a target Windows installation; or
-- still unverified.
-
-### Ryze Playbook
-
-Update this file when a user-facing procedure, feature, safety boundary, troubleshooting method, or acceptance test changes. Keep instructions executable by a non-developer and include the expected result.
-
-For each stage update, record:
-
-- date and revision;
-- what changed;
-- how it was tested;
-- what evidence was produced;
-- remaining limitations;
-- next gate.
+As the system progresses, this manual will gain new sections for each user-facing feature. Technical status belongs in the updated blueprint, not in this manual.
 
 ---
 
@@ -263,7 +248,7 @@ This is expected for shell execution, credential handling, email, Telegram deliv
 
 ---
 
-## 7. Stage roadmap and acceptance gates
+## 7. Current limitations and future updates
 
 ### Stage 1 — Foundation and execution engine
 
@@ -322,7 +307,7 @@ Required design work:
 
 ---
 
-## 8. Evidence record template
+## 8. Optional test notes
 
 Copy this template into the revision record for each test:
 
@@ -357,6 +342,6 @@ Do not include passwords, API keys, `.env` contents, Telegram sessions, or unred
 
 ---
 
-## 9. Current next action
+## 9. Updating this manual
 
-Run the revision verification procedure on the target Windows installation, beginning with the one-click operational baseline. If a check fails, copy the dashboard diagnostic console and share it for debugging. Once the baseline passes, record the evidence using the template above and update the implementation blueprint’s Stage 1 status.
+When a feature is completed and verified, add or update its simple user instructions here. Keep the wording practical: what the user clicks or runs, what should happen, and what to do if it fails. Update the revision number at the top when the manual changes.
