@@ -37,6 +37,14 @@ $excludeDirs = @(
 & robocopy.exe $SourceDirectory $InstallDirectory /E /NFL /NDL /NJH /NJS /NC /NS /XD $excludeDirs /XF '.env' '.env.local' '.env.*.local'
 if ($LASTEXITCODE -ge 8) { throw "Copying update files failed (robocopy exit $LASTEXITCODE). Existing local data and configuration were not changed." }
 
+$workerTokenLine = Get-Content -LiteralPath $EnvFile | Where-Object { $_ -match '^RYZE_WORKER_TOKEN=' } | Select-Object -First 1
+if (-not $workerTokenLine -or [string]::IsNullOrWhiteSpace(($workerTokenLine -replace '^RYZE_WORKER_TOKEN=', '').Trim().Trim('"'))) {
+  $workerToken = (& node -e "process.stdout.write(require('crypto').randomBytes(32).toString('hex'))").Trim()
+  if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($workerToken)) { throw 'Could not generate the local Telegram worker token.' }
+  Add-Content -LiteralPath $EnvFile -Value "RYZE_WORKER_TOKEN=$workerToken" -Encoding UTF8
+  Write-Host 'Added a new local Telegram worker token to the existing configuration. Other configuration and data were preserved.' -ForegroundColor Green
+}
+
 function Invoke-Pnpm {
   param([Parameter(ValueFromRemainingArguments = $true)][string[]]$PnpmArgs)
   & npx.cmd --yes pnpm@10.18.0 @PnpmArgs

@@ -16,9 +16,17 @@ if (-not $python) { throw 'Python 3.10 or newer is required. Install Python from
 $appEnv = Join-Path $InstallDirectory '.env'
 if (-not (Test-Path -LiteralPath $appEnv)) { throw "Ryze local configuration was not found: $appEnv" }
 $tokenLine = Get-Content -LiteralPath $appEnv | Where-Object { $_ -match '^RYZE_WORKER_TOKEN=' } | Select-Object -First 1
-if (-not $tokenLine) { throw 'RYZE_WORKER_TOKEN is missing. Install or upgrade Ryze before configuring Telegram.' }
-$workerToken = $tokenLine.Substring('RYZE_WORKER_TOKEN='.Length).Trim().Trim('"')
-if (-not $workerToken) { throw 'The generated Ryze worker token is empty.' }
+$tokenWasAdded = $false
+if (-not $tokenLine) {
+  $workerToken = (& node -e "process.stdout.write(require('crypto').randomBytes(32).toString('hex'))").Trim()
+  if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($workerToken)) { throw 'Could not generate the local Telegram worker token.' }
+  Add-Content -LiteralPath $appEnv -Value "RYZE_WORKER_TOKEN=$workerToken" -Encoding UTF8
+  $tokenWasAdded = $true
+  Write-Host 'Added a local Telegram worker token to the existing Ryze configuration.' -ForegroundColor Green
+} else {
+  $workerToken = $tokenLine.Substring('RYZE_WORKER_TOKEN='.Length).Trim().Trim('"')
+  if (-not $workerToken) { throw 'The existing RYZE_WORKER_TOKEN is empty. Run the Ryze updater to repair the local configuration.' }
+}
 
 $apiId = Read-Host 'Telegram API ID (numeric; entered only on this computer)'
 if ($apiId -notmatch '^\d+$') { throw 'Telegram API ID must be numeric.' }
@@ -63,4 +71,5 @@ if ($LASTEXITCODE -ne 0) { throw 'Could not protect the Telegram worker director
 Write-Host ''
 Write-Host 'Telegram worker configuration saved locally.' -ForegroundColor Green
 Write-Host 'Outbound Telegram replies remain disabled.' -ForegroundColor Yellow
-Write-Host "Next: from $PSScriptRoot run .\Start-TelegramWorker.ps1 check, then login, then run."
+if ($tokenWasAdded) { Write-Host 'Restart Ryze before running the worker check so the server loads the new token.' -ForegroundColor Yellow }
+Write-Host "Next: use Start-TelegramWorker.cmd check, then login, then run."

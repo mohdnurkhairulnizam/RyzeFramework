@@ -160,6 +160,8 @@ This stage uses the private RyzeTel bridge pattern for local secret handling and
 
 The `.cmd` launchers use a process-only PowerShell execution-policy bypass. They do not change the computer's permanent PowerShell execution policy. The underlying `.ps1` files remain available for advanced users.
 
+If an older installation reports `RYZE_WORKER_TOKEN is missing`, install this revision with `Update-Ryze.cmd`. The updater adds one new random local worker token to the existing `.env` while preserving the owner password, FreeLLMAPI settings, database, files, and logs. The configuration helper also repairs a missing token if needed; restart Ryze before running the worker check so the server loads it.
+
 The worker session and `worker.env` are stored below `%LOCALAPPDATA%\RyzeFramework\telegram-worker` and protected for the current Windows user. Never include that folder, the session file, `worker.env`, API hash, phone code, or two-step password in a support message.
 
 ### 3.8 Telegram account controls in Settings
