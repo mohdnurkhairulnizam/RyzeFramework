@@ -2,7 +2,7 @@
 
 A simple user manual for installing, starting, using, verifying, and troubleshooting RyzeFramework. This is a living document and will be updated progressively as new features are completed.
 
-**Current revision:** `905de16`  
+**Current revision:** `fc1cd92`
 **Current stage:** Stage 1 foundation in progress.
 
 Use the three project documents this way:
