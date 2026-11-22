@@ -150,14 +150,15 @@ Record the model ID and gateway/provider metadata separately if available. Never
 This stage uses the private RyzeTel bridge pattern for local secret handling and worker lifecycle, but it does not enable outbound Telegram replies.
 
 1. Start Ryze with `Start-Ryze.cmd` and sign in.
-2. Open PowerShell in the installed `scripts\windows` folder.
-3. Run `.\Configure-TelegramWorker.ps1` and enter the Telegram API ID, API hash, phone number, and approved chat ID(s) privately on the target Windows computer. Do not paste any of these values into chat.
-4. Run `.\Start-TelegramWorker.ps1 check`. It must report `worker_api_ok`.
-5. Run `.\Start-TelegramWorker.ps1 login`. Enter the Telegram phone code and, if requested, the two-step password in that local PowerShell window.
-6. Run `.\Start-TelegramWorker.ps1 run`.
-7. Send a harmless test message from an approved chat. Confirm that Ryze records an inbound task or activity event and that no Telegram reply is sent.
-8. Send a message from a non-approved chat, if available. Confirm that Ryze ignores it.
-9. Stop the worker with `Ctrl+C`, then run the check again if needed. Do not register a Windows scheduled task yet.
+2. From the installed Ryze folder, double-click `Configure-TelegramWorker.cmd`. Enter the Telegram API ID, API hash, phone number, and approved chat ID(s) privately on the target Windows computer. Do not paste any of these values into chat.
+3. Double-click `Start-TelegramWorker.cmd` or run `Start-TelegramWorker.cmd check`. It must report `worker_api_ok`.
+4. Run `Start-TelegramWorker.cmd login`. Enter the Telegram phone code and, if requested, the two-step password in the local command window.
+5. Run `Start-TelegramWorker.cmd run` and leave that window open while testing.
+6. Send a harmless test message from an approved chat. Confirm that Ryze records an inbound task or activity event and that no Telegram reply is sent.
+7. Send a message from a non-approved chat, if available. Confirm that Ryze ignores it.
+8. Stop the worker with `Ctrl+C`, then run `Start-TelegramWorker.cmd check` again if needed. Do not register a Windows scheduled task yet.
+
+The `.cmd` launchers use a process-only PowerShell execution-policy bypass. They do not change the computer's permanent PowerShell execution policy. The underlying `.ps1` files remain available for advanced users.
 
 The worker session and `worker.env` are stored below `%LOCALAPPDATA%\RyzeFramework\telegram-worker` and protected for the current Windows user. Never include that folder, the session file, `worker.env`, API hash, phone code, or two-step password in a support message.
 

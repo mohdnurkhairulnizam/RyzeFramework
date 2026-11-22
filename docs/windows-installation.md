@@ -45,6 +45,10 @@ This step requires your own OpenAI-compatible FreeLLMAPI API base URL, model ID,
 
 The helper stores the endpoint, model ID, and key in the protected local `.env`; the key is never returned to the dashboard or included in the installer ZIP. Windows account permissions restrict the file, but Ryze does not encrypt it. A gateway health check requests its `/models` endpoint. A chat prompt is sent to the configured gateway and may be handled by that gateway's upstream model provider; review their privacy and retention terms before using sensitive text.
 
+## Configure the staged Telegram worker
+
+The optional staged Telegram worker is started from the installed Ryze folder. Use `Configure-TelegramWorker.cmd` to enter Telegram API details privately, then use `Start-TelegramWorker.cmd check`, `Start-TelegramWorker.cmd login`, and `Start-TelegramWorker.cmd run`. These command files invoke the PowerShell helpers with a process-only execution-policy bypass; they do not change the computer's permanent PowerShell policy. Keep the worker window open during an inbound-only test. Telegram session files and `worker.env` remain under `%LOCALAPPDATA%\RyzeFramework\telegram-worker` and must never be sent in chat or included in an export.
+
 OpenCode's `ryze-chat` agent has global and agent-level deny-all tool permissions. It cannot use shell, edit/read local files, or send Telegram messages. File uploads stay in local storage and are not automatically attached to chat prompts. The integration is text chat only. If a key is configured but either service is offline, chat calls fail clearly; they do not silently fall back to a demo answer. Safe local demo actions remain separate.
 
 ## Where data lives
@@ -80,6 +84,7 @@ To restore, stop Ryze and preserve the current `%LOCALAPPDATA%\RyzeFramework` fo
 - If both services show connected but a chat fails, verify the exact model ID, key permissions/quota, and that the endpoint implements the compatible chat API. Check `opencode-error.log` and `server-error.log`; do not share the `.env` or key.
 - If port 3777 is occupied, stop the other program or ask for help before changing configuration. Do not delete the database to fix an integration issue.
 - If startup reports a migration error, stop and keep the data folder intact rather than deleting it.
+- If PowerShell says that `Configure-TelegramWorker.ps1` or `Start-TelegramWorker.ps1` cannot be loaded because script execution is disabled, do not change the permanent execution policy. Use `Configure-TelegramWorker.cmd` and `Start-TelegramWorker.cmd` from the installed Ryze folder instead. They apply the bypass only to that individual Ryze process.
 
 ### Confirmed ACL incident and fresh installation recovery
 
