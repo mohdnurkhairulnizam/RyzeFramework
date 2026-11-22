@@ -33,7 +33,7 @@ catch {
 }
 const loopback = ["127.0.0.1", "localhost", "[::1]"].includes(parsedUrl.hostname.toLowerCase());
 if (parsedUrl.username || parsedUrl.password || parsedUrl.search || parsedUrl.hash || (parsedUrl.protocol !== "https:" && !(parsedUrl.protocol === "http:" && loopback))) {
-  console.error("Use HTTPS for a hosted gateway. HTTP is allowed only for a gateway on this laptop's loopback address; URL credentials, queries, and fragments are not allowed.");
+  console.error("Use HTTPS for a hosted gateway. HTTP is allowed only for a gateway on this computer's loopback address; URL credentials, queries, and fragments are not allowed.");
   process.exit(2);
 }
 const normalizedUrl = parsedUrl.toString().replace(/\/+$/, "");

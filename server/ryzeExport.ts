@@ -24,7 +24,7 @@ export function buildPortableExport(data: Omit<PortableExport, "schemaVersion" |
       notes: [
         "Import this JSON into the local PROJECT RYZE migration utility.",
         "Copy referenced files using the file manifest; file bytes are kept outside the database.",
-        "Provider and integration flags export as disabled. Configure any laptop secrets locally rather than copying hosted credentials.",
+        "Provider and integration flags export as disabled. Configure any computer secrets locally rather than copying hosted credentials.",
       ],
     },
   };

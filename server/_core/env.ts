@@ -16,7 +16,7 @@ function getFreeLlmApiBaseUrl() {
   catch { throw new Error("RYZE_FREELLMAPI_BASE_URL must be a valid HTTPS URL (or an HTTP loopback URL). Configure it with Configure-FreeLLMAPI.cmd."); }
   const loopback = ["127.0.0.1", "localhost", "[::1]"].includes(url.hostname.toLowerCase());
   if (url.username || url.password || url.search || url.hash || (url.protocol !== "https:" && !(url.protocol === "http:" && loopback))) {
-    throw new Error("FreeLLMAPI must use HTTPS unless it is on this laptop's loopback address; URL credentials, query strings, and fragments are not allowed.");
+    throw new Error("FreeLLMAPI must use HTTPS unless it is on this computer's loopback address; URL credentials, query strings, and fragments are not allowed.");
   }
   return url.toString().replace(/\/+$/, "");
 }

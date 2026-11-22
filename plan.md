@@ -2,7 +2,7 @@
 
 ## Deliverable
 
-Prepare a manual-install ZIP for the owner's target Windows computer. It contains the Ryze source tree, locked dependencies, and double-click Windows install/start/stop/backup helpers. The install script builds the production app on the laptop; the ZIP deliberately excludes sandbox `node_modules`, Linux `dist`, `.git`, credentials, and user data. It does not bundle Node.js or install system software. Internet access is required during dependency installation.
+Prepare a manual-install ZIP for the owner's target Windows computer. It contains the Ryze source tree, locked dependencies, and double-click Windows install/start/stop/backup helpers. The install script builds the production app on the computer; the ZIP deliberately excludes sandbox `node_modules`, Linux `dist`, `.git`, credentials, and user data. It does not bundle Node.js or install system software. Internet access is required during dependency installation.
 
 ## Local-first architecture
 

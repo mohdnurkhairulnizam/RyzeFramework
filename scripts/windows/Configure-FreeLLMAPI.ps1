@@ -47,4 +47,4 @@ try {
   $inputBytes = $null
 }
 Write-Host 'Settings saved. Run Start-Ryze.cmd, sign in, and check the OpenCode + FreeLLMAPI status.' -ForegroundColor Green
-Write-Host 'Prompts sent to the gateway leave this laptop. OpenCode tools remain denied.' -ForegroundColor Yellow
+Write-Host 'Prompts sent to the gateway leave this computer. OpenCode tools remain denied.' -ForegroundColor Yellow
