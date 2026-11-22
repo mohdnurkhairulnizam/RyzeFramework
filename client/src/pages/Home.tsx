@@ -174,6 +174,7 @@ export default function Home() {
   });
   const [activeView, setActiveView] = useState<View>("workspace");
   const [activeSessionId, setActiveSessionId] = useState<string | undefined>();
+  const [telegramCode, setTelegramCode] = useState<{ code: string; expiresAt: string } | null>(null);
   const [prompt, setPrompt] = useState("");
   const [settings, setSettings] = useState({
     provider: "local-demo" as
@@ -211,7 +212,7 @@ export default function Home() {
     onError: error => toast.error(error.message),
   });
   const issueTelegramCode = trpc.ryze.issueTelegramSecretCode.useMutation({
-    onSuccess: result => { void telegramControl.refetch(); window.prompt("Copy this one-time Telegram authorization code. It expires in 15 minutes.", result.code); },
+    onSuccess: result => { void telegramControl.refetch(); setTelegramCode({ code: result.code, expiresAt: String(result.expiresAt) }); toast.success("One-time code generated locally."); },
     onError: error => toast.error(error.message),
   });
 
@@ -562,6 +563,7 @@ export default function Home() {
           removeTelegramAccount={() => removeTelegramAccount.mutate()}
           setTelegramAdmin={telegramUserId => setTelegramAdmin.mutate({ telegramUserId })}
           issueTelegramCode={() => issueTelegramCode.mutate()}
+          telegramCode={telegramCode}
           runBaseline={() => operationalBaseline.mutate()}
           baselineRunning={operationalBaseline.isPending}
           baselineConsole={baselineConsole}
@@ -1262,12 +1264,14 @@ function TelegramSettingsCard({
   removeAccount,
   setAdmin,
   issueCode,
+  telegramCode,
 }: {
   control?: any;
   saveAccount: (input: { label: string; phoneMasked: string; telegramUserId?: string; status?: "configured" | "authorized" | "paused" | "removed" }) => void;
   removeAccount: () => void;
   setAdmin: (telegramUserId: string) => void;
   issueCode: () => void;
+  telegramCode: { code: string; expiresAt: string } | null;
 }) {
   const [label, setLabel] = useState(control?.account?.label ?? "");
   const [phoneMasked, setPhoneMasked] = useState(control?.account?.phoneMasked ?? "");
@@ -1287,15 +1291,16 @@ function TelegramSettingsCard({
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <Input value={label} onChange={event => setLabel(event.target.value)} placeholder="Account label" className="border-white/10 bg-black/20 text-slate-100" />
         <Input value={phoneMasked} onChange={event => setPhoneMasked(event.target.value)} placeholder="Masked phone, e.g. +60••••89" className="border-white/10 bg-black/20 text-slate-100" />
-        <Input value={accountId} onChange={event => setAccountId(event.target.value)} placeholder="Connected Telegram account user ID" className="border-white/10 bg-black/20 text-slate-100" />
+        <Input value={accountId} onChange={event => setAccountId(event.target.value.replace(/\D/g, ""))} inputMode="numeric" placeholder="Account user ID (optional until login)" className="border-white/10 bg-black/20 text-slate-100" />
         <Button disabled={!label || !phoneMasked} onClick={() => saveAccount({ label, phoneMasked, telegramUserId: accountId || undefined, status: "configured" })} className="bg-cyan-400/15 text-cyan-100 hover:bg-cyan-400/25">{control?.account ? "Replace / save account" : "Add account"}</Button>
       </div>
       <div className="mt-4 rounded-xl border border-white/[0.07] bg-black/10 p-3">
         <div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold text-slate-200">Permanent admin Telegram user ID</span><Badge className="border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">{control?.access?.adminTelegramUserId ? "configured" : "not set"}</Badge></div>
-        <div className="mt-3 flex gap-2"><Input value={adminId} onChange={event => setAdminId(event.target.value)} placeholder="Numeric Telegram user ID" className="border-white/10 bg-black/20 text-slate-100" /><Button disabled={!/^\d+$/.test(adminId)} onClick={() => setAdmin(adminId)} className="bg-white/[0.08] text-slate-100 hover:bg-white/[0.14]">Save admin ID</Button></div>
-        <p className="mt-2 text-[11px] leading-5 text-slate-500">All other senders are ignored unless temporarily authorized with a one-time code.</p>
+        <div className="mt-3 flex gap-2"><Input value={adminId} onChange={event => setAdminId(event.target.value.replace(/\D/g, ""))} inputMode="numeric" placeholder="Numeric Telegram user ID" className="border-white/10 bg-black/20 text-slate-100" /><Button disabled={!/^\d+$/.test(adminId)} onClick={() => setAdmin(adminId)} className="bg-white/[0.08] text-slate-100 hover:bg-white/[0.14]">Save admin ID</Button></div>
+        <p className="mt-2 text-[11px] leading-5 text-slate-500">Use the numeric Telegram user ID only—not a phone number, username, or value beginning with `@`. All other senders are ignored unless temporarily authorized.</p>
       </div>
       <div className="mt-4 flex flex-wrap gap-2"><Button onClick={issueCode} className="bg-violet-400/15 text-violet-100 hover:bg-violet-400/25">Generate one-time code</Button><Button variant="outline" disabled={!control?.account} onClick={removeAccount} className="border-rose-300/20 text-rose-200 hover:bg-rose-300/10"><Trash2 className="mr-2 size-4" />Remove account</Button></div>
+      {telegramCode ? <div className="mt-3 rounded-xl border border-violet-300/20 bg-violet-300/[0.07] p-3"><p className="text-[11px] text-violet-100">Use this code only from the specific Telegram sender you want to authorize:</p><p className="mt-2 select-all font-mono text-lg font-bold tracking-wider text-white">{telegramCode.code}</p><p className="mt-1 text-[11px] text-violet-200">Expires {formatDate(telegramCode.expiresAt)}. It is shown only in this local dashboard.</p></div> : null}
       {expires ? <p className="mt-3 text-xs text-amber-200">Temporary sender: {control.access.temporaryTelegramUserId}; expires {formatDate(expires)}.</p> : null}
       <div className="mt-4 border-t border-white/[0.07] pt-4"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Telegram channel log</p><div className="mt-2 max-h-44 space-y-2 overflow-auto">{(control?.logs ?? []).slice(0, 20).map((log: any) => <div key={log.id} className="rounded-lg bg-black/10 px-3 py-2 text-[11px] text-slate-400"><span className="mr-2 font-semibold text-slate-300">{log.direction}</span>{log.status} · {log.messagePreview} · {formatDate(log.createdAt)}</div>)}{!control?.logs?.length ? <p className="text-xs text-slate-500">No Telegram events recorded.</p> : null}</div></div>
     </section>
@@ -1316,6 +1321,7 @@ function SettingsView({
   removeTelegramAccount,
   setTelegramAdmin,
   issueTelegramCode,
+  telegramCode,
   runBaseline,
   baselineRunning,
   baselineConsole,
@@ -1331,6 +1337,7 @@ function SettingsView({
   removeTelegramAccount: () => void;
   setTelegramAdmin: (telegramUserId: string) => void;
   issueTelegramCode: () => void;
+  telegramCode: { code: string; expiresAt: string } | null;
   settings: {
     provider: "local-demo" | "ollama-ready" | "external-disabled";
     ryzeModel: string;
@@ -1453,6 +1460,7 @@ function SettingsView({
               removeAccount={removeTelegramAccount}
               setAdmin={setTelegramAdmin}
               issueCode={issueTelegramCode}
+              telegramCode={telegramCode}
             />
           ) : null}
           <section className="rounded-[1.5rem] border border-rose-300/10 bg-rose-300/[0.035] p-5">
