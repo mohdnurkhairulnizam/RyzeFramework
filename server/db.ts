@@ -131,13 +131,22 @@ export async function saveTelegramAccount(userId: number, input: { label: string
 export async function removeTelegramAccount(userId: number) {
   const db = await requireDb();
   await db.update(ryzeTelegramAccounts).set({ status: "removed", updatedAt: new Date() }).where(eq(ryzeTelegramAccounts.userId, userId));
-  await db.update(ryzeTelegramAccess).set({ temporaryTelegramUserId: null, temporaryExpiresAt: null, secretCodeHash: null, secretCodeExpiresAt: null, updatedAt: new Date() }).where(eq(ryzeTelegramAccess.userId, userId));
+  await db.update(ryzeTelegramAccess).set({ temporaryTelegramUserId: null, temporaryExpiresAt: null, secretCodeHash: null, secretCodeExpiresAt: null, permanentSecretCodeHash: null, updatedAt: new Date() }).where(eq(ryzeTelegramAccess.userId, userId));
   return getTelegramControl(userId);
 }
 
-export async function setTelegramAdminUserId(userId: number, adminTelegramUserId: string) {
+export async function setTelegramAdminIdentity(userId: number, identity: string) {
   const db = await requireDb();
-  await db.insert(ryzeTelegramAccess).values({ userId, adminTelegramUserId }).onConflictDoUpdate({ target: ryzeTelegramAccess.userId, set: { adminTelegramUserId, updatedAt: new Date() } });
+  const normalized = identity.trim();
+  const values = normalized.startsWith("@") ? { adminTelegramUserId: null, adminTelegramUsername: normalized.slice(1).toLowerCase() } : { adminTelegramUserId: normalized, adminTelegramUsername: null };
+  await db.insert(ryzeTelegramAccess).values({ userId, ...values }).onConflictDoUpdate({ target: ryzeTelegramAccess.userId, set: { ...values, updatedAt: new Date() } });
+  return getTelegramControl(userId);
+}
+
+export async function setTelegramPermanentCode(userId: number, code: string) {
+  const db = await requireDb();
+  await db.insert(ryzeTelegramAccess).values({ userId, permanentSecretCodeHash: hashTelegramCode(code.trim()) }).onConflictDoUpdate({ target: ryzeTelegramAccess.userId, set: { permanentSecretCodeHash: hashTelegramCode(code.trim()), updatedAt: new Date() } });
+  await addTelegramLog(userId, { direction: "system", messagePreview: "Permanent Telegram recovery code changed.", status: "recovery-code-updated" });
   return getTelegramControl(userId);
 }
 
@@ -153,7 +162,11 @@ export async function issueTelegramSecretCode(userId: number) {
 export async function authorizeTelegramSender(userId: number, telegramUserId: string, codeText: string) {
   const db = await requireDb();
   const [access] = await db.select().from(ryzeTelegramAccess).where(eq(ryzeTelegramAccess.userId, userId)).limit(1);
-  const valid = Boolean(access?.secretCodeHash && access.secretCodeExpiresAt && access.secretCodeExpiresAt.getTime() > Date.now() && safeTelegramEqual(hashTelegramCode(codeText.trim()), access.secretCodeHash));
+  const suppliedHash = hashTelegramCode(codeText.trim());
+  const valid = Boolean(
+    (access?.secretCodeHash && access.secretCodeExpiresAt && access.secretCodeExpiresAt.getTime() > Date.now() && safeTelegramEqual(suppliedHash, access.secretCodeHash)) ||
+    (access?.permanentSecretCodeHash && safeTelegramEqual(suppliedHash, access.permanentSecretCodeHash))
+  );
   if (!valid) return false;
   const expires = new Date(Date.now() + 60 * 60 * 1000);
   await db.update(ryzeTelegramAccess).set({ temporaryTelegramUserId: telegramUserId, temporaryExpiresAt: expires, secretCodeHash: null, secretCodeExpiresAt: null, updatedAt: new Date() }).where(eq(ryzeTelegramAccess.userId, userId));
@@ -161,10 +174,11 @@ export async function authorizeTelegramSender(userId: number, telegramUserId: st
   return true;
 }
 
-export async function isTelegramSenderAllowed(userId: number, telegramUserId: string) {
+export async function isTelegramSenderAllowed(userId: number, telegramUserId: string, telegramUsername?: string) {
   const db = await requireDb();
   const [access] = await db.select().from(ryzeTelegramAccess).where(eq(ryzeTelegramAccess.userId, userId)).limit(1);
   if (access?.adminTelegramUserId === telegramUserId) return true;
+  if (access?.adminTelegramUsername && telegramUsername && access.adminTelegramUsername === telegramUsername.replace(/^@/, "").toLowerCase()) return true;
   return Boolean(access?.temporaryTelegramUserId === telegramUserId && access.temporaryExpiresAt && access.temporaryExpiresAt.getTime() > Date.now());
 }
 

@@ -128,11 +128,12 @@ class RuntimeApi:
             "automationPaused": paused,
         })
 
-    def inbound(self, *, chat_id: str, sender_id: str, sender_name: str, text: str, message_id: str) -> dict[str, Any]:
+    def inbound(self, *, chat_id: str, sender_id: str, sender_username: str, sender_name: str, text: str, message_id: str) -> dict[str, Any]:
         return self.request("POST", "/inbound", {
             "workerId": self.config.worker_id,
             "chatId": chat_id[:120],
             "senderId": sender_id[:120],
+            "senderUsername": sender_username[:64],
             "senderName": sender_name[:160],
             "text": text[:5000],
             "messageId": message_id[:120],
@@ -239,9 +240,10 @@ class Worker:
                     return
                 sender = await event.get_sender()
                 sender_id = str(getattr(sender, "id", "unknown"))
+                sender_username = str(getattr(sender, "username", "") or "")[:64]
                 sender_name = str(getattr(sender, "first_name", "") or "")[:160]
                 try:
-                    await asyncio.to_thread(self.api.inbound, chat_id=chat_id, sender_id=sender_id, sender_name=sender_name, text=event.raw_text, message_id=str(event.id))
+                    await asyncio.to_thread(self.api.inbound, chat_id=chat_id, sender_id=sender_id, sender_username=sender_username, sender_name=sender_name, text=event.raw_text, message_id=str(event.id))
                 except Exception as exc:
                     LOGGER.warning("inbound forwarding failed: %s", exc)
 

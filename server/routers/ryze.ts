@@ -14,7 +14,8 @@ import {
   issueTelegramSecretCode,
   removeTelegramAccount,
   saveTelegramAccount,
-  setTelegramAdminUserId,
+  setTelegramAdminIdentity,
+  setTelegramPermanentCode,
   listFiles,
   saveFileMetadata,
   searchMemory,
@@ -386,14 +387,17 @@ export const ryzeRouter = router({
     .input(z.object({
       label: z.string().trim().min(1).max(80),
       phoneMasked: z.string().trim().min(3).max(32),
-      telegramUserId: z.string().trim().regex(/^\d{1,32}$/).optional(),
+      telegramUserId: z.string().trim().regex(/^(?:\d{1,32}|@[A-Za-z0-9_]{5,32})$/).optional(),
       status: z.enum(["configured", "authorized", "paused", "removed"]).optional(),
     }))
     .mutation(({ ctx, input }) => saveTelegramAccount(ctx.user.id, input)),
   removeTelegramAccount: protectedProcedure.mutation(({ ctx }) => removeTelegramAccount(ctx.user.id)),
-  setTelegramAdminUserId: protectedProcedure
-    .input(z.object({ telegramUserId: z.string().trim().regex(/^\d{1,32}$/) }))
-    .mutation(({ ctx, input }) => setTelegramAdminUserId(ctx.user.id, input.telegramUserId)),
+  setTelegramAdminIdentity: protectedProcedure
+    .input(z.object({ identity: z.string().trim().regex(/^(?:\d{1,32}|@[A-Za-z0-9_]{5,32})$/) }))
+    .mutation(({ ctx, input }) => setTelegramAdminIdentity(ctx.user.id, input.identity)),
+  setTelegramPermanentCode: protectedProcedure
+    .input(z.object({ code: z.string().trim().min(6).max(128) }))
+    .mutation(({ ctx, input }) => setTelegramPermanentCode(ctx.user.id, input.code)),
   issueTelegramSecretCode: protectedProcedure.mutation(({ ctx }) => issueTelegramSecretCode(ctx.user.id)),
   exportData: protectedProcedure.query(({ ctx }) =>
     exportUserSandbox(ctx.user.id)

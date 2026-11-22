@@ -164,10 +164,12 @@ export const ryzeTelegramAccounts = sqliteTable("ryze_telegram_accounts", {
 export const ryzeTelegramAccess = sqliteTable("ryze_telegram_access", {
   userId: integer("userId").primaryKey().references(() => users.id, { onDelete: "cascade" }),
   adminTelegramUserId: text("adminTelegramUserId"),
+  adminTelegramUsername: text("adminTelegramUsername"),
   temporaryTelegramUserId: text("temporaryTelegramUserId"),
   temporaryExpiresAt: integer("temporaryExpiresAt", { mode: "timestamp_ms" }),
   secretCodeHash: text("secretCodeHash"),
   secretCodeExpiresAt: integer("secretCodeExpiresAt", { mode: "timestamp_ms" }),
+  permanentSecretCodeHash: text("permanentSecretCodeHash"),
   updatedAt: timestampMs("updatedAt"),
 });
 
