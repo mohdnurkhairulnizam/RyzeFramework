@@ -79,7 +79,7 @@ export function registerLocalAuthRoutes(app: Express) {
     const config = validPasswordConfig();
     const password = req.body?.password;
     let valid = false;
-    if (config && typeof password === "string" && password.length >= 12 && password.length <= 1024) {
+    if (config && typeof password === "string" && password.length >= 6 && password.length <= 1024) {
       const supplied = scryptSync(password, config.salt, config.hash.length);
       valid = timingSafeEqual(supplied, config.hash);
     }

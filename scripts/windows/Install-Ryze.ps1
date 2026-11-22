@@ -43,20 +43,20 @@ Push-Location $InstallDirectory
 try {
   Write-Host 'Installing locked application dependencies. Internet access is required for this step.'
   Invoke-Pnpm install --frozen-lockfile
-  Invoke-Pnpm rebuild better-sqlite3
+  Write-Host 'Checking the packaged SQLite runtime; no C++ build tools are required.'
   & node -e "const Database = require('better-sqlite3'); const db = new Database(':memory:'); db.close();"
-  if ($LASTEXITCODE -ne 0) { throw 'The SQLite native driver did not build correctly.' }
+  if ($LASTEXITCODE -ne 0) { throw 'The bundled SQLite runtime could not be loaded.' }
   Invoke-Pnpm run build:local
 
   if (Test-Path '.env') { throw 'Refusing to replace an existing local .env file.' }
-  $password = Read-Host 'Create an owner password (16+ characters)' -AsSecureString
+  $password = Read-Host 'Create an owner password (6+ characters; a 6-digit PIN is less secure)' -AsSecureString
   $confirmation = Read-Host 'Enter the owner password again' -AsSecureString
   $p1 = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($password)
   $p2 = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($confirmation)
   try {
     $plain1 = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($p1)
     $plain2 = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($p2)
-    if ($plain1.Length -lt 16) { throw 'Use at least 16 characters for the owner password.' }
+    if ($plain1.Length -lt 6) { throw 'Use at least 6 characters for the owner password.' }
     if ($plain1 -ne $plain2) { throw 'The two password entries did not match.' }
     $passwordBytes = [Text.Encoding]::UTF8.GetBytes($plain1)
     $encodedPassword = [Convert]::ToBase64String($passwordBytes)

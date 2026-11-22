@@ -47,9 +47,9 @@ Push-Location $InstallDirectory
 try {
   Write-Host 'Updating locked application dependencies. Internet access is required.'
   Invoke-Pnpm install --frozen-lockfile
-  Invoke-Pnpm rebuild better-sqlite3
+  Write-Host 'Checking the packaged SQLite runtime; no C++ build tools are required.'
   & node -e "const Database = require('better-sqlite3'); const db = new Database(':memory:'); db.close();"
-  if ($LASTEXITCODE -ne 0) { throw 'The SQLite native driver did not build correctly; the local database was not opened or deleted.' }
+  if ($LASTEXITCODE -ne 0) { throw 'The bundled SQLite runtime could not be loaded; the local database was not opened or deleted.' }
   Invoke-Pnpm run build:local
   if (-not (Test-Path -LiteralPath $EnvFile)) { throw 'The installed .env is missing after updating; stop and preserve the data folder before taking any further action.' }
 } finally { Pop-Location }

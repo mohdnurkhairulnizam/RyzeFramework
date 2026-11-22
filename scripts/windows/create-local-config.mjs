@@ -12,8 +12,8 @@ if (passwordBytes.toString("base64") !== encodedPassword) {
   console.error("Could not read the owner password from the secure installer prompt.");
   process.exit(2);
 }
-if (password.length < 16 || password.length > 1024 || /[\r\n]/.test(password)) {
-  console.error("Owner password must contain 16–1024 characters and no newline.");
+if (password.length < 6 || password.length > 1024 || /[\r\n]/.test(password)) {
+  console.error("Owner password must contain 6–1024 characters and no newline.");
   process.exit(2);
 }
 

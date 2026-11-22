@@ -14,10 +14,14 @@ Use 64-bit Windows 10 or newer. Install Node.js 22 or 24 LTS if needed; the inst
 
 1. Extract the ZIP to a temporary folder such as Downloads. Do not extract it into the final installation directory.
 2. Double-click `Install-Ryze.cmd`. If Windows asks for permission, allow the script to run for your user account; it does not require administrator rights or change the machine-wide execution policy.
-3. Enter the same owner password twice. Use at least 16 characters. The password is not saved in plain text; the installer stores a salted hash and random session-signing secret in local configuration.
-4. The installer copies the program to `%LOCALAPPDATA%\Programs\RyzeFramework`, installs locked dependencies, rebuilds and verifies the native SQLite driver, builds the local version, and restricts access to the local config/data folders to your Windows account. It may take several minutes and requires internet access.
+3. Enter the same owner password twice. Use at least 6 characters. The password is not saved in plain text; the installer stores a salted hash and random session-signing secret in local configuration. A six-digit numeric PIN is much easier to guess; use a longer mixed passphrase if practical.
+4. The installer copies the program to `%LOCALAPPDATA%\Programs\RyzeFramework`, installs locked dependencies, loads and verifies the SQLite prebuilt bundled with its dependency, builds the local version, and restricts access to the local config/data folders to your Windows account. It may take several minutes and requires internet access. Visual Studio or C++ Build Tools should not be required.
 
 If Node.js is missing or unsupported, install Node.js 22 or 24 LTS from the official Node.js website and run the installer again. Do not send your owner password or any future API keys in chat.
+
+## Fresh test reinstall (destructive)
+
+Use this only when you intentionally want to erase all Ryze test settings and local data. Stop Ryze first. In File Explorer, delete only these two Ryze folders: `%LOCALAPPDATA%\Programs\RyzeFramework` (installed application and `.env` configuration) and `%LOCALAPPDATA%\RyzeFramework` (SQLite database, files, OpenCode workspace, and logs). This permanently removes the local owner-password hash, any configured gateway key, and all Ryze data. Do not delete the extracted installer folder or unrelated files. Then run `Install-Ryze.cmd` from the extracted installer folder and create a new owner password.
 
 ## Update an existing installation
 

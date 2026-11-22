@@ -3,7 +3,7 @@ import { randomBytes, scryptSync } from "node:crypto";
 import express from "express";
 import { createServer, type Server } from "node:http";
 
-const testPassphrase = ["Correct", "Horse", "Battery", "42!"].join("-");
+const testPassphrase = "123456";
 const rejectedPassphrase = ["incorrect", "test", "credential", "000"].join("-");
 const salt = randomBytes(32);
 vi.stubEnv("RYZE_LOCAL_MODE", "true");
@@ -41,6 +41,13 @@ describe("local owner sign-in", () => {
       body: JSON.stringify({ password: testPassphrase }),
     });
     expect(crossOrigin.status).toBe(403);
+
+    const tooShort = await fetch(`${origin}/api/local-auth/login`, {
+      method: "POST",
+      headers: { "content-type": "application/json", origin },
+      body: JSON.stringify({ password: "12345" }),
+    });
+    expect(tooShort.status).toBe(401);
 
     const response = await fetch(`${origin}/api/local-auth/login`, {
       method: "POST",

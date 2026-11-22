@@ -94,10 +94,10 @@ function LocalLogin() {
       <h1 className="mt-3 text-3xl font-semibold">Unlock your workspace</h1>
       <p className="mt-3 text-sm leading-6 text-slate-400">Enter the owner password you set during installation. This local app is available only on this computer.</p>
       <label htmlFor="local-owner-password" className="mt-7 block text-sm font-medium text-slate-200">Owner password</label>
-      <Input id="local-owner-password" autoComplete="current-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="mt-2 h-12 border-white/10 bg-slate-950/70" required minLength={12} maxLength={1024} />
+      <Input id="local-owner-password" autoComplete="current-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="mt-2 h-12 border-white/10 bg-slate-950/70" required minLength={6} maxLength={1024} />
       {error ? <p role="alert" className="mt-3 text-sm text-rose-300">{error}</p> : null}
-      <Button type="submit" disabled={busy || password.length < 12} className="mt-5 h-12 w-full bg-cyan-500 text-slate-950 hover:bg-cyan-400">{busy ? "Checking…" : "Unlock locally"}</Button>
-      <p className="mt-5 text-xs leading-5 text-slate-500">Use the app through its localhost address. Do not expose this port to your network.</p>
+      <Button type="submit" disabled={busy || password.length < 6} className="mt-5 h-12 w-full bg-cyan-500 text-slate-950 hover:bg-cyan-400">{busy ? "Checking…" : "Unlock locally"}</Button>
+      <p className="mt-5 text-xs leading-5 text-slate-500">Six characters are accepted, but a six-digit PIN is easier to guess. Prefer a longer passphrase. Use the app through its localhost address; do not expose this port to your network.</p>
     </form>
   </main>;
 }
