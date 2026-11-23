@@ -25,7 +25,7 @@
 - Metadata-only file inspection is verified; uploaded content is not executed.
 - Worker stop/start replay behavior and duplicate/replayed inbound-event prevention are reported PASS.
 - A dashboard **Stage 1 acceptance self-test** produces non-secret `PASS`, `WARN`, `FAIL`, and `NOT_RUN` evidence.
-- Implicit FreeLLMAPI model fallback was removed. The exact model ID must be configured; no `auto` substitution is allowed.
+- Implicit FreeLLMAPI model fallback was removed. The model selector must be explicitly configured; an explicit `auto` value is allowed when FreeLLMAPI is intended to select the model.
 
 ## Current test evidence
 
@@ -44,7 +44,7 @@
 
 ## Remaining gates before Stage 1 operational status
 
-- Verify an explicit FreeLLMAPI model ID appears as configured in the self-test.
+- Verify an explicit FreeLLMAPI model selector appears as configured in the self-test; `auto` is valid when deliberately selected by the owner.
 - Complete Telegram acknowledgement-mismatch and provider timeout/failure evidence.
 - Verify restore/rollback of the server and worker configuration, including Telegram session recovery.
 - Verify generated report/file retrieval and delivery; metadata inspection alone is not file delivery.

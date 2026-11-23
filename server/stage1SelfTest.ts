@@ -47,8 +47,8 @@ function runtimeConfigCheck(): Stage1SelfTestCheck {
   if (!ENV.localMode) missing.push("local mode");
   if (!ENV.freeLlmApiBaseUrl) missing.push("FreeLLMAPI base URL");
   if (!ENV.freeLlmApiKey) missing.push("FreeLLMAPI key");
-  if (!process.env.RYZE_FREELLMAPI_MODEL?.trim() || process.env.RYZE_FREELLMAPI_MODEL.trim() === "auto")
-    missing.push("explicit FreeLLMAPI model ID");
+  if (!process.env.RYZE_FREELLMAPI_MODEL?.trim())
+    missing.push("FreeLLMAPI model selector (exact ID or explicit auto)");
   if (!ENV.openCodeBaseUrl) missing.push("OpenCode base URL");
   if (!ENV.workerToken) missing.push("worker token");
   return {
@@ -57,7 +57,7 @@ function runtimeConfigCheck(): Stage1SelfTestCheck {
     status: missing.length ? "WARN" : "PASS",
     detail: missing.length
       ? `Non-secret/runtime values are not fully explicit: ${missing.join(", ")}. No provider substitution was performed; secrets are not displayed.`
-      : "Local mode, explicit provider URL/model, OpenCode endpoint, and worker token are present; secret values were not read into the report.",
+      : `Local mode, provider URL, model selector (${process.env.RYZE_FREELLMAPI_MODEL?.trim()}), OpenCode endpoint, and worker token are present; secret values were not read into the report.`,
   };
 }
 

@@ -155,7 +155,7 @@ Implemented the OpenCode sidecar lifecycle alongside the Ryze Node server; local
 
 Verification in the sandbox: `pnpm check`, 32 Vitest tests, 4 worker tests, and `pnpm build:local` pass. OpenCode CLI 2.3.0 `debug config` accepts the managed config and recognizes the dedicated system instruction plus deny-all tool permissions. A separate OpenCode-to-mock-FreeLLMAPI smoke test authenticated on the loopback API, created a session, sent a streamed OpenAI-compatible request, and received the mock assistant reply. A live request against the user's real FreeLLMAPI endpoint has **not** been tested; no real endpoint/model/key has been supplied, and the physical target Windows computer is not connected to this session. No real gateway credentials were used.
 
-**Next action:** when you have the FreeLLMAPI API base URL and exact model ID, enter them and the key privately on the target Windows computer with `Configure-FreeLLMAPI.cmd`, then use a harmless test prompt and share only the status/error text. Install the revised ZIP and test double-click startup on that computer; do not send the key or `.env`. Telegram outbound remains disabled until the owner-approval workflow is implemented.
+**Next action:** when the FreeLLMAPI API base URL, model selector (an exact ID or deliberate `auto`), and key are available, enter them privately on the target Windows computer with `Configure-FreeLLMAPI.cmd`, then use a harmless test prompt and share only status/error text. Install the revised ZIP and test double-click startup on that computer; do not send the key or `.env`. Telegram outbound now follows the bounded autonomous same-chat scope documented in the current checkpoints.
 
 ## Suggested execution order
 
