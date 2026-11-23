@@ -5,6 +5,7 @@ $DataRoot = Join-Path $env:LOCALAPPDATA 'RyzeFramework'
 $PidFile = Join-Path $DataRoot 'ryze.pid'
 $DatabaseFile = Join-Path $DataRoot 'data\ryze.sqlite'
 $FilesDirectory = Join-Path $DataRoot 'files'
+$WorkerRoot = Join-Path $DataRoot 'telegram-worker'
 
 if (-not (Test-Path $EnvFile)) { throw 'Ryze local configuration is missing.' }
 if (-not (Test-Path $DatabaseFile)) { throw 'Ryze database does not exist yet; start the app once before creating a backup.' }
@@ -32,6 +33,7 @@ New-Item -ItemType Directory -Path $stage -Force | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'Could not protect the temporary backup staging directory.' }
 New-Item -ItemType Directory -Path (Join-Path $stage 'data') -Force | Out-Null
 New-Item -ItemType Directory -Path (Join-Path $stage 'config') -Force | Out-Null
+New-Item -ItemType Directory -Path (Join-Path $stage 'telegram\data') -Force | Out-Null
 try {
   Copy-Item $DatabaseFile (Join-Path $stage 'data\ryze.sqlite')
   foreach ($sidecar in @("$DatabaseFile-wal", "$DatabaseFile-shm")) {
@@ -39,6 +41,11 @@ try {
   }
   if (Test-Path $FilesDirectory) { Copy-Item $FilesDirectory (Join-Path $stage 'data\files') -Recurse }
   Copy-Item $EnvFile (Join-Path $stage 'config\app.env')
+  if (Test-Path (Join-Path $WorkerRoot 'worker.env')) { Copy-Item (Join-Path $WorkerRoot 'worker.env') (Join-Path $stage 'telegram\worker.env') }
+  foreach ($suffix in @('.session', '.session-wal', '.session-shm', '.session-journal')) {
+    $sessionFile = Join-Path $WorkerRoot "data\ryze-user$suffix"
+    if (Test-Path $sessionFile) { Copy-Item $sessionFile (Join-Path $stage "telegram\data\ryze-user$suffix") }
+  }
   Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $archive -CompressionLevel Optimal
   & icacls.exe $archive /inheritance:r /grant:r "${identity}:F" | Out-Null
   if ($LASTEXITCODE -ne 0) { throw 'Could not restrict access to the backup archive.' }

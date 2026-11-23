@@ -120,11 +120,13 @@ export async function createPrivateBackup() {
   const filesDirectory = ENV.storageDir;
   const installDirectory = process.cwd();
   const envFile = path.join(installDirectory, ".env");
+  const telegramRoot = path.join(process.env.LOCALAPPDATA || os.homedir(), "RyzeFramework", "telegram-worker");
   const backupRoot = path.join(homeDocuments(), "RyzeFramework-backups");
   const backupDirectory = path.join(backupRoot, `Ryze-backup-${runStamp}`);
   await mkdir(backupRoot, { recursive: true });
   await mkdir(path.join(backupDirectory, "data"), { recursive: true });
   await mkdir(path.join(backupDirectory, "config"), { recursive: true });
+  await mkdir(path.join(backupDirectory, "telegram", "data"), { recursive: true });
   await protectBackupDirectory(backupRoot);
   await protectBackupDirectory(backupDirectory);
   const databaseCopied = await copyIfPresent(databaseFile, path.join(backupDirectory, "data", "ryze.sqlite"));
@@ -132,6 +134,11 @@ export async function createPrivateBackup() {
   await copyIfPresent(`${databaseFile}-shm`, path.join(backupDirectory, "data", "ryze.sqlite-shm"));
   const filesCopied = await copyIfPresent(filesDirectory, path.join(backupDirectory, "data", "files"));
   const configCopied = await copyIfPresent(envFile, path.join(backupDirectory, "config", "app.env"));
+  const telegramConfigCopied = await copyIfPresent(path.join(telegramRoot, "worker.env"), path.join(backupDirectory, "telegram", "worker.env"));
+  let telegramSessionCopied = false;
+  for (const suffix of [".session", ".session-wal", ".session-shm", ".session-journal"]) {
+    telegramSessionCopied = (await copyIfPresent(path.join(telegramRoot, "data", `ryze-user${suffix}`), path.join(backupDirectory, "telegram", "data", `ryze-user${suffix}`))) || telegramSessionCopied;
+  }
   if (!databaseCopied || !configCopied)
     throw new Error("The local database or .env configuration is missing; no usable backup was created.");
   const manifest = {
@@ -142,10 +149,48 @@ export async function createPrivateBackup() {
       databaseBytes: await sizeOf(path.join(backupDirectory, "data", "ryze.sqlite")),
       filesBytes: filesCopied ? await sizeOf(path.join(backupDirectory, "data", "files")) : 0,
       configIncluded: configCopied,
+      telegramConfigIncluded: telegramConfigCopied,
+      telegramSessionIncluded: telegramSessionCopied,
     },
   };
   await writeFile(path.join(backupDirectory, "manifest.json"), JSON.stringify(manifest, null, 2), { mode: 0o600 });
   return { backupDirectory, manifest };
+}
+
+export async function listPrivateBackups() {
+  if (!ENV.localMode) return [];
+  const root = path.join(homeDocuments(), "RyzeFramework-backups");
+  if (!(await exists(root))) return [];
+  const entries = await readdir(root, { withFileTypes: true });
+  const backups = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory() && path.extname(entry.name).toLowerCase() !== ".zip") continue;
+    if (!/^Ryze-(backup|baseline)-|^Ryze-backup-.*\.zip$/i.test(entry.name)) continue;
+    const fullPath = path.join(root, entry.name);
+    const info = await stat(fullPath);
+    backups.push({ name: entry.name, backupPath: fullPath, modifiedAt: info.mtime.toISOString(), kind: entry.isDirectory() ? "folder" : "zip" });
+  }
+  return backups.sort((a, b) => b.modifiedAt.localeCompare(a.modifiedAt));
+}
+
+export async function requestPrivateRestore(backupPath: string) {
+  if (!ENV.localMode) throw new Error("Restore is available only in the local Windows build.");
+  const root = path.join(homeDocuments(), "RyzeFramework-backups");
+  const requested = path.resolve(backupPath);
+  const allowed = `${path.resolve(root)}${path.sep}`;
+  if (!requested.toLowerCase().startsWith(allowed.toLowerCase())) throw new Error("The selected backup is outside the protected Ryze backup folder.");
+  if (!(await exists(requested))) throw new Error("The selected backup no longer exists.");
+  const selectedInfo = await stat(requested);
+  if (selectedInfo.isDirectory()) {
+    if (!(await exists(path.join(requested, "data", "ryze.sqlite"))) || !(await exists(path.join(requested, "config", "app.env"))))
+      throw new Error("The selected backup is missing the Ryze database or configuration.");
+  } else if (path.extname(requested).toLowerCase() !== ".zip") {
+    throw new Error("The selected item is not a Ryze backup folder or ZIP archive.");
+  }
+  const requestPath = path.join(ENV.localDataDir, "data", "ryze-restore-request.json");
+  await mkdir(path.dirname(requestPath), { recursive: true });
+  await writeFile(requestPath, JSON.stringify({ backupPath: requested, requestedAt: new Date().toISOString() }, null, 2), { encoding: "utf8", mode: 0o600 });
+  return { name: path.basename(requested), restartRequired: true };
 }
 
 export async function runOperationalBaseline(userId: number) {

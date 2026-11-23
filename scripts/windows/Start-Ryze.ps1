@@ -3,11 +3,16 @@ param()
 
 $ErrorActionPreference = 'Stop'
 $InstallDirectory = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$DataRoot = Join-Path $env:LOCALAPPDATA 'RyzeFramework'
+$restoreScript = Join-Path $PSScriptRoot 'Apply-RyzeRestore.ps1'
+if (Test-Path -LiteralPath (Join-Path $DataRoot 'data\ryze-restore-request.json')) {
+  & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $restoreScript -InstallDirectory $InstallDirectory
+  if ($LASTEXITCODE -ne 0) { throw 'The requested Ryze restore could not be applied. Live data was preserved; review the restore error before starting again.' }
+}
 $EnvFile = Join-Path $InstallDirectory '.env'
 if (-not (Test-Path $EnvFile)) { throw 'Ryze is not installed. Run Install-Ryze.cmd first.' }
 if (-not (Test-Path (Join-Path $InstallDirectory 'dist\index.js'))) { throw 'The Ryze production build is missing. Preserve the local data folder and .env before repairing the installation; do not rerun the installer over existing data.' }
 
-$DataRoot = Join-Path $env:LOCALAPPDATA 'RyzeFramework'
 $Logs = Join-Path $DataRoot 'logs'
 $Workspace = Join-Path $DataRoot 'opencode-workspace'
 New-Item -ItemType Directory -Path $Logs -Force | Out-Null

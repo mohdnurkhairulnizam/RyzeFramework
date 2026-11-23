@@ -100,3 +100,9 @@ For a deliberate fresh installation after preserving any needed backup, stop Ryz
 Extract a fresh installer and run `Install-Ryze.cmd`. Do not restore the old `logs` or `opencode-workspace` directories into the new installation. Future update packages must retain the stable startup path and must not apply a file-level ACL that is protected with no allow entry.
 
 The owner has now confirmed successful startup, sign-in, and one model-backed OpenCode/FreeLLMAPI text-chat request on the physical target Windows computer. Repeat start/stop, backup/restore, and ACL behavior for newly created files remain to be verified from the computer. After installation, share any error text here (remove personal paths if you prefer); do not share `.env`, the database, backups, Telegram session files, or passwords.
+
+## Dashboard restore
+
+The installed dashboard Settings page lists protected backups found under `%USERPROFILE%\Documents\RyzeFramework-backups`. Select a backup and press **Restore selected backup**, then confirm. Ryze queues the request and applies it on the next normal start, after preserving the current database, files, `.env`, and Telegram worker configuration/session in a protected `Ryze-pre-restore-*` backup. The worker `.venv` is not replaced. Do not delete the preserved copy until the restored dashboard and Telegram inbound checks are verified.
+
+The private backup format includes `telegram\worker.env` and the Telethon `telegram\data\ryze-user.session` files when present. These are sensitive login material and must not be uploaded or pasted into support chat. Backups made before this capability was added may not include them.

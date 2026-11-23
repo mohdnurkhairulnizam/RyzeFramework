@@ -80,3 +80,5 @@ Before enabling the deferred integrations, create separate reviewed changes for:
 7. An append-first synchronisation queue with duplicate and conflict handling.
 
 Until those gates are approved and tested, the current local build remains a safe local demo with a verified text-chat integration, not the origin blueprint's operational AI agent. The original MySQL migration files are retained as history, but the Windows ZIP uses the separate SQLite migration directory.
+
+**Restore checkpoint (23 November 2026):** The local dashboard now lists protected Ryze backup folders and ZIP files, requires explicit confirmation, and queues a validated restore for the next Windows startup. Startup preserves the current live database, files, `.env`, and Telegram worker configuration/session before replacement, repairs local ACL inheritance, and leaves the worker `.venv` untouched. New private and command-line backups include `telegram\worker.env` and the Telethon session when present; ordinary exports do not. Telegram remains inbound-only and the outbound safety gate is not enabled.

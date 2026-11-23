@@ -327,9 +327,18 @@ export default function Home() {
     },
   });
   const privateBackup = trpc.ryze.privateBackup.useMutation({
-    onSuccess: result => toast.success(`Private backup created: ${result.backupDirectory}`),
+    onSuccess: async result => { await utils.ryze.privateBackups.invalidate(); toast.success(`Private backup created: ${result.backupDirectory}`); },
     onError: mutationError => toast.error(mutationError.message),
   });
+  const privateBackups = trpc.ryze.privateBackups.useQuery(undefined, { enabled: localBuild && isAuthenticated, refetchInterval: 10000 });
+  const [selectedPrivateBackup, setSelectedPrivateBackup] = useState("");
+  const privateRestore = trpc.ryze.requestPrivateRestore.useMutation({
+    onSuccess: result => toast.success(`${result.name} is queued. Stop and restart Ryze to apply it.`),
+    onError: mutationError => toast.error(mutationError.message),
+  });
+  useEffect(() => {
+    if (!selectedPrivateBackup && privateBackups.data?.[0]) setSelectedPrivateBackup(privateBackups.data[0].backupPath);
+  }, [privateBackups.data, selectedPrivateBackup]);
   const [baselineConsole, setBaselineConsole] = useState("");
   const updateSettings = trpc.ryze.updateSettings.useMutation({
     onSuccess: async () => {
@@ -623,6 +632,14 @@ export default function Home() {
           baselineConsole={baselineConsole}
           runPrivateBackup={() => privateBackup.mutate()}
           privateBackupRunning={privateBackup.isPending}
+          privateBackups={privateBackups.data ?? []}
+          selectedPrivateBackup={selectedPrivateBackup}
+          setSelectedPrivateBackup={setSelectedPrivateBackup}
+          requestPrivateRestore={() => {
+            if (!selectedPrivateBackup) return toast.error("Select a backup first.");
+            if (window.confirm("Restore this backup on the next Ryze start? Current live data will be preserved first, but the selected backup will replace the active database, files, configuration, and Telegram session.")) privateRestore.mutate({ backupPath: selectedPrivateBackup });
+          }}
+          privateRestoreRunning={privateRestore.isPending}
         />
       )}
     </DashboardLayout>
@@ -1439,6 +1456,11 @@ function SettingsView({
   baselineConsole,
   runPrivateBackup,
   privateBackupRunning,
+  privateBackups,
+  selectedPrivateBackup,
+  setSelectedPrivateBackup,
+  requestPrivateRestore,
+  privateRestoreRunning,
 }: {
   localBuild: boolean;
   integrationStatus?: {
@@ -1483,6 +1505,11 @@ function SettingsView({
   baselineConsole: string;
   runPrivateBackup: () => void;
   privateBackupRunning: boolean;
+  privateBackups: { name: string; backupPath: string; modifiedAt: string; kind: string }[];
+  selectedPrivateBackup: string;
+  setSelectedPrivateBackup: (value: string) => void;
+  requestPrivateRestore: () => void;
+  privateRestoreRunning: boolean;
 }) {
   return (
     <div className="mx-auto max-w-6xl">
@@ -1658,12 +1685,25 @@ function SettingsView({
               <Button
                 variant="outline"
                 onClick={runPrivateBackup}
-                disabled={!localBuild || privateBackupRunning || baselineRunning}
+                disabled={!localBuild || privateBackupRunning || privateRestoreRunning || baselineRunning}
                 className="mt-3 w-full rounded-xl border-emerald-300/20 bg-emerald-300/[0.04] text-emerald-100 hover:bg-emerald-300/[0.12]"
               >
                 {privateBackupRunning ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Download className="mr-2 size-4" />}
                 {privateBackupRunning ? "Creating backup…" : "Create private backup"}
               </Button>
+              <div className="mt-4 border-t border-white/[0.08] pt-4">
+                <p className="text-xs font-semibold text-slate-200">Restore an existing backup</p>
+                <p className="mt-2 text-[11px] leading-5 text-slate-500">Ryze queues the restore and applies it only when you next start the app. Current database, files, configuration, and Telegram session are preserved first in a protected <code>Ryze-pre-restore-*</code> folder. The Telegram virtual environment is not replaced.</p>
+                <select value={selectedPrivateBackup} onChange={event => setSelectedPrivateBackup(event.target.value)} disabled={!localBuild || privateBackupRunning || privateRestoreRunning || baselineRunning} className="mt-3 flex h-10 w-full rounded-xl border border-white/10 bg-black/20 px-3 text-xs text-slate-100 outline-none focus:border-cyan-300/40">
+                  <option value="">Select a backup…</option>
+                  {privateBackups.map(backup => <option key={backup.backupPath} value={backup.backupPath}>{backup.name} · {formatDate(backup.modifiedAt)}</option>)}
+                </select>
+                <Button variant="outline" onClick={requestPrivateRestore} disabled={!localBuild || !selectedPrivateBackup || privateBackupRunning || privateRestoreRunning || baselineRunning} className="mt-3 w-full rounded-xl border-amber-300/20 bg-amber-300/[0.04] text-amber-100 hover:bg-amber-300/[0.12]">
+                  {privateRestoreRunning ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Download className="mr-2 size-4" />}
+                  {privateRestoreRunning ? "Queueing restore…" : "Restore selected backup"}
+                </Button>
+                {!privateBackups.length ? <p className="mt-2 text-[11px] text-slate-500">No protected Ryze backups were found under Documents\RyzeFramework-backups.</p> : null}
+              </div>
             </div>
           </section>
           {baselineConsole ? (

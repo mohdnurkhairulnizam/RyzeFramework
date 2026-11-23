@@ -190,3 +190,11 @@ Two follow-up requests asked for two separate Markdown bullet lines; both replie
 The owner completed the dashboard Telegram login-code flow on the target Windows computer and reported the inbound-only acceptance test successful. The connected user account reached authorized/running status; the permanent admin sender was accepted; ordinary messages from another sender were ignored; the exact recovery code temporarily authorized that sender for one hour; and dashboard pause, resume, and stop controls worked. No outbound Telegram reply was sent. This closes the staged inbound deployment verification, but not the outbound approval, suppression, duplicate-prevention, or result-validation gate.
 
 **Next approved direction:** implement direct same-chat Telegram replies only after the server-enforced outbound safety gate is designed and tested. Then add Gmail through Google OAuth, with Drive and Photos as separate optional scopes. Never request or store a Gmail password, and do not enable either workstream merely by documenting it.
+
+## Restore and Telegram backup checkpoint
+
+- [x] Add a dashboard selector and explicit confirmation for protected backup restore.
+- [x] Apply restore only during the next Windows startup, preserving current live data first.
+- [x] Include Telegram `worker.env` and Telethon session files in protected backups while excluding `.venv`.
+- [ ] Verify restore on the target Windows computer, including Telegram session recovery and preserved-copy review.
+- [ ] Keep outbound Telegram replies disabled until owner approval, pause/stop, suppression, duplicate, and result-validation controls pass.

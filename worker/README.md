@@ -54,3 +54,9 @@ No server command is interpreted as shell, Python, filesystem or arbitrary Teleg
 ## Deployment note
 
 The worker is a persistent local process. Keep the owner computer online for live Telegram handling and supervise it with an approved platform service manager. The dashboard-controlled login and inbound lifecycle have been verified on the target Windows computer, including permanent-admin authorization, unauthorized-sender ignoring, one-hour recovery-code authorization, and pause/resume/stop controls. The Windows service/scheduled-task configuration and secure secret-injection method are not yet selected or tested. Preserve the local session and diagnostic logs separately from Git. The hosted sandbox API is stateless at the HTTP layer; worker state and command history are stored in the Ryze database. Outbound Telegram replies remain disabled pending the owner-approval workflow.
+
+## Backup boundary
+
+The Ryze dashboard and Windows ZIP backup can include the protected `worker.env` and Telethon `data\ryze-user.session` files so a restore can recover Telegram configuration and authorization. The Python virtual environment is intentionally excluded and is recreated or retained locally. Treat the backup as secret material: never send the archive, worker environment, session, API hash, phone code, or two-step password in chat.
+
+Outbound Telegram replies are still disabled. Before direct same-chat replies are enabled, the server must enforce owner approval, pause/stop checks, suppression checks, duplicate prevention, and result validation.

@@ -40,7 +40,7 @@ import {
   getIntegrationStatus,
   sendOpenCodePrompt,
 } from "../openCode";
-import { createPrivateBackup, runOperationalBaseline } from "../operationalBaseline";
+import { createPrivateBackup, listPrivateBackups, requestPrivateRestore, runOperationalBaseline } from "../operationalBaseline";
 import { ENV } from "../_core/env";
 import { protectedProcedure, router } from "../_core/trpc";
 import {
@@ -324,6 +324,10 @@ export const ryzeRouter = router({
     runOperationalBaseline(ctx.user.id)
   ),
   privateBackup: protectedProcedure.mutation(() => createPrivateBackup()),
+  privateBackups: protectedProcedure.query(() => listPrivateBackups()),
+  requestPrivateRestore: protectedProcedure
+    .input(z.object({ backupPath: z.string().min(1).max(1000) }))
+    .mutation(({ input }) => requestPrivateRestore(input.backupPath)),
   createSession: protectedProcedure
     .input(z.object({ name: z.string().trim().min(1).max(80).optional() }))
     .mutation(({ ctx, input }) => createSession(ctx.user.id, input.name)),

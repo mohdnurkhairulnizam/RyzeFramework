@@ -410,3 +410,13 @@ Do not include passwords, API keys, `.env` contents, Telegram sessions, or unred
 ## 9. Updating this manual
 
 When a feature is completed and verified, add or update its simple user instructions here. Keep the wording practical: what the user clicks or runs, what should happen, and what to do if it fails. Update the revision number at the top when the manual changes.
+
+### Dashboard restore and Telegram recovery
+
+In **Settings**, create a private backup or select an existing backup under `Documents\RyzeFramework-backups`, then choose **Restore selected backup**. Ryze asks for confirmation and queues the restore; it is not applied while the dashboard is running. Stop Ryze and start it again. Before replacement, Ryze preserves the current database, files, `.env`, and Telegram worker configuration/session in a protected `Ryze-pre-restore-*` folder.
+
+New Ryze backups include the Telegram worker's `worker.env` and Telethon session files, but not the worker virtual environment. Restoring a backup therefore restores the Telegram configuration and logged-in session without replacing `.venv`. Keep these backups private: they can contain credentials, hashes, personal data, and a Telegram login session. Never send a backup archive, `worker.env`, or session file in chat. Older backups may not contain Telegram files; in that case the existing Telegram session is left unchanged and the worker may need **Prepare Telegram** and login again.
+
+### Why Telegram does not reply yet
+
+Current Telegram behavior is inbound-only. The permanent admin is accepted, ordinary senders are ignored, and an exact recovery code temporarily authorizes one sender for one hour. Outbound replies remain disabled until Ryze enforces owner approval, checks pause/stop state immediately before sending, rejects suppressed senders/chats/tasks/messages, prevents duplicate sends across retries, and verifies Telegram's acknowledged recipient, content, and message ID before recording success. This is the server-enforced outbound safety gate; it prevents a previously allowed event from becoming an unintended message.
