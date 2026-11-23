@@ -275,6 +275,18 @@ If ACL reset repairs one file but another existing Ryze file immediately fails, 
 
 Then run `Install-Ryze.cmd` from a newly extracted installer. Do not copy the old `data`, `logs`, or `opencode-workspace` folder into the fresh installation. Future upgrades must preserve the stable startup scripts and must not reintroduce a protected empty ACL on existing files.
 
+### `EPERM` when selecting **Prepare Telegram**
+
+If the dashboard reports an error opening:
+
+```text
+%LOCALAPPDATA%\RyzeFramework\telegram-worker\worker.env
+```
+
+the existing worker folder or environment file may have a stale file-level ACL. Select **Prepare Telegram** again in the dashboard. The current revision automatically resets the ACL on the existing Telegram worker folder and `worker.env` before writing the updated local configuration. It preserves the worker configuration and Telegram session; it does not delete or replace the account session.
+
+If the retry still fails, stop Ryze, run the one-button operational baseline, and preserve the diagnostic console output. Do not paste `worker.env`, Telegram API credentials, login codes, recovery codes, session files, or other secrets into support messages.
+
 ### FreeLLMAPI is unavailable
 
 1. Confirm the gateway URL and model ID.

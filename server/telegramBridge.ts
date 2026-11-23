@@ -63,6 +63,19 @@ async function protectWorkerRoot() {
     throw new Error("Ryze could not protect the local Telegram worker folder.");
   }
 }
+async function repairWorkerAcls() {
+  if (process.platform !== "win32") return;
+  try {
+    await execFileAsync("icacls.exe", [workerRoot(), "/reset"], { windowsHide: true });
+  } catch {
+    throw new Error("Ryze could not repair access to the local Telegram worker folder. Stop Ryze and run the operational baseline before retrying.");
+  }
+  try {
+    await execFileAsync("icacls.exe", [workerEnvPath(), "/reset"], { windowsHide: true });
+  } catch {
+    // worker.env may not exist on a first setup; the write below creates it.
+  }
+}
 async function ensurePythonEnvironment() {
   const pythonPath = workerPythonPath();
   try { await readFile(pythonPath); return pythonPath; } catch { /* create below */ }
@@ -75,6 +88,7 @@ async function ensurePythonEnvironment() {
 async function writeWorkerEnvironment(input: TelegramSetup) {
   validateSetup(input);
   await mkdir(path.join(workerRoot(), "data"), { recursive: true });
+  await repairWorkerAcls();
   const token = ENV.workerToken;
   if (!token) throw new Error("Ryze worker token is not available. Run the Ryze updater and restart Ryze.");
   const session = path.join(workerRoot(), "data", "ryze-user");
