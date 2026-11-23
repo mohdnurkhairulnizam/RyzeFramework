@@ -67,10 +67,10 @@ The retention and rollback policy is in `docs/stage-1-retention-rollback.md`. Au
 
 ## Latest repository state
 
-- Latest commit: `95390ab` (`test explicit FreeLLMAPI model selectors`).
-- Previous configuration commit: `44f8fef` (`allow explicit FreeLLMAPI auto selector`).
+- Latest commit: `6ade2c5` (`harden Stage 1 runtime and execution boundaries`).
+- Previous handoff commit: `c9f9bfc` (`update Stage 1 continuation handoff`).
 - Branch `stable-merge` is pushed to `origin/stable-merge`.
-- Refreshed package: `RyzeFramework-stage1-acceptance-self-test-v21.zip`; SHA-256 `ef09ca46c136646805ff7527948acab79abbd5ffb4a7357c4852e9a0d990b4fe`.
+- Refreshed package is generated from the latest pushed commit after this handoff update; verify its SHA-256 from the delivery message.
 
 ## Important constraints
 
