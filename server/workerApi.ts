@@ -20,7 +20,7 @@ import {
   upsertWorkerHeartbeat,
 } from "./db";
 import { determineDemoAction } from "./ryzeDemo";
-import { runSafeDemo } from "./routers/ryze";
+import { runOpenCodeChat, runSafeDemo } from "./routers/ryze";
 import { ENV } from "./_core/env";
 
 const workerIdSchema = z.string().regex(/^[a-zA-Z0-9._-]{1,64}$/);
@@ -169,7 +169,9 @@ export function registerWorkerRoutes(app: Express) {
     const action = determineDemoAction(input.data.text);
     const task = await createTask(userId, session.id, input.data.text, action);
     await addTaskLog(userId, task.id, "system", "info", "Task accepted from the authorized Telegram user-account worker.");
-    const result = await runSafeDemo(userId, { ...task, action });
+    const result = ENV.localMode && Boolean(ENV.freeLlmApiKey) && action === "safe_analysis"
+      ? await runOpenCodeChat(userId, session.id, task)
+      : await runSafeDemo(userId, { ...task, action });
     const replyText = `Ryze: ${result.summary}`.slice(0, 4000);
     const replyKey = crypto.createHash("sha256").update(`${input.data.workerId}\0${input.data.chatId}\0${input.data.messageId}`).digest("hex");
     const worker = await getWorkerForUser(userId, input.data.workerId);

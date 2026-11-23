@@ -239,11 +239,11 @@ export async function runSafeDemo(
   }
 }
 
-async function runOpenCodeChat(
+export async function runOpenCodeChat(
   userId: number,
   sessionId: string,
   task: { id: string; prompt: string }
-): Promise<boolean> {
+): Promise<{ success: boolean; summary: string }> {
   await updateTask(userId, task.id, { status: "IN_PROGRESS" });
   await addTaskLog(
     userId,
@@ -281,7 +281,7 @@ async function runOpenCodeChat(
       totalSteps: 1,
       completedAt: new Date(),
     });
-    return true;
+    return { success: true, summary: answer };
   } catch (error) {
     const summary =
       error instanceof Error
@@ -293,7 +293,7 @@ async function runOpenCodeChat(
       summary,
       completedAt: new Date(),
     });
-    return false;
+    return { success: false, summary };
   }
 }
 
@@ -360,13 +360,13 @@ export const ryzeRouter = router({
         ENV.localMode &&
         Boolean(ENV.freeLlmApiKey) &&
         action === "safe_analysis";
-      const success = useOpenCode
+      const chatResult = useOpenCode
         ? await runOpenCodeChat(ctx.user.id, session.id, task)
         : (await runSafeDemo(ctx.user.id, { ...task, action })).success;
       return {
         taskId: task.id,
         mode: useOpenCode ? ("opencode" as const) : ("demo" as const),
-        success,
+        success: typeof chatResult === "boolean" ? chatResult : chatResult.success,
       };
     }),
   upload: protectedProcedure
