@@ -7,15 +7,15 @@ This checklist turns the origin blueprint and current repository status into an 
 - [x] Password-protected localhost dashboard, local SQLite database, and safe demo task foundation exist.
 - [x] Per-user data scoping, task logs, bounded retries, safe demo routing, file metadata, and portable export exist.
 - [x] Local Telethon user-account worker and authenticated worker API code exist.
-- [x] Automatic Telegram replies are disabled pending an owner-approval workflow; a regression test now guards this fail-closed state.
+- [x] Autonomous Telegram same-chat replies are implemented without per-message approval; server checks, durable reply keys, content hashing, and Telegram acknowledgement validation remain enforced.
 - [x] Build a Windows installer/launcher/stop/backup package using local SQLite and a protected local file directory.
 - [x] Add a first-run scrypt owner password, localhost/Origin checks, rate limiting, and Windows install/backup guidance.
 - [x] Current code passes TypeScript check, 32 Vitest tests across 12 files, 4 worker tests, and the local production build; a sandbox smoke test verified health, login, migration, and owner bootstrap.
 - [x] Install the latest ZIP on the target Windows computer, repair ACLs on existing SQLite database/WAL/SHM files without deleting contents, sign in, and reach the Ryze dashboard.
 - [x] Complete one harmless model-backed text chat from the target Windows dashboard through OpenCode and the local FreeLLMAPI gateway; general OpenCode tool execution remains disabled.
 - [x] Configure the local gateway at `http://127.0.0.1:31415/v1` and receive a completed model reply. The exact model ID and upstream provider route were not recorded; no API key is stored in Git.
-- [x] Telegram inbound setup and sender-only communication are verified on the target Windows computer; outbound communication remains disabled.
-- [ ] Owner approval is implemented and enforced for outbound Telegram actions; outbound sending currently remains disabled.
+- [x] Telegram inbound setup and sender-only communication are verified on the target Windows computer; autonomous outbound code is implemented but target-Windows delivery verification remains open.
+- [x] Manual owner approval was intentionally removed for the approved same-chat scope; pause/stop, eligibility, duplicate, and result-validation controls remain required.
 - [ ] All nine Stage 1 origin completion criteria pass in the intended deployment environment.
 
 ## Workstream 0 — Establish a safe implementation baseline

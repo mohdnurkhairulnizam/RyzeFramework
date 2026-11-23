@@ -8,9 +8,14 @@ import {
   authorizeTelegramSender,
   createTask,
   ensureSession,
+  getWorkerCommand,
+  getWorkerForUser,
   getUserByOpenId,
+  hasTelegramReplyRecord,
+  hasTelegramReplyBeenSent,
   isTelegramSenderAllowed,
   listWorkerCommands,
+  queueWorkerCommand,
   updateWorkerCommand,
   upsertWorkerHeartbeat,
 } from "./db";
@@ -44,6 +49,9 @@ const eventSchema = z.object({
 const ackSchema = z.object({
   status: z.enum(["acknowledged", "completed", "failed"]),
   message: z.string().trim().max(300).optional(),
+  chatId: z.string().trim().max(120).optional(),
+  messageId: z.string().trim().max(120).optional(),
+  contentHash: z.string().regex(/^[a-f0-9]{64}$/).optional(),
 });
 
 function safeEqual(left: string, right: string) {
@@ -112,6 +120,19 @@ export function registerWorkerRoutes(app: Express) {
     const workerId = workerIdSchema.safeParse(String(req.body?.workerId ?? req.header("x-ryze-worker-id") ?? "primary"));
     if (!Number.isInteger(commandId) || commandId < 1 || !input.success || !workerId.success) return void jsonError(res, 400, "INVALID_ACK", "Command acknowledgement is invalid.");
     const userId = await ownerId();
+    const command = await getWorkerCommand(userId, workerId.data, commandId);
+    if (!command) return void jsonError(res, 404, "COMMAND_NOT_FOUND", "Worker command was not found.");
+    if (command.command === "send_message" && input.data.status === "completed") {
+      const payload = command.payload ? JSON.parse(command.payload) as { chatId?: string; contentHash?: string; replyKey?: string; taskId?: string } : {};
+      const worker = await getWorkerForUser(userId, workerId.data);
+      if (!worker || worker.status !== "online" || worker.automationPaused) return void jsonError(res, 409, "SEND_PAUSED", "Telegram sending is paused or the worker is not online.");
+      if (!payload.chatId || input.data.chatId !== payload.chatId || !payload.contentHash || input.data.contentHash !== payload.contentHash || !input.data.messageId) return void jsonError(res, 409, "SEND_VALIDATION_FAILED", "Telegram did not confirm the expected recipient and content.");
+      if (payload.replyKey && await hasTelegramReplyBeenSent(userId, payload.replyKey)) return void jsonError(res, 409, "DUPLICATE_REPLY", "This Telegram reply was already recorded as sent.");
+      await addTelegramLog(userId, { direction: "outgoing", chatId: payload.chatId, messagePreview: input.data.message ?? "Autonomous same-chat reply sent.", status: `sent:${payload.replyKey ?? commandId}` });
+    }
+    if (command.command === "send_message" && input.data.status === "failed") {
+      await addTelegramLog(userId, { direction: "system", messagePreview: "Autonomous Telegram reply failed; the failure was retained for diagnosis.", status: "send-failed" });
+    }
     await updateWorkerCommand(userId, workerId.data, commandId, input.data.status);
     res.json({ ok: true });
   }));
@@ -148,10 +169,18 @@ export function registerWorkerRoutes(app: Express) {
     const action = determineDemoAction(input.data.text);
     const task = await createTask(userId, session.id, input.data.text, action);
     await addTaskLog(userId, task.id, "system", "info", "Task accepted from the authorized Telegram user-account worker.");
-    await runSafeDemo(userId, { ...task, action });
-    await addTaskLog(userId, task.id, "system", "warning", "No Telegram reply was sent: the owner-approval gate is not implemented yet.");
-    await addTelegramLog(userId, { direction: "system", telegramUserId: input.data.senderId, chatId: input.data.chatId, messagePreview: "Inbound task accepted; outbound reply remains disabled.", status: "accepted-no-reply" });
-    res.status(202).json({ taskId: task.id, accepted: true });
+    const result = await runSafeDemo(userId, { ...task, action });
+    const replyText = `Ryze: ${result.summary}`.slice(0, 4000);
+    const replyKey = crypto.createHash("sha256").update(`${input.data.workerId}\0${input.data.chatId}\0${input.data.messageId}`).digest("hex");
+    const worker = await getWorkerForUser(userId, input.data.workerId);
+    const contentHash = crypto.createHash("sha256").update(replyText).digest("hex");
+    if (worker?.status === "online" && !worker.automationPaused && !(await hasTelegramReplyRecord(userId, replyKey))) {
+      await queueWorkerCommand(userId, input.data.workerId, "send_message", { chatId: input.data.chatId, text: replyText, sourceMessageId: input.data.messageId, taskId: task.id, replyKey, contentHash });
+      await addTelegramLog(userId, { direction: "system", telegramUserId: input.data.senderId, chatId: input.data.chatId, messagePreview: "Autonomous same-chat reply queued.", status: `queued:${replyKey}` });
+    } else {
+      await addTelegramLog(userId, { direction: "system", telegramUserId: input.data.senderId, chatId: input.data.chatId, messagePreview: "Reply suppressed because Telegram sending is paused or unavailable.", status: "reply-suppressed" });
+    }
+    res.status(202).json({ taskId: task.id, accepted: true, replyQueued: worker?.status === "online" && !worker.automationPaused });
   }));
 }
 

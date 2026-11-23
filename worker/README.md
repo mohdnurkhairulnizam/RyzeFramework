@@ -31,7 +31,7 @@ For the staged Windows flow, run these commands from the installed Ryze `scripts
 .\Start-TelegramWorker.ps1 run
 ```
 
-`check` sends one paused heartbeat to the local Ryze server and must pass before Telegram login. `login` creates or reuses the protected Telethon session and requests the phone code and optional two-step password locally. `run` starts the inbound-only worker. Do not register a scheduled task yet; that supervision mechanism remains a later tested stage.
+`check` sends one paused heartbeat to the local Ryze server and must pass before Telegram login. `login` creates or reuses the protected Telethon session and requests the phone code and optional two-step password locally. `run` starts the worker. It receives authorized text and may send autonomous replies only to the originating chat. Do not register a scheduled task yet; that supervision mechanism remains a later tested stage.
 
 On Linux or macOS:
 
@@ -47,16 +47,16 @@ Before either command, a secure launcher must provide the required environment v
 
 ## Hosted API behavior
 
-The worker sends sanitized heartbeats, forwards incoming text messages, polls a small command queue, and acknowledges only `pause`, `resume`, `reload_config`, and `request_status`. The server creates a user-scoped Ryze task for each inbound message. **Outbound Telegram replies are disabled** until a server-enforced owner-approval flow is implemented and tested; the worker rejects `send_message` as an unknown command.
+The worker sends sanitized heartbeats, forwards incoming text messages, polls a small command queue, and acknowledges `pause`, `resume`, `reload_config`, `request_status`, and the narrowly scoped `send_message` command. The server creates a user-scoped Ryze task for each inbound message and may queue an autonomous reply only to that message's original chat. The worker validates the content hash and reports Telegram's returned chat and message identifiers before the server records success. There is no per-message owner approval; broadcasts, proactive messages, and unrelated automation remain unsupported.
 
 No server command is interpreted as shell, Python, filesystem or arbitrary Telegram code. The worker uses a local session lock to prevent concurrent Telethon SQLite access.
 
 ## Deployment note
 
-The worker is a persistent local process. Keep the owner computer online for live Telegram handling and supervise it with an approved platform service manager. The dashboard-controlled login and inbound lifecycle have been verified on the target Windows computer, including permanent-admin authorization, unauthorized-sender ignoring, one-hour recovery-code authorization, and pause/resume/stop controls. The Windows service/scheduled-task configuration and secure secret-injection method are not yet selected or tested. Preserve the local session and diagnostic logs separately from Git. The hosted sandbox API is stateless at the HTTP layer; worker state and command history are stored in the Ryze database. Outbound Telegram replies remain disabled pending the owner-approval workflow.
+The worker is a persistent local process. Keep the owner computer online for live Telegram handling and supervise it with an approved platform service manager. The dashboard-controlled login and inbound lifecycle have been verified on the target Windows computer, including permanent-admin authorization, unauthorized-sender ignoring, one-hour recovery-code authorization, and pause/resume/stop controls. The Windows service/scheduled-task configuration and secure secret-injection method are not yet selected or tested. Preserve the local session and diagnostic logs separately from Git. The hosted sandbox API is stateless at the HTTP layer; worker state and command history are stored in the Ryze database. Autonomous outbound replies require target-Windows end-to-end verification.
 
 ## Backup boundary
 
 The Ryze dashboard and Windows ZIP backup can include the protected `worker.env` and Telethon `data\ryze-user.session` files so a restore can recover Telegram configuration and authorization. The Python virtual environment is intentionally excluded and is recreated or retained locally. Treat the backup as secret material: never send the archive, worker environment, session, API hash, phone code, or two-step password in chat.
 
-Outbound Telegram replies are still disabled. Before direct same-chat replies are enabled, the server must enforce owner approval, pause/stop checks, suppression checks, duplicate prevention, and result validation.
+Autonomous same-chat replies do not require manual owner approval. The server still enforces pause/stop checks, sender/chat/task/message eligibility, duplicate prevention, content hashing, and Telegram result validation before recording a send as successful.

@@ -26,12 +26,12 @@ RyzeFramework is currently a local Windows application with:
 - Safe allowlisted demo actions for memory, recall, file metadata, Markdown generation, and retry testing.
 - Optional OpenCode + FreeLLMAPI text chat.
 - OpenCode tools denied by default.
-- Optional Telegram inbound-only worker setup with a protected local worker environment and preflight check.
-- Telegram outbound replies, arbitrary shell execution, email delivery, and unsupervised external actions disabled.
+- Optional Telegram worker with protected local configuration, preflight check, sender authorization, and autonomous same-chat replies.
+- Telegram replies remain restricted to an authorized sender's original chat; broadcasts, proactive messaging, sales funnels, arbitrary shell execution, and email delivery remain disabled.
 
 A successful chat response is evidence of the text-chat path only. It is not evidence that Ryze can safely plan and execute arbitrary real-world operations.
 
-**Latest verification:** On 23 November 2026, the target Windows installation passed the one-button operational baseline, restart test, and staged Telegram inbound test. Backup creation, restore rehearsal, database/log records, uploaded-file record, Windows ACL checks, Telegram login-code flow, worker startup, authorized sender handling, unauthorized-sender ignoring, recovery-code temporary authorization, and worker pause/resume/stop controls were reported successful. This verifies the local baseline and inbound Telegram path; it does not complete the broader Stage 1 integration and outbound safety requirements.
+**Latest verification:** On 23 November 2026, the target Windows installation passed the one-button operational baseline, restart test, and staged Telegram inbound test. Backup creation, restore rehearsal, database/log records, uploaded-file record, Windows ACL checks, Telegram login-code flow, worker startup, authorized sender handling, unauthorized-sender ignoring, recovery-code temporary authorization, and worker pause/resume/stop controls were reported successful. Autonomous outbound replies are implemented in the current package but still require target-Windows end-to-end verification.
 
 ## 2. What is available now
 

@@ -2,7 +2,7 @@
 
 RyzeFramework’s planned Telegram interface uses the user-account pattern from the connected **ryzetel** repository. It does **not** use a Telegram bot token or bot webhook.
 
-**Current package boundary:** the local Windows dashboard includes a controlled Telegram setup wizard. It writes the protected local `worker.env`, installs the private worker environment, starts Telethon login, accepts the login code and optional two-step password through transient dashboard fields, and controls start/pause/resume/stop. This inbound-only flow has been verified on the target Windows computer, including sender authorization and rejection behavior. The worker still does not send replies in this release. The older `.cmd` launchers remain as a recovery path.
+**Current package boundary:** the local Windows dashboard includes a controlled Telegram setup wizard. It writes the protected local `worker.env`, installs the private worker environment, starts Telethon login, accepts the login code and optional two-step password through transient dashboard fields, and controls start/pause/resume/stop. The worker supports autonomous same-chat replies for authorized inbound messages; target-Windows end-to-end outbound verification remains pending. The older `.cmd` launchers remain as a recovery path.
 
 ## Architecture
 
@@ -48,16 +48,20 @@ The worker must reject unknown commands and must never interpret a command paylo
 
 - Use a process-wide lock so two workers cannot open the same Telethon SQLite session concurrently.
 - Keep session files on the owner-controlled computer, outside Git, exports and portable packages unless an explicit encrypted migration design is approved.
-- Require explicit owner approval before outbound actions.
-- Check pause/stop state and suppression records immediately before every outbound message.
+- No manual owner approval is required for the approved same-chat reply scope.
+- Check pause/stop state, sender/chat/task/message eligibility, and durable reply records immediately before every outbound message.
 - Apply bounded retry and backoff only to transient worker/API failures.
 - Log sanitized identifiers and event types; never log message bodies, authorization headers or credentials.
 - Preserve diagnostic logs and a last-known-good worker revision before deployment changes.
 
 ## Current status
 
-The pattern is selected as the replacement for the earlier Telegram bot proposal, using the private RyzeTel bridge as an implementation reference for protected worker environment files, preflight heartbeat, session handling, and explicit worker lifecycle stages. The Python worker package and worker API are implemented, and the local Windows dashboard wizard now stages configuration, Telethon login, private code entry, and worker lifecycle control. The owner verified this inbound-only flow on the target Windows computer: login completed, the worker ran, the permanent admin was accepted, ordinary unauthorized senders were ignored, the exact recovery code temporarily authorized a sender for one hour, and pause/resume/stop controls worked. Automatic outbound replies are disabled: the server does not queue `send_message`, and the worker rejects that command. Do not register a persistent Windows task or enable live replies before the approval, pause/stop, suppression, duplicate-send, and result-validation controls are implemented and tested.
+The pattern is selected as the replacement for the earlier Telegram bot proposal, using the private RyzeTel bridge as an implementation reference for protected worker environment files, preflight heartbeat, session handling, and explicit worker lifecycle stages. The Python worker package and worker API are implemented, and the local Windows dashboard wizard now stages configuration, Telethon login, private code entry, and worker lifecycle control. The owner verified this inbound flow on the target Windows computer: login completed, the worker ran, the permanent admin was accepted, ordinary unauthorized senders were ignored, the exact recovery code temporarily authorized a sender for one hour, and pause/resume/stop controls worked. Autonomous same-chat reply queuing is now implemented without per-message owner approval. It still requires target-Windows verification of pause behavior, duplicate/replay handling, Telegram acknowledgement, and actual recipient/content validation.
 
 ## Protected backup boundary
 
-The dashboard private backup and Windows ZIP backup now include the Telegram worker's protected `worker.env` and Telethon `data\ryze-user.session` files when present. They exclude the worker `.venv` and do not expose these files through ordinary exports or dashboard telemetry. A restore preserves the current worker configuration/session first, then restores the selected copies without replacing `.venv`. Treat the backup as equivalent to a Telegram login credential: keep it private and never paste or upload it. Outbound replies remain disabled until the server-enforced approval, pause/stop, suppression, duplicate, and result-validation gate is implemented and tested.
+The dashboard private backup and Windows ZIP backup now include the Telegram worker's protected `worker.env` and Telethon `data\ryze-user.session` files when present. They exclude the worker `.venv` and do not expose these files through ordinary exports or dashboard telemetry. A restore preserves the current worker configuration/session first, then restores the selected copies without replacing `.venv`. Treat the backup as equivalent to a Telegram login credential: keep it private and never paste or upload it.
+
+## Autonomous same-chat replies
+
+The current implementation removes manual owner approval for each reply. After an authorized inbound text creates a Ryze task, the server may queue a reply only for the exact originating chat. The worker sends the reply through the logged-in user account and reports the Telegram message identifier and content hash back to the server. The server checks that the worker is online and not paused, verifies the intended chat and content, records a durable reply key, and does not replay completed commands after restart. Unauthorized senders, different chats, broadcasts, proactive messages, and unrelated automation remain outside this capability.

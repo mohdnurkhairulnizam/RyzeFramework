@@ -10,6 +10,7 @@ import argparse
 import asyncio
 import json
 import logging
+import hashlib
 import os
 import sys
 import time
@@ -24,7 +25,7 @@ from telethon import TelegramClient, events
 from telethon.errors import SessionPasswordNeededError
 
 LOGGER = logging.getLogger("ryze.telegram")
-ALLOWED_COMMANDS = {"pause", "resume", "reload_config", "request_status"}
+ALLOWED_COMMANDS = {"pause", "resume", "reload_config", "request_status", "send_message"}
 
 
 def required_env(name: str) -> str:
@@ -135,8 +136,9 @@ class RuntimeApi:
     def commands(self, after: int) -> list[dict[str, Any]]:
         return self.request("GET", "/commands", query={"workerId": self.config.worker_id, "after": after}).get("commands", [])
 
-    def acknowledge(self, command_id: int, status: str, message: str = "") -> dict[str, Any]:
-        return self.request("POST", f"/commands/{command_id}/ack", {"workerId": self.config.worker_id, "status": status, "message": message[:300]})
+    def acknowledge(self, command_id: int, status: str, message: str = "", **details: str) -> dict[str, Any]:
+        payload = {"workerId": self.config.worker_id, "status": status, "message": message[:300], **details}
+        return self.request("POST", f"/commands/{command_id}/ack", payload)
 
     def event(self, event_type: str, message: str, level: str = "info") -> dict[str, Any]:
         return self.request("POST", "/events", {
@@ -209,6 +211,24 @@ class Worker:
                             self.paused = True
                         elif name == "resume":
                             self.paused = False
+                        elif name == "send_message":
+                            if self.paused:
+                                raise RuntimeError("Telegram worker is paused")
+                            payload = command.get("payload") or {}
+                            chat_id = str(payload.get("chatId", ""))
+                            text = str(payload.get("text", "")).strip()
+                            content_hash = str(payload.get("contentHash", ""))
+                            if not chat_id or not text or len(text) > 4000 or len(content_hash) != 64:
+                                raise RuntimeError("Reply command payload is invalid")
+                            if hashlib.sha256(text.encode()).hexdigest() != content_hash:
+                                raise RuntimeError("Reply content hash does not match")
+                            sent = await client.send_message(entity=chat_id, message=text)
+                            actual_chat = str(getattr(sent, "chat_id", ""))
+                            message_id = str(getattr(sent, "id", ""))
+                            if actual_chat != chat_id or not message_id:
+                                raise RuntimeError("Telegram did not confirm the intended chat")
+                            await asyncio.to_thread(self.api.acknowledge, command_id, "completed", "Autonomous same-chat reply sent", chatId=actual_chat, messageId=message_id, contentHash=content_hash)
+                            continue
                         await asyncio.to_thread(self.api.acknowledge, command_id, "completed", "Command completed")
                     except Exception as exc:
                         await asyncio.to_thread(self.api.acknowledge, command_id, "failed", str(exc))

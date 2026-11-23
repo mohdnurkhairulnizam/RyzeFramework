@@ -1,4 +1,4 @@
-import { and, desc, eq, like, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, like, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import Database from "better-sqlite3";
 import { mkdirSync } from "node:fs";
@@ -185,6 +185,32 @@ export async function isTelegramSenderAllowed(userId: number, telegramUserId: st
 export async function addTelegramLog(userId: number, input: { direction: "incoming" | "outgoing" | "system"; telegramUserId?: string; chatId?: string; messagePreview: string; status: string; accountId?: number }) {
   const db = await requireDb();
   await db.insert(ryzeTelegramLogs).values({ userId, accountId: input.accountId ?? null, direction: input.direction, telegramUserId: input.telegramUserId ?? null, chatId: input.chatId ?? null, messagePreview: input.messagePreview.slice(0, 500), status: input.status });
+}
+
+export async function hasTelegramReplyBeenSent(userId: number, replyKey: string) {
+  const db = await requireDb();
+  const rows = await db.select({ id: ryzeTelegramLogs.id }).from(ryzeTelegramLogs).where(and(eq(ryzeTelegramLogs.userId, userId), eq(ryzeTelegramLogs.direction, "outgoing"), eq(ryzeTelegramLogs.status, `sent:${replyKey}`))).limit(1);
+  return Boolean(rows[0]);
+}
+
+export async function hasTelegramReplyRecord(userId: number, replyKey: string) {
+  const db = await requireDb();
+  const sent = await hasTelegramReplyBeenSent(userId, replyKey);
+  if (sent) return true;
+  const rows = await db.select({ id: ryzeTelegramLogs.id }).from(ryzeTelegramLogs).where(and(eq(ryzeTelegramLogs.userId, userId), eq(ryzeTelegramLogs.direction, "system"), eq(ryzeTelegramLogs.status, `queued:${replyKey}`))).limit(1);
+  return Boolean(rows[0]);
+}
+
+export async function getWorkerForUser(userId: number, workerId: string) {
+  const db = await requireDb();
+  const rows = await db.select().from(ryzeWorkers).where(and(eq(ryzeWorkers.userId, userId), eq(ryzeWorkers.id, workerId))).limit(1);
+  return rows[0] ?? null;
+}
+
+export async function getWorkerCommand(userId: number, workerId: string, commandId: number) {
+  const db = await requireDb();
+  const rows = await db.select().from(ryzeWorkerCommands).where(and(eq(ryzeWorkerCommands.userId, userId), eq(ryzeWorkerCommands.workerId, workerId), eq(ryzeWorkerCommands.id, commandId))).limit(1);
+  return rows[0] ?? null;
 }
 
 export async function updateSafeSettings(userId: number, input: { provider: string; ryzeModel: string; nerdModel: string; demoMode: boolean }) {
@@ -418,7 +444,7 @@ export async function upsertWorkerHeartbeat(userId: number, input: {
 export async function listWorkerCommands(userId: number, workerId: string, afterId: number) {
   const db = await requireDb();
   return db.select().from(ryzeWorkerCommands)
-    .where(and(eq(ryzeWorkerCommands.userId, userId), eq(ryzeWorkerCommands.workerId, workerId), sql`${ryzeWorkerCommands.id} > ${afterId}`))
+    .where(and(eq(ryzeWorkerCommands.userId, userId), eq(ryzeWorkerCommands.workerId, workerId), inArray(ryzeWorkerCommands.status, ["queued", "acknowledged"]), sql`${ryzeWorkerCommands.id} > ${afterId}`))
     .orderBy(ryzeWorkerCommands.id).limit(50);
 }
 

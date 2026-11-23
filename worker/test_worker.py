@@ -19,18 +19,21 @@ def load_function(name):
 class WorkerSafetyTests(unittest.TestCase):
     def test_command_allowlist_is_literal_and_excludes_arbitrary_execution(self):
         source = SOURCE.read_text(encoding="utf-8")
-        self.assertIn('ALLOWED_COMMANDS = {"pause", "resume", "reload_config", "request_status"}', source)
-        self.assertNotIn('"send_message"', source)
-        self.assertNotIn("client.send_message(", source)
+        self.assertIn('ALLOWED_COMMANDS = {"pause", "resume", "reload_config", "request_status", "send_message"}', source)
+        self.assertIn("client.send_message(", source)
+        self.assertIn("content_hash", source)
         self.assertNotIn("subprocess", source)
         self.assertNotIn("eval(", source)
         self.assertNotIn("exec(", source)
 
-    def test_server_inbound_path_does_not_queue_telegram_replies(self):
+    def test_server_inbound_path_queues_only_validated_same_chat_replies(self):
         worker_api = ROOT.parent / "server" / "workerApi.ts"
         source = worker_api.read_text(encoding="utf-8")
-        self.assertNotIn("queueWorkerCommand", source)
-        self.assertIn("No Telegram reply was sent: the owner-approval gate is not implemented yet.", source)
+        self.assertIn('queueWorkerCommand(userId, input.data.workerId, "send_message"', source)
+        self.assertIn('input.data.chatId', source)
+        self.assertIn('replyKey', source)
+        self.assertIn('SEND_VALIDATION_FAILED', source)
+        self.assertIn('DUPLICATE_REPLY', source)
 
     def test_phone_masking_does_not_expose_full_number(self):
         mask_phone = load_function("mask_phone")
