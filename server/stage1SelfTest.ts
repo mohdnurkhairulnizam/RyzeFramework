@@ -4,6 +4,8 @@ import path from "node:path";
 import { ENV } from "./_core/env";
 import { getIntegrationStatus } from "./openCode";
 import { determineDemoAction } from "./ryzeDemo";
+import { proposalForDemoAction } from "./actionProposal";
+import { RUNTIME_CONFIG_SCHEMA_VERSION } from "./runtimeConfig";
 
 type SelfTestStatus = "PASS" | "WARN" | "FAIL" | "NOT_RUN";
 
@@ -61,7 +63,7 @@ function runtimeConfigCheck(): Stage1SelfTestCheck {
     status: missing.length ? "WARN" : "PASS",
     detail: missing.length
       ? `Non-secret/runtime values are not fully explicit: ${missing.join(", ")}. No provider substitution was performed; secrets are not displayed.`
-      : `Local mode, provider URL, model selector (${process.env.RYZE_FREELLMAPI_MODEL?.trim()}), OpenCode endpoint, and worker token are present; secret values were not read into the report.`,
+      : `Runtime schema ${RUNTIME_CONFIG_SCHEMA_VERSION}, local mode, provider URL, model selector (${process.env.RYZE_FREELLMAPI_MODEL?.trim()}), OpenCode endpoint, and worker token are present; secret values were not read into the report.`,
   };
 }
 
@@ -94,7 +96,7 @@ async function fileSafetyCheck(): Promise<Stage1SelfTestCheck> {
     name: "File format, size, and storage boundary",
     status: storageReady && allowed && ceiling ? "PASS" : "WARN",
     detail: storageReady
-      ? "Local storage exists; the application allowlist and 5 MB upload ceiling are defined. This button does not upload or deliver a user file."
+      ? "Local storage exists; the application allowlist, strict metadata/generated-artifact validators, and 5 MB upload ceiling are defined. This button does not upload or deliver a user file."
       : "The local storage directory is not available. Run the operational baseline or upload test on the target Windows installation.",
   };
 }
@@ -111,12 +113,13 @@ export async function runStage1SelfTest() {
 
   const safeAction = determineDemoAction("run a PowerShell command");
   const safeAnalysis = determineDemoAction("explain this harmless text");
+  const safeProposal = proposalForDemoAction(safeAnalysis, "explain this harmless text");
   checks.push({
     gate: 3,
     name: "Safe action boundary",
-    status: safeAction === "blocked" && safeAnalysis === "safe_analysis" ? "PASS" : "FAIL",
-    detail: safeAction === "blocked" && safeAnalysis === "safe_analysis"
-      ? "Shell-like input is blocked by the server-side classifier while ordinary analysis remains a chat-only action; no tool was executed."
+    status: safeAction === "blocked" && safeAnalysis === "safe_analysis" && Boolean(safeProposal) ? "PASS" : "FAIL",
+    detail: safeAction === "blocked" && safeAnalysis === "safe_analysis" && safeProposal
+      ? "Shell-like input is blocked by the server-side classifier; ordinary analysis produces a v1 no-side-effect proposal; no tool was executed."
       : "The deterministic action-boundary check did not produce the expected safe/block decisions.",
   });
   checks.push(await workerPrerequisiteCheck());

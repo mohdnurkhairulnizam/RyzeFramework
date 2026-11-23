@@ -22,6 +22,7 @@ import {
 import { determineDemoAction } from "./ryzeDemo";
 import { runOpenCodeChat, runSafeDemo } from "./routers/ryze";
 import { ENV } from "./_core/env";
+import { telegramAcknowledgementSchema } from "./resultValidators";
 
 const workerIdSchema = z.string().regex(/^[a-zA-Z0-9._-]{1,64}$/);
 const heartbeatSchema = z.object({
@@ -46,13 +47,7 @@ const eventSchema = z.object({
   eventType: z.string().trim().min(1).max(100),
   message: z.string().trim().min(1).max(2000),
 });
-const ackSchema = z.object({
-  status: z.enum(["acknowledged", "completed", "failed"]),
-  message: z.string().trim().max(300).optional(),
-  chatId: z.string().trim().max(120).optional(),
-  messageId: z.string().trim().max(120).optional(),
-  contentHash: z.string().regex(/^[a-f0-9]{64}$/).optional(),
-});
+const ackSchema = telegramAcknowledgementSchema;
 
 function safeEqual(left: string, right: string) {
   const a = Buffer.from(left);

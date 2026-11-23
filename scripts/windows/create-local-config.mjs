@@ -39,6 +39,7 @@ const dotenvValue = (value) => `"${value.replace(/\\/g, "/").replace(/"/g, "\\\"
 const contents = [
   "NODE_ENV=production",
   "RYZE_LOCAL_MODE=true",
+  "RYZE_RUNTIME_CONFIG_SCHEMA=v1",
   "PORT=3777",
   `JWT_SECRET=${jwtSecret}`,
   "RYZE_LOCAL_OWNER_OPEN_ID=ryze-local-owner",

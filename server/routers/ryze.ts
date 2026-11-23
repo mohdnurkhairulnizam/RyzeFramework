@@ -42,6 +42,8 @@ import {
 } from "../openCode";
 import { createPrivateBackup, listPrivateBackups, requestPrivateRestore, runOperationalBaseline } from "../operationalBaseline";
 import { runStage1SelfTest } from "../stage1SelfTest";
+import { proposalForDemoAction } from "../actionProposal";
+import { validateFileMetadata, validateGeneratedArtifact } from "../resultValidators";
 import { ENV } from "../_core/env";
 import { protectedProcedure, router } from "../_core/trpc";
 import {
@@ -82,6 +84,7 @@ export async function runSafeDemo(
   task: { id: string; prompt: string; action: DemoAction }
 ): Promise<{ summary: string; success: boolean }> {
   const action = task.action;
+  const proposal = proposalForDemoAction(action, task.prompt);
   await updateTask(userId, task.id, { status: "IN_PROGRESS" });
   await addTaskLog(
     userId,
@@ -97,6 +100,9 @@ export async function runSafeDemo(
     "info",
     "Executor accepted the allowlisted demonstration step."
   );
+  if (proposal) {
+    await addTaskLog(userId, task.id, "ryze", "info", `Structured action proposal v1 accepted: ${proposal.action} (${proposal.permission}); external side effects disabled.`);
+  }
 
   if (action === "blocked") {
     const summary =
@@ -158,6 +164,14 @@ export async function runSafeDemo(
             Buffer.from(content, "utf8"),
             "text/markdown"
           );
+          validateGeneratedArtifact({
+            originalName: filename,
+            mimeType: "text/markdown",
+            byteSize: Buffer.byteLength(content),
+            storageKey: key,
+            source: "generated",
+            category: "documents",
+          });
           await saveFileMetadata(userId, {
             taskId: task.id,
             storageKey: key,
@@ -402,6 +416,12 @@ export const ryzeRouter = router({
         bytes,
         input.mimeType
       );
+      validateFileMetadata({
+        originalName: filename,
+        mimeType: input.mimeType,
+        byteSize: bytes.length,
+        storageKey: key,
+      });
       return saveFileMetadata(ctx.user.id, {
         storageKey: key,
         originalName: filename,

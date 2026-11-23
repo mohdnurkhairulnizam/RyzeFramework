@@ -2,7 +2,7 @@
 
 **Repository branch:** `stable-merge`
 **Handoff date:** 24 November 2026
-**Current milestone:** Stage 1 foundation — runtime model configuration is finalized; autonomous Telegram/OpenCode acceptance evidence remains in progress.
+**Current milestone:** Stage 1 foundation — runtime configuration and safe execution hardening are implemented; autonomous Telegram/OpenCode acceptance evidence remains in progress.
 
 ## Read first
 
@@ -26,6 +26,10 @@
 - Worker stop/start replay behavior and duplicate/replayed inbound-event prevention are reported PASS.
 - A dashboard **Stage 1 acceptance self-test** produces non-secret `PASS`, `WARN`, `FAIL`, and `NOT_RUN` evidence.
 - Implicit FreeLLMAPI model fallback was removed. The model selector must be explicitly configured; an explicit `auto` value is allowed when FreeLLMAPI is intended to select the model.
+- Runtime configuration schema `v1` is emitted by the installer and checked at startup; local/hosted contradictions and incomplete provider pairs fail closed.
+- Structured v1 action proposals are parsed server-side with a narrow no-side-effect allowlist. OpenCode tools remain deny-all.
+- Strict validators cover uploaded/generated file metadata and Telegram acknowledgement shape/content fields.
+- Provider timeout, rate-limit, refusal, and malformed-response tests pass; restore selection and one-hour expiry logic have automated unit coverage.
 
 ## Current test evidence
 
@@ -38,13 +42,13 @@
 - Target Windows: worker stop/start replay PASS.
 - Target Windows: duplicate/replayed inbound-event prevention PASS.
 - Workspace: TypeScript check PASS.
-- Workspace: 35 Vitest tests PASS, including blank, explicit `auto`, and named FreeLLMAPI model-selector coverage.
+- Workspace: 46 Vitest tests PASS across 16 files, including blank, explicit `auto`, and named FreeLLMAPI model-selector coverage plus Stage 1 hardening boundaries.
 - Workspace: 4 Python worker tests PASS.
 - Workspace: local production build PASS.
 
 ## Remaining gates before Stage 1 operational status
 
-- Target Windows self-test should report the explicitly configured FreeLLMAPI selector; blank remains incomplete, while deliberate `auto` and named selectors are valid.
+- Target Windows self-test should report runtime schema `v1` and the explicitly configured FreeLLMAPI selector; blank remains incomplete, while deliberate `auto` and named selectors are valid.
 - Complete Telegram acknowledgement-mismatch and provider timeout/failure evidence.
 - Verify restore/rollback of the server and worker configuration, including Telegram session recovery.
 - Verify generated report/file retrieval and delivery; metadata inspection alone is not file delivery.
@@ -52,12 +56,14 @@
 - Define and implement structured action proposals before any future tools.
 - Define the narrow action allowlist, permission requirements, rejection behavior, and strict result validators.
 - Add controlled provider timeout/rate-limit/cancellation tests without granting shell access.
-- Define message-content retention and operational rollback policy.
+- Apply the documented message-content retention and operational rollback policy on target Windows and retain evidence.
 - Record evidence against all nine origin Stage 1 criteria. Do not mark Stage 1 complete from architecture statements alone.
 
 ## Immediate next implementation action
 
-Continue with safe task execution: implement structured action proposals and strict validation while retaining the current deny-all OpenCode tool policy. Do not start Gmail until Stage 1 is stabilized. Gmail must use Google OAuth; Drive and Photos must remain separate optional scopes.
+Continue with target-Windows operational evidence: provider timeout/refusal behavior, physical restore/rollback, generated report/file delivery, and recovery-code expiry. Keep the current structured proposal/validator boundaries and deny-all OpenCode tool policy. Do not start Gmail until Stage 1 is stabilized. Gmail must use Google OAuth; Drive and Photos must remain separate optional scopes.
+
+The retention and rollback policy is in `docs/stage-1-retention-rollback.md`. Automated tests prove path safety and expiry semantics, but they do not replace live Windows restore or a real one-hour Telegram expiry observation.
 
 ## Latest repository state
 

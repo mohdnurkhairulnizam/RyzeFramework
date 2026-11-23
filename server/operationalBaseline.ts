@@ -173,12 +173,20 @@ export async function listPrivateBackups() {
   return backups.sort((a, b) => b.modifiedAt.localeCompare(a.modifiedAt));
 }
 
+export function validateRestoreSelection(backupRoot: string, backupPath: string) {
+  const root = `${path.resolve(backupRoot)}${path.sep}`;
+  const requested = path.resolve(backupPath);
+  if (!requested.toLowerCase().startsWith(root.toLowerCase())) throw new Error("The selected backup is outside the protected Ryze backup folder.");
+  if (!path.basename(requested).match(/^Ryze-(backup|baseline)-/i) && path.extname(requested).toLowerCase() !== ".zip") {
+    throw new Error("The selected item is not a Ryze backup folder or ZIP archive.");
+  }
+  return requested;
+}
+
 export async function requestPrivateRestore(backupPath: string) {
   if (!ENV.localMode) throw new Error("Restore is available only in the local Windows build.");
   const root = path.join(homeDocuments(), "RyzeFramework-backups");
-  const requested = path.resolve(backupPath);
-  const allowed = `${path.resolve(root)}${path.sep}`;
-  if (!requested.toLowerCase().startsWith(allowed.toLowerCase())) throw new Error("The selected backup is outside the protected Ryze backup folder.");
+  const requested = validateRestoreSelection(root, backupPath);
   if (!(await exists(requested))) throw new Error("The selected backup no longer exists.");
   const selectedInfo = await stat(requested);
   if (selectedInfo.isDirectory()) {

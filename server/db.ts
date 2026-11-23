@@ -110,6 +110,10 @@ function safeTelegramEqual(left: string, right: string) {
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
+export function isTemporaryAuthorizationActive(expiresAt: Date | null | undefined, now = Date.now()) {
+  return Boolean(expiresAt && expiresAt.getTime() > now);
+}
+
 export async function getTelegramControl(userId: number) {
   const db = await requireDb();
   await db.insert(ryzeTelegramAccess).values({ userId }).onConflictDoNothing();
@@ -179,7 +183,7 @@ export async function isTelegramSenderAllowed(userId: number, telegramUserId: st
   const [access] = await db.select().from(ryzeTelegramAccess).where(eq(ryzeTelegramAccess.userId, userId)).limit(1);
   if (access?.adminTelegramUserId === telegramUserId) return true;
   if (access?.adminTelegramUsername && telegramUsername && access.adminTelegramUsername === telegramUsername.replace(/^@/, "").toLowerCase()) return true;
-  return Boolean(access?.temporaryTelegramUserId === telegramUserId && access.temporaryExpiresAt && access.temporaryExpiresAt.getTime() > Date.now());
+  return Boolean(access?.temporaryTelegramUserId === telegramUserId && isTemporaryAuthorizationActive(access.temporaryExpiresAt));
 }
 
 export async function addTelegramLog(userId: number, input: { direction: "incoming" | "outgoing" | "system"; telegramUserId?: string; chatId?: string; messagePreview: string; status: string; accountId?: number }) {

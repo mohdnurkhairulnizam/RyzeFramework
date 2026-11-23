@@ -1,5 +1,6 @@
 import os from "node:os";
 import path from "node:path";
+import { RUNTIME_CONFIG_SCHEMA_VERSION } from "../runtimeConfig";
 
 const localDataDir = path.resolve(
   process.env.RYZE_DATA_DIR ||
@@ -22,6 +23,7 @@ function getFreeLlmApiBaseUrl() {
 }
 
 export const ENV = {
+  runtimeConfigSchema: process.env.RYZE_RUNTIME_CONFIG_SCHEMA || RUNTIME_CONFIG_SCHEMA_VERSION,
   appId: process.env.VITE_APP_ID ?? "ryze-local",
   cookieSecret: process.env.JWT_SECRET ?? "",
   databasePath: path.resolve(process.env.RYZE_DATABASE_PATH || path.join(localDataDir, "data", "ryze.sqlite")),

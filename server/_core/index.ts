@@ -12,6 +12,7 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { registerWorkerRoutes } from "../workerApi";
 import { ENV } from "./env";
+import { assertRuntimeConfiguration } from "../runtimeConfig";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -51,6 +52,18 @@ function isSameLocalOrigin(req: express.Request): boolean {
 }
 
 async function startServer() {
+  assertRuntimeConfiguration({
+    schemaVersion: ENV.runtimeConfigSchema,
+    localMode: ENV.localMode,
+    providerBaseUrl: ENV.freeLlmApiBaseUrl,
+    providerApiKey: ENV.freeLlmApiKey,
+    providerModel: ENV.freeLlmApiModel,
+    openCodeBaseUrl: ENV.openCodeBaseUrl,
+    workerToken: ENV.workerToken,
+    workerOwnerOpenId: ENV.workerOwnerOpenId,
+    hostedDatabaseUrl: ENV.databaseUrl,
+    hostedOAuthUrl: ENV.oAuthServerUrl,
+  });
   if (ENV.localMode) {
     assertLocalAuthConfiguration();
     await getDb();

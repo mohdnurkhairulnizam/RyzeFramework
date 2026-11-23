@@ -92,4 +92,44 @@ describe("OpenCode chat adapter", () => {
       message: expect.not.stringContaining("private upstream error"),
     } satisfies Partial<OpenCodeError>);
   });
+
+  it("converts a provider timeout into a sanitized OpenCode error", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("UND_ERR_CONNECT_TIMEOUT private-key"); }));
+    await expect(sendOpenCodePrompt("ses_1234567890", "timeout test")).rejects.toMatchObject({
+      name: "OpenCodeError",
+      message: expect.not.stringContaining("private-key"),
+    });
+  });
+
+  it("does not retry or expose a provider rate-limit response", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => jsonResponse({ error: { message: "private quota details" } }, 429)));
+    await expect(sendOpenCodePrompt("ses_1234567890", "rate limit test")).rejects.toMatchObject({
+      name: "OpenCodeError",
+      message: expect.not.stringContaining("private quota details"),
+    });
+  });
+
+  it("rejects a model refusal or failed outcome without returning hidden details", async () => {
+    vi.stubGlobal("setTimeout", ((callback: (...args: unknown[]) => void) => { callback(); return 0; }) as typeof setTimeout);
+    const fetchMock = vi.fn(async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.endsWith("/prompt")) return jsonResponse({ data: { id: "message-user" } });
+      if (url.includes("/message?")) return jsonResponse({ data: [{ type: "assistant", time: { created: Date.now(), completed: Date.now() }, outcome: "failed", error: { message: "private refusal" } }] });
+      throw new Error(`Unexpected URL ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(sendOpenCodePrompt("ses_1234567890", "refuse test")).rejects.toThrow("model error");
+  });
+
+  it("rejects malformed provider message data", async () => {
+    vi.stubGlobal("setTimeout", ((callback: (...args: unknown[]) => void) => { callback(); return 0; }) as typeof setTimeout);
+    const fetchMock = vi.fn(async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.endsWith("/prompt")) return jsonResponse({ data: { id: "message-user" } });
+      if (url.includes("/message?")) return jsonResponse({ data: [{ type: "assistant", time: { created: Date.now(), completed: Date.now() }, finish: "stop", content: [{ type: "tool", text: "not a user-visible answer" }] }] });
+      throw new Error(`Unexpected URL ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(sendOpenCodePrompt("ses_1234567890", "malformed test")).rejects.toThrow("without a text reply");
+  });
 });
