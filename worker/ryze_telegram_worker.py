@@ -222,7 +222,8 @@ class Worker:
                                 raise RuntimeError("Reply command payload is invalid")
                             if hashlib.sha256(text.encode()).hexdigest() != content_hash:
                                 raise RuntimeError("Reply content hash does not match")
-                            sent = await client.send_message(entity=chat_id, message=text)
+                            entity: Any = int(chat_id) if chat_id.lstrip("-").isdigit() else chat_id
+                            sent = await client.send_message(entity=entity, message=text)
                             actual_chat = str(getattr(sent, "chat_id", ""))
                             message_id = str(getattr(sent, "id", ""))
                             if actual_chat != chat_id or not message_id:
@@ -231,7 +232,8 @@ class Worker:
                             continue
                         await asyncio.to_thread(self.api.acknowledge, command_id, "completed", "Command completed")
                     except Exception as exc:
-                        await asyncio.to_thread(self.api.acknowledge, command_id, "failed", str(exc))
+                        failure = str(exc).replace("\r", " ").replace("\n", " ")[:260]
+                        await asyncio.to_thread(self.api.acknowledge, command_id, "failed", failure)
                         await asyncio.to_thread(self.api.event, "command_failed", "Approved worker command failed", "error")
             except Exception as exc:
                 LOGGER.warning("command polling unavailable: %s", exc)

@@ -131,7 +131,7 @@ export function registerWorkerRoutes(app: Express) {
       await addTelegramLog(userId, { direction: "outgoing", chatId: payload.chatId, messagePreview: input.data.message ?? "Autonomous same-chat reply sent.", status: `sent:${payload.replyKey ?? commandId}` });
     }
     if (command.command === "send_message" && input.data.status === "failed") {
-      await addTelegramLog(userId, { direction: "system", messagePreview: "Autonomous Telegram reply failed; the failure was retained for diagnosis.", status: "send-failed" });
+      await addTelegramLog(userId, { direction: "system", messagePreview: `Autonomous Telegram reply failed: ${input.data.message || "worker rejected the send"}`, status: "send-failed" });
     }
     await updateWorkerCommand(userId, workerId.data, commandId, input.data.status);
     res.json({ ok: true });
