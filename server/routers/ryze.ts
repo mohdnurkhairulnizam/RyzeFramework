@@ -12,6 +12,7 @@ import {
   getDashboard,
   getTelegramControl,
   issueTelegramSecretCode,
+  queueWorkerCommand,
   removeTelegramAccount,
   saveTelegramAccount,
   setTelegramAdminIdentity,
@@ -42,6 +43,17 @@ import {
 import { runOperationalBaseline } from "../operationalBaseline";
 import { ENV } from "../_core/env";
 import { protectedProcedure, router } from "../_core/trpc";
+import {
+  configureTelegramBridge,
+  getTelegramBridgeStatus,
+  markTelegramBridgePaused,
+  removeTelegramBridgeSession,
+  sendTelegramBridgeInput,
+  startTelegramLogin,
+  startTelegramWorker,
+  stopTelegramWorker,
+  submitTelegramLoginInput,
+} from "../telegramBridge";
 
 const maxUploadBytes = 5 * 1024 * 1024;
 const allowedMimeTypes = new Set([
@@ -288,6 +300,27 @@ async function runOpenCodeChat(
 export const ryzeRouter = router({
   dashboard: protectedProcedure.query(({ ctx }) => getDashboard(ctx.user.id)),
   integrationStatus: protectedProcedure.query(() => getIntegrationStatus()),
+  telegramBridgeStatus: protectedProcedure.query(() => getTelegramBridgeStatus()),
+  configureTelegramBridge: protectedProcedure
+    .input(z.object({
+      apiId: z.string().trim().regex(/^\d+$/).max(32),
+      apiHash: z.string().trim().min(1).max(128),
+      phone: z.string().trim().min(5).max(64),
+      allowedChatIds: z.string().trim().min(1).max(1000),
+      workerId: z.string().trim().regex(/^[a-zA-Z0-9._-]{1,64}$/).optional(),
+    }))
+    .mutation(({ input }) => configureTelegramBridge(input)),
+  startTelegramLogin: protectedProcedure.mutation(() => startTelegramLogin()),
+  submitTelegramLoginCode: protectedProcedure
+    .input(z.object({ value: z.string().trim().min(1).max(256) }))
+    .mutation(({ input }) => submitTelegramLoginInput(input.value, "code")),
+  submitTelegramTwoStepPassword: protectedProcedure
+    .input(z.object({ value: z.string().min(1).max(256) }))
+    .mutation(({ input }) => sendTelegramBridgeInput(input.value)),
+  startTelegramWorker: protectedProcedure.mutation(() => startTelegramWorker()),
+  stopTelegramWorker: protectedProcedure.mutation(() => stopTelegramWorker()),
+  pauseTelegramWorker: protectedProcedure.mutation(async ({ ctx }) => { await queueWorkerCommand(ctx.user.id, "primary", "pause"); return markTelegramBridgePaused(true); }),
+  resumeTelegramWorker: protectedProcedure.mutation(async ({ ctx }) => { await queueWorkerCommand(ctx.user.id, "primary", "resume"); return markTelegramBridgePaused(false); }),
   operationalBaseline: protectedProcedure.mutation(({ ctx }) =>
     runOperationalBaseline(ctx.user.id)
   ),
@@ -391,7 +424,7 @@ export const ryzeRouter = router({
       status: z.enum(["configured", "authorized", "paused", "removed"]).optional(),
     }))
     .mutation(({ ctx, input }) => saveTelegramAccount(ctx.user.id, input)),
-  removeTelegramAccount: protectedProcedure.mutation(({ ctx }) => removeTelegramAccount(ctx.user.id)),
+  removeTelegramAccount: protectedProcedure.mutation(async ({ ctx }) => { await removeTelegramBridgeSession(); return removeTelegramAccount(ctx.user.id); }),
   setTelegramAdminIdentity: protectedProcedure
     .input(z.object({ identity: z.string().trim().regex(/^(?:\d{1,32}|@[A-Za-z0-9_]{5,32})$/) }))
     .mutation(({ ctx, input }) => setTelegramAdminIdentity(ctx.user.id, input.identity)),

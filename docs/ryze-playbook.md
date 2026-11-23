@@ -145,18 +145,20 @@ Only perform this if a valid FreeLLMAPI gateway is available:
 
 Record the model ID and gateway/provider metadata separately if available. Never record the API key.
 
-### 3.7 Optional Telegram inbound-only test
+### 3.7 Optional Telegram setup and inbound-only test
 
 This stage uses the private RyzeTel bridge pattern for local secret handling and worker lifecycle, but it does not enable outbound Telegram replies.
 
 1. Start Ryze with `Start-Ryze.cmd` and sign in.
-2. From the installed Ryze folder, double-click `Configure-TelegramWorker.cmd`. Enter the Telegram API ID, API hash, phone number, and approved chat ID(s) privately on the target Windows computer. Do not paste any of these values into chat.
-3. Double-click `Start-TelegramWorker.cmd` or run `Start-TelegramWorker.cmd check`. It must report `worker_api_ok`.
-4. Run `Start-TelegramWorker.cmd login`. Enter the Telegram phone code and, if requested, the two-step password in the local command window.
-5. Run `Start-TelegramWorker.cmd run` and leave that window open while testing.
-6. Send a harmless test message from an approved chat. Confirm that Ryze records an inbound task or activity event and that no Telegram reply is sent.
+2. Open **Settings → Telegram account bridge**.
+3. Enter the Telegram API ID, API hash, phone number, and approved chat ID(s) in the **Connection wizard**, then select **Prepare Telegram**. These values are written only to the protected local worker folder.
+4. Select **Start login**. Enter the Telegram phone code in the dashboard. If Telegram requests two-step verification, enter that password in the dashboard. The fields are cleared after submission.
+5. After the phase changes to `authorized`, select **Start receiving**.
+6. Send a harmless test message from an approved chat. Confirm that Ryze records an inbound task or activity event. Direct replies remain disabled in this staged release.
 7. Send a message from a non-approved chat, if available. Confirm that Ryze ignores it.
-8. Stop the worker with `Ctrl+C`, then run `Start-TelegramWorker.cmd check` again if needed. Do not register a Windows scheduled task yet.
+8. Use **Pause**, **Resume**, and **Stop worker** from the dashboard. Do not register a Windows scheduled task yet.
+
+If the dashboard wizard is unavailable in an older package, use the policy-safe `Configure-TelegramWorker.cmd` and `Start-TelegramWorker.cmd` launchers described above. The dashboard wizard is the intended setup path for this revision.
 
 The `.cmd` launchers use a process-only PowerShell execution-policy bypass. They do not change the computer's permanent PowerShell execution policy. The underlying `.ps1` files remain available for advanced users.
 
@@ -170,7 +172,7 @@ Open **Settings → Telegram account bridge** on the local dashboard. The panel 
 
 Set the permanent admin Telegram user ID in the same panel. Ryze accepts messages from that ID by default and ignores other sender IDs. Save a permanent recovery code for remote recovery, or use **Generate one-time code** when another specific sender needs temporary access. The sender must send only the exact code as the Telegram message; no `RYZE-AUTH` prefix is required. The one-time code is shown only on the local dashboard and expires after 15 minutes. When that sender sends it to the connected account, that sender is accepted for one hour, then the permanent admin-only rule returns. Incoming, ignored, authorization, and system events appear in the local Telegram channel log. Outbound replies remain disabled.
 
-The dashboard controls above configure Ryze's authorization policy, but the current revision does not yet perform Telethon login or start/stop the local Telegram process from a dashboard button. To test live inbound Telegram now, use the staged local worker procedure in section 3.7. The dashboard-only process bridge is the next Telegram implementation stage.
+The Connection wizard in this revision performs the local Telethon environment setup, login-code entry, optional two-step-password entry, worker start, pause, resume, stop, and protected session removal from the dashboard. Telegram API credentials and login values remain local and are not displayed in the audit log. The wizard currently enables inbound-only testing; direct same-chat replies remain disabled until the outbound safety gate and end-to-end acceptance tests pass.
 
 Gmail is planned as a separate OAuth setup panel. The Gmail account will be authorized through Google consent rather than by storing a Gmail password. Drive and Photos access will be optional scopes and will not be enabled merely because Gmail is connected.
 

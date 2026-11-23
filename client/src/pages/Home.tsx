@@ -199,6 +199,42 @@ export default function Home() {
     enabled: localBuild && isAuthenticated,
     refetchInterval: 5000,
   });
+  const telegramBridge = trpc.ryze.telegramBridgeStatus.useQuery(undefined, {
+    enabled: localBuild && isAuthenticated,
+    refetchInterval: 1500,
+  });
+  const configureTelegramBridge = trpc.ryze.configureTelegramBridge.useMutation({
+    onSuccess: result => { void telegramBridge.refetch(); toast.success(result.message); },
+    onError: error => toast.error(error.message),
+  });
+  const startTelegramLogin = trpc.ryze.startTelegramLogin.useMutation({
+    onSuccess: result => { void telegramBridge.refetch(); toast.success(result.message); },
+    onError: error => toast.error(error.message),
+  });
+  const submitTelegramLoginCode = trpc.ryze.submitTelegramLoginCode.useMutation({
+    onSuccess: result => { void telegramBridge.refetch(); toast.success(result.message); },
+    onError: error => toast.error(error.message),
+  });
+  const submitTelegramTwoStepPassword = trpc.ryze.submitTelegramTwoStepPassword.useMutation({
+    onSuccess: result => { void telegramBridge.refetch(); toast.success(result.message); },
+    onError: error => toast.error(error.message),
+  });
+  const startTelegramWorker = trpc.ryze.startTelegramWorker.useMutation({
+    onSuccess: result => { void telegramBridge.refetch(); toast.success(result.message); },
+    onError: error => toast.error(error.message),
+  });
+  const stopTelegramWorker = trpc.ryze.stopTelegramWorker.useMutation({
+    onSuccess: result => { void telegramBridge.refetch(); toast.success(result.message); },
+    onError: error => toast.error(error.message),
+  });
+  const pauseTelegramWorker = trpc.ryze.pauseTelegramWorker.useMutation({
+    onSuccess: () => { void telegramBridge.refetch(); toast.success("Telegram worker pause requested."); },
+    onError: error => toast.error(error.message),
+  });
+  const resumeTelegramWorker = trpc.ryze.resumeTelegramWorker.useMutation({
+    onSuccess: () => { void telegramBridge.refetch(); toast.success("Telegram worker resume requested."); },
+    onError: error => toast.error(error.message),
+  });
   const saveTelegramAccount = trpc.ryze.saveTelegramAccount.useMutation({
     onSuccess: () => void telegramControl.refetch(),
     onError: error => toast.error(error.message),
@@ -563,12 +599,21 @@ export default function Home() {
           localBuild={localBuild}
           integrationStatus={integrationStatus.data}
           telegramControl={telegramControl.data}
+          telegramBridge={telegramBridge.data}
           saveTelegramAccount={input => saveTelegramAccount.mutate(input)}
           removeTelegramAccount={() => removeTelegramAccount.mutate()}
           setTelegramAdmin={identity => setTelegramAdmin.mutate({ identity })}
           setTelegramPermanentCode={code => setTelegramPermanentCode.mutate({ code })}
           issueTelegramCode={() => issueTelegramCode.mutate()}
           telegramCode={telegramCode}
+          configureTelegramBridge={input => configureTelegramBridge.mutate(input)}
+          startTelegramLogin={() => startTelegramLogin.mutate()}
+          submitTelegramLoginCode={value => submitTelegramLoginCode.mutate({ value })}
+          submitTelegramTwoStepPassword={value => submitTelegramTwoStepPassword.mutate({ value })}
+          startTelegramWorker={() => startTelegramWorker.mutate()}
+          stopTelegramWorker={() => stopTelegramWorker.mutate()}
+          pauseTelegramWorker={() => pauseTelegramWorker.mutate()}
+          resumeTelegramWorker={() => resumeTelegramWorker.mutate()}
           runBaseline={() => operationalBaseline.mutate()}
           baselineRunning={operationalBaseline.isPending}
           baselineConsole={baselineConsole}
@@ -1265,26 +1310,49 @@ function FilesView({
 
 function TelegramSettingsCard({
   control,
+  bridge,
   saveAccount,
   removeAccount,
   setAdmin,
   setPermanentCode,
   issueCode,
   telegramCode,
+  configureBridge,
+  startLogin,
+  submitLoginCode,
+  submitTwoStepPassword,
+  startWorker,
+  stopWorker,
+  pauseWorker,
+  resumeWorker,
 }: {
   control?: any;
+  bridge?: any;
   saveAccount: (input: { label: string; phoneMasked: string; telegramUserId?: string; status?: "configured" | "authorized" | "paused" | "removed" }) => void;
   removeAccount: () => void;
   setAdmin: (telegramUserId: string) => void;
   setPermanentCode: (code: string) => void;
   issueCode: () => void;
   telegramCode: { code: string; expiresAt: string } | null;
+  configureBridge: (input: { apiId: string; apiHash: string; phone: string; allowedChatIds: string; workerId?: string }) => void;
+  startLogin: () => void;
+  submitLoginCode: (value: string) => void;
+  submitTwoStepPassword: (value: string) => void;
+  startWorker: () => void;
+  stopWorker: () => void;
+  pauseWorker: () => void;
+  resumeWorker: () => void;
 }) {
   const [label, setLabel] = useState(control?.account?.label ?? "");
   const [phoneMasked, setPhoneMasked] = useState(control?.account?.phoneMasked ?? "");
   const [accountId, setAccountId] = useState(control?.account?.telegramUserId ?? "");
   const [adminId, setAdminId] = useState(control?.access?.adminTelegramUserId ? String(control.access.adminTelegramUserId) : control?.access?.adminTelegramUsername ? `@${control.access.adminTelegramUsername}` : "");
   const [permanentCode, setPermanentCodeValue] = useState("");
+  const [apiId, setApiId] = useState("");
+  const [apiHash, setApiHash] = useState("");
+  const [phone, setPhone] = useState("");
+  const [allowedChatIds, setAllowedChatIds] = useState("");
+  const [loginValue, setLoginValue] = useState("");
   useEffect(() => {
     setLabel(control?.account?.label ?? "");
     setPhoneMasked(control?.account?.phoneMasked ?? "");
@@ -1295,7 +1363,26 @@ function TelegramSettingsCard({
   return (
     <section className="rounded-[1.5rem] border border-cyan-300/15 bg-cyan-300/[0.035] p-5">
       <div className="flex items-center gap-2 text-sm font-semibold text-cyan-100"><UserRound className="size-4 text-cyan-300" /> Telegram account bridge</div>
-      <p className="mt-3 text-xs leading-5 text-slate-400">Manage one active Telegram user account. Incoming and outgoing channel events are kept in the local audit log. Outbound replies remain disabled until the approval gate is completed.</p>
+      <p className="mt-3 text-xs leading-5 text-slate-400">One dashboard wizard for one connected Telegram user account. This stage receives approved text only; direct same-chat replies remain safety-gated until the final send controls and end-to-end tests pass. No broadcast, sales funnel, or unrelated automation is enabled.</p>
+      <div className="mt-4 rounded-xl border border-violet-300/15 bg-violet-300/[0.04] p-3">
+        <div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold text-slate-200">Connection wizard</span><Badge className="border border-violet-300/20 bg-violet-300/10 text-violet-200">{bridge?.phase ?? "not_configured"}</Badge></div>
+        <p className="mt-2 text-[11px] leading-5 text-slate-500">{bridge?.message ?? "Enter the Telegram API details below to prepare the private local worker."}</p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <Input value={apiId} onChange={event => setApiId(event.target.value)} placeholder="Telegram API ID" className="border-white/10 bg-black/20 text-slate-100" />
+          <Input type="password" value={apiHash} onChange={event => setApiHash(event.target.value)} placeholder="Telegram API hash" className="border-white/10 bg-black/20 text-slate-100" />
+          <Input value={phone} onChange={event => setPhone(event.target.value)} placeholder="Phone number, e.g. +60123456789" className="border-white/10 bg-black/20 text-slate-100" />
+          <Input value={allowedChatIds} onChange={event => setAllowedChatIds(event.target.value)} placeholder="Approved chat ID(s), comma-separated" className="border-white/10 bg-black/20 text-slate-100" />
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button disabled={!apiId || !apiHash || !phone || !allowedChatIds} onClick={() => configureBridge({ apiId, apiHash, phone, allowedChatIds })} className="bg-violet-400/15 text-violet-100 hover:bg-violet-400/25">Prepare Telegram</Button>
+          <Button disabled={!bridge?.configured || bridge?.processRunning} onClick={startLogin} className="bg-cyan-400/15 text-cyan-100 hover:bg-cyan-400/25">Start login</Button>
+          <Button disabled={!bridge?.configured || bridge?.phase !== "running"} onClick={stopWorker} variant="outline" className="border-rose-300/20 text-rose-200 hover:bg-rose-300/10">Stop worker</Button>
+          <Button disabled={!bridge?.configured || bridge?.phase !== "authorized"} onClick={startWorker} className="bg-emerald-400/15 text-emerald-100 hover:bg-emerald-400/25">Start receiving</Button>
+          <Button disabled={bridge?.phase !== "running"} onClick={pauseWorker} variant="outline" className="border-amber-300/20 text-amber-200 hover:bg-amber-300/10">Pause</Button>
+          <Button disabled={bridge?.phase !== "paused"} onClick={resumeWorker} variant="outline" className="border-emerald-300/20 text-emerald-200 hover:bg-emerald-300/10">Resume</Button>
+        </div>
+        {(bridge?.phase === "awaiting_code" || bridge?.phase === "awaiting_2fa") ? <div className="mt-3 flex gap-2"><Input type={bridge.phase === "awaiting_2fa" ? "password" : "text"} value={loginValue} onChange={event => setLoginValue(event.target.value)} placeholder={bridge.phase === "awaiting_2fa" ? "Telegram two-step password" : "Telegram login code"} className="border-white/10 bg-black/20 text-slate-100" /><Button disabled={!loginValue} onClick={() => { (bridge.phase === "awaiting_2fa" ? submitTwoStepPassword : submitLoginCode)(loginValue); setLoginValue(""); }} className="bg-amber-400/15 text-amber-100 hover:bg-amber-400/25">Submit securely</Button></div> : null}
+      </div>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <Input value={label} onChange={event => setLabel(event.target.value)} placeholder="Account label" className="border-white/10 bg-black/20 text-slate-100" />
         <Input value={phoneMasked} onChange={event => setPhoneMasked(event.target.value)} placeholder="Masked phone, e.g. +60••••89" className="border-white/10 bg-black/20 text-slate-100" />
@@ -1327,12 +1414,21 @@ function SettingsView({
   localBuild,
   integrationStatus,
   telegramControl,
+  telegramBridge,
   saveTelegramAccount,
   removeTelegramAccount,
   setTelegramAdmin,
   setTelegramPermanentCode,
   issueTelegramCode,
   telegramCode,
+  configureTelegramBridge,
+  startTelegramLogin,
+  submitTelegramLoginCode,
+  submitTelegramTwoStepPassword,
+  startTelegramWorker,
+  stopTelegramWorker,
+  pauseTelegramWorker,
+  resumeTelegramWorker,
   runBaseline,
   baselineRunning,
   baselineConsole,
@@ -1344,12 +1440,21 @@ function SettingsView({
     chatReady: boolean;
   };
   telegramControl?: any;
+  telegramBridge?: any;
   saveTelegramAccount: (input: { label: string; phoneMasked: string; telegramUserId?: string; status?: "configured" | "authorized" | "paused" | "removed" }) => void;
   removeTelegramAccount: () => void;
   setTelegramAdmin: (telegramUserId: string) => void;
   setTelegramPermanentCode: (code: string) => void;
   issueTelegramCode: () => void;
   telegramCode: { code: string; expiresAt: string } | null;
+  configureTelegramBridge: (input: { apiId: string; apiHash: string; phone: string; allowedChatIds: string; workerId?: string }) => void;
+  startTelegramLogin: () => void;
+  submitTelegramLoginCode: (value: string) => void;
+  submitTelegramTwoStepPassword: (value: string) => void;
+  startTelegramWorker: () => void;
+  stopTelegramWorker: () => void;
+  pauseTelegramWorker: () => void;
+  resumeTelegramWorker: () => void;
   settings: {
     provider: "local-demo" | "ollama-ready" | "external-disabled";
     ryzeModel: string;
@@ -1468,12 +1573,21 @@ function SettingsView({
           {localBuild ? (
             <TelegramSettingsCard
               control={telegramControl}
+              bridge={telegramBridge}
               saveAccount={saveTelegramAccount}
               removeAccount={removeTelegramAccount}
               setAdmin={setTelegramAdmin}
               setPermanentCode={setTelegramPermanentCode}
               issueCode={issueTelegramCode}
               telegramCode={telegramCode}
+              configureBridge={configureTelegramBridge}
+              startLogin={startTelegramLogin}
+              submitLoginCode={submitTelegramLoginCode}
+              submitTwoStepPassword={submitTelegramTwoStepPassword}
+              startWorker={startTelegramWorker}
+              stopWorker={stopTelegramWorker}
+              pauseWorker={pauseTelegramWorker}
+              resumeWorker={resumeTelegramWorker}
             />
           ) : null}
           <section className="rounded-[1.5rem] border border-rose-300/10 bg-rose-300/[0.035] p-5">

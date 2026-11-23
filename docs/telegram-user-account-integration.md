@@ -2,7 +2,7 @@
 
 RyzeFramework’s planned Telegram interface uses the user-account pattern from the connected **ryzetel** repository. It does **not** use a Telegram bot token or bot webhook.
 
-**Current package boundary:** the Windows ZIP now includes an optional, manually started worker setup path. A fresh local install generates a separate worker token; `Configure-TelegramWorker.ps1` stores a protected local `worker.env`; and `Start-TelegramWorker.ps1 check` verifies the local worker API before any Telegram login. The worker still does not send replies. It only forwards allowlisted inbound messages after the owner completes local Telethon authorization.
+**Current package boundary:** the local Windows dashboard now includes a controlled Telegram setup wizard. It writes the protected local `worker.env`, installs the private worker environment, starts Telethon login, accepts the login code and optional two-step password through transient dashboard fields, and controls start/pause/resume/stop. The worker still does not send replies in this staged release. It only forwards allowlisted inbound messages after the owner completes local Telethon authorization. The older `.cmd` launchers remain as a recovery path.
 
 ## Architecture
 
@@ -24,9 +24,9 @@ The worker requires an explicit `TELEGRAM_ALLOWED_CHAT_IDS` allowlist. It ignore
 2. The dashboard-controlled Python subprocess opens a stable per-account `TelegramClient` session.
 3. If the session is not already authorized, the subprocess requests a Telegram phone code.
 4. The owner supplies the code through the setup flow.
-5. If Telegram requests two-step verification, the subprocess requests the password and handles `SessionPasswordNeededError`.
+5. If Telegram requests two-step verification, the subprocess requests the password and handles `SessionPasswordNeededError`; the dashboard supplies the value through a transient input field.
 6. The subprocess verifies `is_user_authorized()` before reporting success.
-7. The subprocess disconnects; later worker starts connect to the existing local session and refuse to operate if authorization is absent.
+7. The subprocess disconnects; later worker starts connect to the existing local session and refuse to operate if authorization is absent. Dashboard disconnect removes the protected local session before an account replacement.
 
 Phone values shown to the dashboard must be masked. API hashes, codes, passwords, session paths, session bytes and raw credentials must never be returned through the dashboard API, logs, exports or worker telemetry.
 
