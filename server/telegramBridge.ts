@@ -151,7 +151,9 @@ export async function configureTelegramBridge(input: TelegramSetup) {
   return getTelegramBridgeStatus();
 }
 export async function startTelegramLogin() {
-  if (state.process) throw new Error("A Telegram setup operation is already running.");
+  if (state.process && state.status.phase !== "running" && state.status.phase !== "paused")
+    throw new Error("A Telegram setup operation is already running.");
+  if (state.process) await stopTelegramWorker();
   const python = await ensurePythonEnvironment();
   const child = spawn(python, ["-u", workerEntryPath(), "login"], { cwd: process.cwd(), env: { ...process.env, ...(await Object.fromEntries((await readWorkerEnvironment()).entries())), PYTHONUNBUFFERED: "1", NO_PROXY: "127.0.0.1,localhost" }, stdio: "pipe", windowsHide: true });
   setStatus("awaiting_code", "Starting Telegram login. Waiting for Telegram's response.");
@@ -176,7 +178,12 @@ export async function startTelegramWorker() {
 }
 export async function stopTelegramWorker() {
   if (state.process) {
-    state.process.kill();
+    const process = state.process;
+    await new Promise<void>(resolve => {
+      const timer = setTimeout(resolve, 3000);
+      process.once("close", () => { clearTimeout(timer); resolve(); });
+      process.kill();
+    });
     state.process = null;
   }
   setStatus("stopped", "Telegram worker is stopped.");
