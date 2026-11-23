@@ -33,7 +33,7 @@ This checklist turns the origin blueprint and current repository status into an 
 
 ## Workstream 1 — Define runtime configuration and feature gates
 
-- [ ] Specify a versioned runtime configuration schema covering execution mode, model gateway URL/name, timeout/retry limits, worker identity, permitted actions, allowed Telegram chat IDs, and upload limits.
+- [ ] Specify a versioned runtime configuration schema covering execution mode, model gateway URL/name, timeout/retry limits, worker identity, sender authorization policy, permitted actions, and upload limits.
 - [ ] Keep credentials in a separate secret provider or protected local environment. Never serialize secrets into client responses, exported JSON, logs, or portable packages.
 - [ ] Validate required settings at startup. Fail closed with actionable, non-secret error messages when required settings are absent or invalid.
 - [ ] Add explicit feature gates for model calls, Telegram inbound handling, Telegram outbound delivery, file processing, and each tool. Defaults must remain disabled for external operations.
@@ -77,12 +77,12 @@ The implementation now provides text-only chat and denies all OpenCode tool perm
 
 - [ ] Choose the owner-controlled local worker host and service manager. Keep the worker and Telethon session local to that host as prescribed by the origin.
 - [ ] Install the worker dependencies in an isolated Python environment and document reproducible installation/upgrade steps.
-- [ ] Configure the server-side worker token and owner identity through protected deployment secrets. Configure local API ID/hash, phone, session path, worker ID, and explicit allowed chat IDs through a protected local environment.
+- [ ] Configure the server-side worker token and owner identity through protected deployment secrets. Configure local API ID/hash, phone, session path, worker ID, permanent admin identity, and recovery-code policy through a protected local environment.
 - [ ] Verify that the worker token is distinct from Telegram credentials, transmitted only over HTTPS, and rejected if absent or incorrect.
 - [ ] Perform the explicit owner login flow. Confirm phone-code and optional two-step-password handling; verify the phone shown in any UI is masked and session files remain outside Git/exports.
 - [ ] Verify the session lock rejects a second worker process, releases on normal exit, and has documented recovery for a stale lock after a crash.
 - [ ] Test heartbeat, status updates, command polling, acknowledgements, and sanitized event handling against a non-production/test deployment first.
-- [ ] Test inbound messages from an allowed chat and rejection/ignore behavior for a non-allowed chat. Define which message content is stored, how long it is retained, and how it is deleted; do not treat message bodies as sanitized telemetry.
+- [ ] Test inbound messages from the permanent admin sender and a recovery-code-authorized sender, plus rejection/ignore behavior for other senders in private chats and groups. Define which message content is stored, how long it is retained, and how it is deleted; do not treat message bodies as sanitized telemetry.
 - [ ] Test approved outbound delivery only after Workstream 2 is complete. Verify exact recipient/content approval, pause/stop, suppression, retries, duplicate prevention, and audit logs.
 - [ ] Test network outage, API timeout, invalid token, unauthorized session, malformed command, command replay, and worker restart. Confirm bounded behavior and owner-visible diagnostics without exposing secrets.
 
@@ -95,7 +95,7 @@ The implementation now provides text-only chat and denies all OpenCode tool perm
 - [ ] Decide which document-processing operations Stage 1 actually supports. Implement only named, bounded operations; do not execute uploaded files or treat their contents as trusted instructions.
 - [ ] Add tests for empty files, incorrect declared size, base64 edge cases, oversize files, unsupported MIME types, path-like names, storage failure, and cross-user file access.
 - [ ] Verify report generation produces a retrievable file with correct metadata and that users can obtain it from the dashboard.
-- [ ] If Telegram file delivery is in Stage 1 scope, make it an explicitly approved action and test delivery to an allowlisted chat. Otherwise document it as deferred and do not count it as complete.
+- [ ] If Telegram file delivery is in Stage 1 scope, make it an explicitly approved action and test delivery to the same authorized sender chat. Otherwise document it as deferred and do not count it as complete.
 
 **Exit condition:** The supported upload/process/report path is validated against the real storage setup, safely handles failure, and returns artifacts only to their authorized owner/destination.
 

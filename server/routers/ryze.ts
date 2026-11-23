@@ -306,7 +306,6 @@ export const ryzeRouter = router({
       apiId: z.string().trim().regex(/^\d+$/).max(32),
       apiHash: z.string().trim().min(1).max(128),
       phone: z.string().trim().min(5).max(64),
-      allowedChatIds: z.string().trim().min(1).max(1000),
       workerId: z.string().trim().regex(/^[a-zA-Z0-9._-]{1,64}$/).optional(),
     }))
     .mutation(({ input }) => configureTelegramBridge(input)),

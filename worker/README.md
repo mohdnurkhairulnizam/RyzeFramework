@@ -14,12 +14,11 @@ TELEGRAM_API_ID=<Telegram application ID>
 TELEGRAM_API_HASH=<Telegram application hash>
 TELEGRAM_PHONE=+60123456789
 TELEGRAM_SESSION_PATH=./data/ryze-user
-TELEGRAM_ALLOWED_CHAT_IDS=123456789
 ```
 
 For a fresh local Ryze install, the installer creates a separate random `RYZE_WORKER_TOKEN` in the protected application `.env`. `scripts/windows/Configure-TelegramWorker.ps1` copies only that token into a separately protected local worker environment and prompts for Telegram values on the Windows computer. The token is not the owner password and must not be pasted into chat.
 
-`TELEGRAM_ALLOWED_CHAT_IDS` is mandatory and comma-separated. The worker ignores inbound messages and rejects outbound commands for chats that are not explicitly listed.
+No chat or group allowlist is required. The worker forwards inbound text to Ryze for sender authorization. In a private chat or group, the permanent admin sender is allowed; a sender that supplies the exact recovery code is allowed for one hour; every other sender is ignored.
 
 ## Install and authorize
 

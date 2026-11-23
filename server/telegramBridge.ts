@@ -23,7 +23,6 @@ type TelegramSetup = {
   apiId: string;
   apiHash: string;
   phone: string;
-  allowedChatIds: string;
   workerId?: string;
 };
 
@@ -49,12 +48,11 @@ function setStatus(phase: BridgePhase, message: string, extra: Partial<BridgeSta
   state.status = { ...state.status, ...extra, phase, message, processRunning: Boolean(state.process && !state.process.killed), updatedAt: new Date().toISOString() };
 }
 function validateSetup(input: TelegramSetup) {
-  for (const [name, value, max] of [["Telegram API ID", input.apiId, 32], ["Telegram API hash", input.apiHash, 128], ["Telegram phone number", input.phone, 64], ["Approved chat IDs", input.allowedChatIds, 1000]] as const) {
+  for (const [name, value, max] of [["Telegram API ID", input.apiId, 32], ["Telegram API hash", input.apiHash, 128], ["Telegram phone number", input.phone, 64]] as const) {
     if (!value.trim() || value.length > max || /[\r\n]/.test(value)) throw new Error(`${name} is required and must be a single line.`);
   }
   if (!/^\d+$/.test(input.apiId.trim())) throw new Error("Telegram API ID must be numeric.");
   if (!/^\+?[0-9 ()-]{5,64}$/.test(input.phone.trim())) throw new Error("Telegram phone number format is invalid.");
-  if (!input.allowedChatIds.split(",").every(item => /^-?\d+$/.test(item.trim()))) throw new Error("Approved chat IDs must be numeric and comma-separated.");
 }
 async function protectWorkerRoot() {
   if (process.platform !== "win32") return;
@@ -89,7 +87,6 @@ async function writeWorkerEnvironment(input: TelegramSetup) {
     `TELEGRAM_API_HASH=${input.apiHash.trim()}`,
     `TELEGRAM_PHONE=${input.phone.trim()}`,
     `TELEGRAM_SESSION_PATH=${session}`,
-    `TELEGRAM_ALLOWED_CHAT_IDS=${input.allowedChatIds.split(",").map(value => value.trim()).join(",")}`,
     "RYZE_WORKER_VERSION=0.2.0-dashboard-bridge-inbound",
   ].join("\n") + "\n";
   await writeFile(workerEnvPath(), lines, { encoding: "utf8", mode: 0o600 });

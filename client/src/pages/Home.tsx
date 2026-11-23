@@ -1334,7 +1334,7 @@ function TelegramSettingsCard({
   setPermanentCode: (code: string) => void;
   issueCode: () => void;
   telegramCode: { code: string; expiresAt: string } | null;
-  configureBridge: (input: { apiId: string; apiHash: string; phone: string; allowedChatIds: string; workerId?: string }) => void;
+  configureBridge: (input: { apiId: string; apiHash: string; phone: string; workerId?: string }) => void;
   startLogin: () => void;
   submitLoginCode: (value: string) => void;
   submitTwoStepPassword: (value: string) => void;
@@ -1351,7 +1351,6 @@ function TelegramSettingsCard({
   const [apiId, setApiId] = useState("");
   const [apiHash, setApiHash] = useState("");
   const [phone, setPhone] = useState("");
-  const [allowedChatIds, setAllowedChatIds] = useState("");
   const [loginValue, setLoginValue] = useState("");
   useEffect(() => {
     setLabel(control?.account?.label ?? "");
@@ -1363,7 +1362,7 @@ function TelegramSettingsCard({
   return (
     <section className="rounded-[1.5rem] border border-cyan-300/15 bg-cyan-300/[0.035] p-5">
       <div className="flex items-center gap-2 text-sm font-semibold text-cyan-100"><UserRound className="size-4 text-cyan-300" /> Telegram account bridge</div>
-      <p className="mt-3 text-xs leading-5 text-slate-400">One dashboard wizard for one connected Telegram user account. This stage receives approved text only; direct same-chat replies remain safety-gated until the final send controls and end-to-end tests pass. No broadcast, sales funnel, or unrelated automation is enabled.</p>
+      <p className="mt-3 text-xs leading-5 text-slate-400">One dashboard wizard for one connected Telegram user account. This stage receives sender-authorized text only; direct same-chat replies remain safety-gated until the final send controls and end-to-end tests pass. No broadcast, sales funnel, or unrelated automation is enabled.</p>
       <div className="mt-4 rounded-xl border border-violet-300/15 bg-violet-300/[0.04] p-3">
         <div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold text-slate-200">Connection wizard</span><Badge className="border border-violet-300/20 bg-violet-300/10 text-violet-200">{bridge?.phase ?? "not_configured"}</Badge></div>
         <p className="mt-2 text-[11px] leading-5 text-slate-500">{bridge?.message ?? "Enter the Telegram API details below to prepare the private local worker."}</p>
@@ -1371,11 +1370,10 @@ function TelegramSettingsCard({
           <Input value={apiId} onChange={event => setApiId(event.target.value)} placeholder="Telegram API ID" className="border-white/10 bg-black/20 text-slate-100" />
           <Input type="password" value={apiHash} onChange={event => setApiHash(event.target.value)} placeholder="Telegram API hash" className="border-white/10 bg-black/20 text-slate-100" />
           <Input value={phone} onChange={event => setPhone(event.target.value)} placeholder="Phone number, e.g. +60123456789" className="border-white/10 bg-black/20 text-slate-100" />
-          <Input value={allowedChatIds} onChange={event => setAllowedChatIds(event.target.value)} placeholder="Approved chat ID(s), comma-separated" aria-label="Approved Telegram chat IDs" className="border-white/10 bg-black/20 text-slate-100" />
         </div>
-        <p className="mt-2 text-[11px] leading-5 text-slate-500">Approved chat ID means the numeric Telegram conversation allowed to reach Ryze. For a private one-to-one chat it is normally the sender's numeric Telegram user ID; group IDs are usually negative numbers. Do not enter an @username here.</p>
+        <p className="mt-2 text-[11px] leading-5 text-slate-500">Ryze authorizes the permanent admin identity below. Other senders are ignored unless they send the exact recovery code, which grants one-hour temporary access. No group or chat allowlist is required.</p>
         <div className="mt-3 flex flex-wrap gap-2">
-          <Button disabled={!apiId || !apiHash || !phone || !allowedChatIds} onClick={() => configureBridge({ apiId, apiHash, phone, allowedChatIds })} className="bg-violet-400/15 text-violet-100 hover:bg-violet-400/25">Prepare Telegram</Button>
+          <Button disabled={!apiId || !apiHash || !phone} onClick={() => configureBridge({ apiId, apiHash, phone })} className="bg-violet-400/15 text-violet-100 hover:bg-violet-400/25">Prepare Telegram</Button>
           <Button disabled={!bridge?.configured || bridge?.processRunning} onClick={startLogin} className="bg-cyan-400/15 text-cyan-100 hover:bg-cyan-400/25">Start login</Button>
           <Button disabled={!bridge?.configured || bridge?.phase !== "running"} onClick={stopWorker} variant="outline" className="border-rose-300/20 text-rose-200 hover:bg-rose-300/10">Stop worker</Button>
           <Button disabled={!bridge?.configured || bridge?.phase !== "authorized"} onClick={startWorker} className="bg-emerald-400/15 text-emerald-100 hover:bg-emerald-400/25">Start receiving</Button>
@@ -1393,7 +1391,7 @@ function TelegramSettingsCard({
       <div className="mt-4 rounded-xl border border-white/[0.07] bg-black/10 p-3">
         <div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold text-slate-200">Permanent admin Telegram identity</span><Badge className="border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">{control?.access?.adminTelegramUserId || control?.access?.adminTelegramUsername ? "configured" : "not set"}</Badge></div>
         <div className="mt-3 flex gap-2"><Input value={adminId} onChange={event => setAdminId(event.target.value.trim())} placeholder="Numeric ID or @username" className="border-white/10 bg-black/20 text-slate-100" /><Button disabled={!/^\d{1,32}$/.test(adminId) && !/^@[A-Za-z0-9_]{5,32}$/.test(adminId)} onClick={() => setAdmin(adminId)} className="bg-white/[0.08] text-slate-100 hover:bg-white/[0.14]">Save admin identity</Button></div>
-        <p className="mt-2 text-[11px] leading-5 text-slate-500"><strong className="text-slate-300">Who:</strong> this is the sender identity allowed by default. Use a numeric ID or an exact Telegram username beginning with `@`. The approved chat ID below separately defines <strong className="text-slate-300">where</strong> messages may come from.</p>
+        <p className="mt-2 text-[11px] leading-5 text-slate-500"><strong className="text-slate-300">Who:</strong> this is the sender identity allowed by default. Use a numeric ID or an exact Telegram username beginning with `@`. In a private chat or group, this sender-only rule is applied to every incoming message.</p>
         <div className="mt-3 flex gap-2"><Input type="password" value={permanentCode} onChange={event => setPermanentCodeValue(event.target.value)} placeholder="Permanent recovery code (6+ characters)" className="border-white/10 bg-black/20 text-slate-100" /><Button disabled={permanentCode.length < 6} onClick={() => { setPermanentCode(permanentCode); setPermanentCodeValue(""); }} className="bg-amber-400/15 text-amber-100 hover:bg-amber-400/25">Save recovery code</Button></div>
         <p className="mt-2 text-[11px] leading-5 text-slate-500">Store this code privately. To use it from Telegram, send only the exact code. Ryze stores only a hash and never writes the code to logs.</p>
       </div>
@@ -1448,7 +1446,7 @@ function SettingsView({
   setTelegramPermanentCode: (code: string) => void;
   issueTelegramCode: () => void;
   telegramCode: { code: string; expiresAt: string } | null;
-  configureTelegramBridge: (input: { apiId: string; apiHash: string; phone: string; allowedChatIds: string; workerId?: string }) => void;
+  configureTelegramBridge: (input: { apiId: string; apiHash: string; phone: string; workerId?: string }) => void;
   startTelegramLogin: () => void;
   submitTelegramLoginCode: (value: string) => void;
   submitTelegramTwoStepPassword: (value: string) => void;

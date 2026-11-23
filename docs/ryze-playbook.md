@@ -151,27 +151,16 @@ This stage uses the private RyzeTel bridge pattern for local secret handling and
 
 1. Start Ryze with `Start-Ryze.cmd` and sign in.
 2. Open **Settings → Telegram account bridge**.
-3. Enter the Telegram API ID, API hash, phone number, and approved chat ID(s) in the **Connection wizard**, then select **Prepare Telegram**. These values are written only to the protected local worker folder.
+3. Enter the Telegram API ID, API hash, and phone number in the **Connection wizard**, then select **Prepare Telegram**. These values are written only to the protected local worker folder.
 4. Select **Start login**. Enter the Telegram phone code in the dashboard. If Telegram requests two-step verification, enter that password in the dashboard. The fields are cleared after submission.
 5. After the phase changes to `authorized`, select **Start receiving**.
-6. Send a harmless test message from an approved chat. Confirm that Ryze records an inbound task or activity event. Direct replies remain disabled in this staged release.
-7. Send a message from a non-approved chat, if available. Confirm that Ryze ignores it.
+6. Send a harmless test message from the permanent admin Telegram identity. Confirm that Ryze records an inbound task or activity event. Direct replies remain disabled in this staged release.
+7. From another Telegram account, send only the exact permanent or one-time recovery code. Confirm that this sender is temporarily authorized for one hour. Other senders remain ignored.
 8. Use **Pause**, **Resume**, and **Stop worker** from the dashboard. Do not register a Windows scheduled task yet.
 
 If the dashboard wizard is unavailable in an older package, use the policy-safe `Configure-TelegramWorker.cmd` and `Start-TelegramWorker.cmd` launchers described above. The dashboard wizard is the intended setup path for this revision.
 
-#### What is an approved Telegram chat ID?
-
-An approved chat ID is the **numeric ID of the Telegram conversation** that Ryze is allowed to receive messages from. It is a safety allowlist and is separate from the Telegram API ID, API hash, phone number, Telegram username, permanent admin identity, and recovery code.
-
-The **Permanent admin Telegram identity** and the **approved chat ID** answer different questions: the admin identity says **who** may send commands by default; the approved chat ID says **which conversation** may reach Ryze. In a private one-to-one chat with the admin, the two numeric values are often the same. In a group, the admin's identity is the person's ID or username, while the approved chat ID is the group's separate negative numeric ID.
-
-- For a private one-to-one chat, the chat ID is normally the other person's numeric Telegram user ID. If the connected Telegram account is chatting with the permanent admin, this is normally the permanent admin's numeric Telegram ID.
-- For a group or supergroup, the chat ID is normally a negative numeric value.
-- Multiple approved chats can be entered as comma-separated numeric values.
-- Do not enter `@username`, a phone number, the Telegram API ID, or the recovery code in this field.
-
-Keep the chat ID private when sharing diagnostics. Do not paste Telegram credentials, login codes, session files, or private conversation identifiers into a support message. The current staged worker requires at least one approved chat ID before it will receive messages; this prevents an accidentally connected account from monitoring unrelated conversations.
+There is no approved-chat or group allowlist in this design. Authorization is based only on the sender: the permanent admin identity is accepted by default, and another sender is accepted for one hour after sending the exact recovery code. All other senders are ignored.
 
 The `.cmd` launchers use a process-only PowerShell execution-policy bypass. They do not change the computer's permanent PowerShell execution policy. The underlying `.ps1` files remain available for advanced users.
 

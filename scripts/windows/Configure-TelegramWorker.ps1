@@ -32,8 +32,6 @@ $apiId = Read-Host 'Telegram API ID (numeric; entered only on this computer)'
 if ($apiId -notmatch '^\d+$') { throw 'Telegram API ID must be numeric.' }
 $apiHashSecure = Read-Host 'Telegram API hash (hidden)' -AsSecureString
 $phone = Read-Host 'Telegram phone number, including country code (for example +60123456789)'
-$allowed = Read-Host 'Approved Telegram chat ID(s), comma-separated (required)'
-if ([string]::IsNullOrWhiteSpace($allowed)) { throw 'At least one approved Telegram chat ID is required.' }
 $workerId = Read-Host 'Worker ID (press Enter for primary)'
 if ([string]::IsNullOrWhiteSpace($workerId)) { $workerId = 'primary' }
 
@@ -60,7 +58,6 @@ $lines = @(
   "TELEGRAM_API_HASH=$apiHash",
   "TELEGRAM_PHONE=$phone",
   "TELEGRAM_SESSION_PATH=$session",
-  "TELEGRAM_ALLOWED_CHAT_IDS=$allowed",
   'RYZE_WORKER_VERSION=0.1.0-inbound-only'
 )
 Set-Content -LiteralPath $workerEnv -Value $lines -Encoding UTF8

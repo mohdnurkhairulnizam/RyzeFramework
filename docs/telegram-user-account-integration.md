@@ -2,7 +2,7 @@
 
 RyzeFramework’s planned Telegram interface uses the user-account pattern from the connected **ryzetel** repository. It does **not** use a Telegram bot token or bot webhook.
 
-**Current package boundary:** the local Windows dashboard now includes a controlled Telegram setup wizard. It writes the protected local `worker.env`, installs the private worker environment, starts Telethon login, accepts the login code and optional two-step password through transient dashboard fields, and controls start/pause/resume/stop. The worker still does not send replies in this staged release. It only forwards allowlisted inbound messages after the owner completes local Telethon authorization. The older `.cmd` launchers remain as a recovery path.
+**Current package boundary:** the local Windows dashboard now includes a controlled Telegram setup wizard. It writes the protected local `worker.env`, installs the private worker environment, starts Telethon login, accepts the login code and optional two-step password through transient dashboard fields, and controls start/pause/resume/stop. The worker still does not send replies in this staged release. It only forwards inbound messages for sender authorization after the owner completes local Telethon authorization. The older `.cmd` launchers remain as a recovery path.
 
 ## Architecture
 
@@ -16,9 +16,9 @@ RyzeFramework dashboard / execution engine
 
 The local worker is the only component that may access Telegram API credentials and Telethon `.session` files. The hosted dashboard receives sanitized health and activity data, not Telegram secrets or raw Telegram objects.
 
-The worker requires an explicit `TELEGRAM_ALLOWED_CHAT_IDS` allowlist. It ignores inbound messages from unapproved chats and rejects outbound commands targeting them. The Ryze recovery flow accepts the exact permanent or temporary code as the entire Telegram message; it does not require a command prefix. Raw recovery codes are never written to logs or forwarded into task prompts.
+The worker forwards inbound text for sender authorization by Ryze; it does not require a private-chat or group allowlist. If the connected Telegram account is in a group, the same sender-only rule applies: the permanent admin is allowed, a sender that supplies the exact recovery code is allowed for one hour, and every other sender is ignored. The recovery flow accepts the exact permanent or temporary code as the entire Telegram message; it does not require a command prefix. Raw recovery codes are never written to logs or forwarded into task prompts.
 
-An approved chat ID is the numeric Telegram conversation ID in that allowlist. A private one-to-one conversation normally uses the sender's numeric Telegram user ID; a group or supergroup normally has a negative numeric ID. Usernames beginning with `@`, phone numbers, Telegram API IDs, and recovery codes are not chat IDs. Requiring this allowlist is intentional: a connected user account must not monitor every conversation it can access.
+There is no approved-chat or group-member allowlist in this design. The conversation may be a private chat or a group; authorization is based on the sender identity, not the group itself.
 
 ## Login flow
 
@@ -56,4 +56,4 @@ The worker must reject unknown commands and must never interpret a command paylo
 
 ## Current status
 
-The pattern is selected as the replacement for the earlier Telegram bot proposal, using the private RyzeTel bridge as an implementation reference for protected worker environment files, preflight heartbeat, session handling, and explicit worker lifecycle stages. The Python worker package and worker API are implemented, and the local Windows dashboard wizard now stages configuration, Telethon login, private code entry, and worker lifecycle control. Automatic outbound replies are disabled: the server does not queue `send_message`, and the worker rejects that command. Live inbound operation requires an approved chat ID and completed local authorization. Do not register a persistent Windows task or enable live replies before the approval, pause/stop, suppression, duplicate-send, and result-validation controls are implemented and tested.
+The pattern is selected as the replacement for the earlier Telegram bot proposal, using the private RyzeTel bridge as an implementation reference for protected worker environment files, preflight heartbeat, session handling, and explicit worker lifecycle stages. The Python worker package and worker API are implemented, and the local Windows dashboard wizard now stages configuration, Telethon login, private code entry, and worker lifecycle control. Automatic outbound replies are disabled: the server does not queue `send_message`, and the worker rejects that command. Live inbound operation uses sender-only authorization and works in private chats or groups. Do not register a persistent Windows task or enable live replies before the approval, pause/stop, suppression, duplicate-send, and result-validation controls are implemented and tested.

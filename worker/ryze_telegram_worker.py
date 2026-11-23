@@ -43,13 +43,6 @@ def telegram_config() -> tuple[int, str, str, Path]:
     return api_id, api_hash, phone, session_path
 
 
-def allowed_chat_ids() -> set[str]:
-    values = {item.strip() for item in os.environ.get("TELEGRAM_ALLOWED_CHAT_IDS", "").split(",") if item.strip()}
-    if not values:
-        raise RuntimeError("TELEGRAM_ALLOWED_CHAT_IDS must contain at least one approved chat ID")
-    return values
-
-
 class SessionLock:
     """Small single-instance guard for a Telethon SQLite session."""
 
@@ -186,7 +179,6 @@ def mask_phone(phone: str) -> str:
 class Worker:
     def __init__(self, api: RuntimeApi):
         self.api = api
-        self.allowed_chats = allowed_chat_ids()
         self.paused = False
         self.last_command_id = 0
         self.hostname = os.environ.get("HOSTNAME", "local-worker")
@@ -236,7 +228,7 @@ class Worker:
             @client.on(events.NewMessage(incoming=True))
             async def incoming(event: Any) -> None:
                 chat_id = str(event.chat_id)
-                if self.paused or chat_id not in self.allowed_chats or not event.raw_text.strip():
+                if self.paused or not event.raw_text.strip():
                     return
                 sender = await event.get_sender()
                 sender_id = str(getattr(sender, "id", "unknown"))
