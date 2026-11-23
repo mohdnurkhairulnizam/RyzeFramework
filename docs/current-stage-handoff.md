@@ -1,8 +1,8 @@
 # RyzeFramework Current Stage Handoff
 
 **Repository branch:** `stable-merge`
-**Handoff date:** 23 November 2026
-**Current milestone:** Stage 1 foundation — autonomous Telegram/OpenCode path and acceptance evidence in progress.
+**Handoff date:** 24 November 2026
+**Current milestone:** Stage 1 foundation — runtime model configuration is finalized; autonomous Telegram/OpenCode acceptance evidence remains in progress.
 
 ## Read first
 
@@ -38,13 +38,13 @@
 - Target Windows: worker stop/start replay PASS.
 - Target Windows: duplicate/replayed inbound-event prevention PASS.
 - Workspace: TypeScript check PASS.
-- Workspace: 32 Vitest tests PASS.
+- Workspace: 35 Vitest tests PASS, including blank, explicit `auto`, and named FreeLLMAPI model-selector coverage.
 - Workspace: 4 Python worker tests PASS.
 - Workspace: local production build PASS.
 
 ## Remaining gates before Stage 1 operational status
 
-- Verify an explicit FreeLLMAPI model selector appears as configured in the self-test; `auto` is valid when deliberately selected by the owner.
+- Target Windows self-test should report the explicitly configured FreeLLMAPI selector; blank remains incomplete, while deliberate `auto` and named selectors are valid.
 - Complete Telegram acknowledgement-mismatch and provider timeout/failure evidence.
 - Verify restore/rollback of the server and worker configuration, including Telegram session recovery.
 - Verify generated report/file retrieval and delivery; metadata inspection alone is not file delivery.
@@ -57,7 +57,14 @@
 
 ## Immediate next implementation action
 
-Continue with runtime configuration and safe task execution: finalize the versioned non-secret configuration contract and separate secret contract, then implement structured action proposals and strict validation while retaining the current deny-all OpenCode tool policy. Do not start Gmail until Stage 1 is stabilized. Gmail must use Google OAuth; Drive and Photos must remain separate optional scopes.
+Continue with safe task execution: implement structured action proposals and strict validation while retaining the current deny-all OpenCode tool policy. Do not start Gmail until Stage 1 is stabilized. Gmail must use Google OAuth; Drive and Photos must remain separate optional scopes.
+
+## Latest repository state
+
+- Latest commit: `95390ab` (`test explicit FreeLLMAPI model selectors`).
+- Previous configuration commit: `44f8fef` (`allow explicit FreeLLMAPI auto selector`).
+- Branch `stable-merge` is pushed to `origin/stable-merge`.
+- Refreshed package: `RyzeFramework-stage1-acceptance-self-test-v21.zip`; SHA-256 `ef09ca46c136646805ff7527948acab79abbd5ffb4a7357c4852e9a0d990b4fe`.
 
 ## Important constraints
 
