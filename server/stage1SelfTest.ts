@@ -26,6 +26,10 @@ const allowedMimeTypes = new Set([
   "image/jpeg",
 ]);
 
+export function hasExplicitFreeLlmApiModelSelector(value: string | undefined) {
+  return Boolean(value?.trim());
+}
+
 async function isFile(target: string) {
   try {
     return (await stat(target)).isFile();
@@ -47,7 +51,7 @@ function runtimeConfigCheck(): Stage1SelfTestCheck {
   if (!ENV.localMode) missing.push("local mode");
   if (!ENV.freeLlmApiBaseUrl) missing.push("FreeLLMAPI base URL");
   if (!ENV.freeLlmApiKey) missing.push("FreeLLMAPI key");
-  if (!process.env.RYZE_FREELLMAPI_MODEL?.trim())
+  if (!hasExplicitFreeLlmApiModelSelector(process.env.RYZE_FREELLMAPI_MODEL))
     missing.push("FreeLLMAPI model selector (exact ID or explicit auto)");
   if (!ENV.openCodeBaseUrl) missing.push("OpenCode base URL");
   if (!ENV.workerToken) missing.push("worker token");
