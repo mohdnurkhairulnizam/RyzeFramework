@@ -34,7 +34,7 @@ export const ENV = {
   localOwnerPasswordHash: process.env.RYZE_LOCAL_PASSWORD_HASH ?? "",
   freeLlmApiBaseUrl: getFreeLlmApiBaseUrl(),
   freeLlmApiKey: localMode ? process.env.RYZE_FREELLMAPI_API_KEY ?? "" : "",
-  freeLlmApiModel: localMode ? process.env.RYZE_FREELLMAPI_MODEL ?? "auto" : "",
+  freeLlmApiModel: localMode ? process.env.RYZE_FREELLMAPI_MODEL?.trim() ?? "" : "",
   openCodeBaseUrl: localMode ? process.env.RYZE_OPENCODE_BASE_URL ?? "http://127.0.0.1:4096" : "",
   openCodeServerUsername: localMode ? process.env.RYZE_OPENCODE_SERVER_USERNAME ?? "opencode" : "",
   openCodeServerPassword: localMode ? process.env.RYZE_OPENCODE_SERVER_PASSWORD ?? "" : "",

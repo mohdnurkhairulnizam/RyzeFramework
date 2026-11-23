@@ -14,7 +14,7 @@ This checklist turns the origin blueprint and current repository status into an 
 - [x] Install the latest ZIP on the target Windows computer, repair ACLs on existing SQLite database/WAL/SHM files without deleting contents, sign in, and reach the Ryze dashboard.
 - [x] Complete one harmless model-backed text chat from the target Windows dashboard through OpenCode and the local FreeLLMAPI gateway; general OpenCode tool execution remains disabled.
 - [x] Configure the local gateway at `http://127.0.0.1:31415/v1` and receive a completed model reply. The exact model ID and upstream provider route were not recorded; no API key is stored in Git.
-- [x] Telegram inbound setup and sender-only communication are verified on the target Windows computer; autonomous outbound code is implemented but target-Windows delivery verification remains open.
+- [x] Telegram inbound setup, sender-only authorization, and one OpenCode-backed autonomous same-chat reply are verified on the target Windows computer; broader target-Windows delivery/restart/failure evidence remains open.
 - [x] Manual owner approval was intentionally removed for the approved same-chat scope; pause/stop, eligibility, duplicate, and result-validation controls remain required.
 - [ ] All nine Stage 1 origin completion criteria pass in the intended deployment environment.
 
@@ -37,7 +37,7 @@ This checklist turns the origin blueprint and current repository status into an 
 - [ ] Specify a versioned runtime configuration schema covering execution mode, model gateway URL/name, timeout/retry limits, worker identity, sender authorization policy, permitted actions, and upload limits.
 - [ ] Keep credentials in a separate secret provider or protected local environment. Never serialize secrets into client responses, exported JSON, logs, or portable packages.
 - [ ] Validate required settings at startup. Fail closed with actionable, non-secret error messages when required settings are absent or invalid.
-- [ ] Add explicit feature gates for model calls, Telegram inbound handling, Telegram outbound delivery, file processing, and each tool. Defaults must remain disabled for external operations.
+- [ ] Add explicit feature gates for model calls, Telegram inbound handling, bounded Telegram same-chat delivery, file processing, and each tool. Defaults must remain disabled for external operations outside the approved scope.
 - [ ] Ensure UI settings cannot turn on an integration whose server-side credentials or approval controls are missing.
 - [ ] Test missing, malformed, and partially configured settings. Verify that no service silently falls back to an unintended provider or demo/live mode.
 
@@ -48,12 +48,12 @@ This checklist turns the origin blueprint and current repository status into an 
 - [ ] Define the Stage 1 action catalog. For each action, record its required permission, risk level, input schema, allowed destinations, and whether explicit owner approval is required.
 - [ ] Implement authorization in server-side code, independent of model output. Treat model-produced instructions as untrusted data, not permission grants.
 - [ ] Add a durable approval state for actions requiring approval: pending, approved, rejected, expired, and completed. Record approver, time, action summary, and the exact bounded payload being approved.
-- [ ] Require approval immediately before any Telegram outbound message or other externally visible action. Approval must bind to the actual recipient and message/action content; changes after approval invalidate it.
+- [ ] Require approval immediately before externally visible actions that are not already covered by a narrowly defined authorization. For Telegram, the approved exception is an autonomous text reply to the exact originating chat of an authorized sender; no broadcast, proactive, or cross-chat delivery is permitted.
 - [ ] Implement pause/stop and suppression checks immediately before every outbound send, not only when the command is first queued.
 - [ ] Keep the current safe action allowlist and arbitrary shell prohibition. Add tests proving model prompts cannot bypass blocked actions, approval state, allowlists, or pause/stop controls.
-- [x] Disable automatic sending in the current `server/workerApi.ts` inbound route and remove `send_message` from the worker allowlist. Regression tests prove the route does not queue replies and the worker cannot send them.
-- [ ] Implement the real approval flow and re-enable outbound delivery only after approval, pause/stop, suppression, and duplicate-send protections are tested. Keep live outbound disabled until then.
-- [ ] Add replay/idempotency protection so repeated inbound events or command polling cannot create duplicate tasks or duplicate external sends.
+- [x] Replace the former disabled/approval-gated Telegram route with the approved bounded autonomous same-chat route in `server/workerApi.ts`; the worker allowlist contains only the narrowly scoped `send_message` command and server validation remains authoritative.
+- [ ] Complete target-Windows evidence for pause/stop, sender/chat/task/message eligibility, content/result validation, Telegram acknowledgement, and failure retention. No per-message owner approval is required for this bounded scope.
+- [x] Add replay/idempotency protection so repeated inbound events or command polling do not create duplicate tasks or duplicate external sends; completed commands are filtered after restart.
 
 **Exit condition:** Unauthorized actions are denied server-side, all externally visible effects require the defined approval, and negative tests prove the controls cannot be bypassed.
 
@@ -84,8 +84,8 @@ The implementation now provides text-only chat and denies all OpenCode tool perm
 - [ ] Verify the session lock rejects a second worker process, releases on normal exit, and has documented recovery for a stale lock after a crash.
 - [x] Test heartbeat, status updates, command polling, acknowledgements, and sanitized event handling against a non-production/test deployment first.
 - [x] Test inbound messages from the permanent admin sender and a recovery-code-authorized sender, plus rejection/ignore behavior for other senders in private chats and groups. Define which message content is stored, how long it is retained, and how it is deleted; do not treat message bodies as sanitized telemetry.
-- [ ] Test approved outbound delivery only after Workstream 2 is complete. Verify exact recipient/content approval, pause/stop, suppression, retries, duplicate prevention, and audit logs.
-- [ ] Test network outage, API timeout, invalid token, unauthorized session, malformed command, command replay, and worker restart. Confirm bounded behavior and owner-visible diagnostics without exposing secrets.
+- [ ] Test bounded autonomous delivery after Workstream 2 controls are complete. Verify exact originating recipient/content, pause/stop, sender/task/message eligibility, duplicate prevention, acknowledgement, and audit logs.
+- [ ] Test network outage, OpenCode/API timeout, invalid token, unauthorized session, malformed command, command replay, and worker restart. Confirm bounded behavior and owner-visible diagnostics without exposing secrets.
 
 **Exit condition:** Authorized account communication works end to end under the defined approval policy, and disallowed accounts/actions fail closed.
 
@@ -119,7 +119,7 @@ The implementation now provides text-only chat and denies all OpenCode tool perm
 - [ ] Test authentication and cross-user access for sessions, tasks, logs, memory, settings, files, exports, workers, commands, and events.
 - [ ] Test safe behavior for shell requests, credential requests, external actions without approval, unauthorized chats, paused worker, malformed model output, missing secrets, and provider failures.
 - [ ] Test the complete safe path: dashboard instruction → plan/action authorization → execution → validation → task/log persistence → result display.
-- [ ] Test the Telegram path in stages: heartbeat only; inbound with outbound disabled; approved test reply; then approved file/report delivery if included.
+- [ ] Test the Telegram path in stages: heartbeat/status; permanent-admin OpenCode-backed same-chat reply; unauthorized sender ignored; exact recovery-code sender accepted for one hour; pause/stop blocks sends; resume restores sends; restart does not replay completed replies; failure and acknowledgement diagnostics remain sanitized. Defer file/report delivery unless explicitly added to scope.
 - [ ] Verify deployment migration and rollback steps against a non-production database. Confirm backups and restore validation before any production schema/configuration change.
 - [ ] Record test environment, software versions, test cases, evidence, known failures, and explicit sign-off. Do not include secret values.
 
@@ -167,7 +167,7 @@ Proceed in this order to avoid connecting live services to an incomplete safety 
 4. Workstream 6: task-state, logging, validation, and diagnostics contract.
 5. Workstream 3: OpenCode/FreeLLMAPI adapter and isolated tests.
 6. Workstream 5: supported file operations and verified report path.
-7. Workstream 4: Telegram outbound safety gate and approved same-chat reply, followed by Gmail OAuth with optional Drive/Photos scopes.
+7. Workstream 4: Telegram autonomous same-chat acceptance evidence and worker supervision, followed by Gmail OAuth with optional Drive/Photos scopes.
 8. Workstream 7: full deployment rehearsal and acceptance evidence.
 9. Workstream 8: owner sign-off against the origin criteria.
 
@@ -183,13 +183,17 @@ The owner configured the target Windows installation to use the local FreeLLMAPI
 
 Two follow-up requests asked for two separate Markdown bullet lines; both replies placed the points on one line. The chat round-trip worked, but those tests did not pass the requested formatting. The exact upstream provider/model route was not identified; Ryze does not display the FreeLLMAPI `X-Routed-Via` response header, and no direct SDK test has yet been run.
 
-**Stage 1 remains incomplete.** This verifies text chat only, not OpenCode's goal-oriented planning/tool execution, safe file-content processing, Telegram, the outbound approval gate, or all nine origin acceptance criteria. The immediate next step is to finish Workstream 0 on the computer: test repeat start/stop, create and verify a private backup, and confirm a restore procedure using a preserved copy. Then proceed through the checklist's runtime configuration and server-enforced permission/approval work before considering narrowly scoped tools. Keep Telegram outbound and arbitrary OpenCode tools disabled until those controls pass.
+**Stage 1 remains incomplete.** This verifies text chat only, not OpenCode's goal-oriented planning/tool execution, safe file-content processing, or all nine origin acceptance criteria. Telegram same-chat delivery is now implemented separately and has one successful OpenCode-backed target-Windows report; its pause, restart, duplicate, timeout, and failure-recovery evidence remains open. The immediate next steps are to finish the remaining Workstream 0 evidence and the runtime configuration, result-validation, and bounded action-boundary work before considering broader tools.
 
 ## Progress checkpoint — 23 November 2026: Telegram inbound operation verified
 
-The owner completed the dashboard Telegram login-code flow on the target Windows computer and reported the inbound-only acceptance test successful. The connected user account reached authorized/running status; the permanent admin sender was accepted; ordinary messages from another sender were ignored; the exact recovery code temporarily authorized that sender for one hour; and dashboard pause, resume, and stop controls worked. No outbound Telegram reply was sent. This closes the staged inbound deployment verification, but not the outbound approval, suppression, duplicate-prevention, or result-validation gate.
+The owner completed the dashboard Telegram login-code flow on the target Windows computer and reported the sender-policy acceptance test successful. The connected user account reached authorized/running status; the permanent admin sender was accepted; ordinary messages from another sender were ignored; the exact recovery code temporarily authorized that sender for one hour; and dashboard pause, resume, and stop controls worked. A later test also confirmed that an authorized Telegram prompt was routed through the OpenCode workspace and returned to the same chat. This closes the inbound deployment verification and establishes the autonomous same-chat path, but not the remaining pause/restart/duplicate/failure acceptance evidence.
 
-**Next approved direction:** implement direct same-chat Telegram replies only after the server-enforced outbound safety gate is designed and tested. Then add Gmail through Google OAuth, with Drive and Photos as separate optional scopes. Never request or store a Gmail password, and do not enable either workstream merely by documenting it.
+**Next approved direction:** complete target-Windows acceptance evidence for autonomous same-chat replies, then finish Stage 1 configuration, structured-output, result-validation, and worker-supervision gaps. Add Gmail later through Google OAuth, with Drive and Photos as separate optional scopes. Never request or store a Gmail password, and do not enable either workstream merely by documenting it.
+
+**Target-Windows acceptance update — 23 November 2026:** The owner reported PASS for permanent-admin same-chat reply, pause/resume, unauthorized-sender rejection, temporary recovery-code authorization, and controlled failure handling. A JPG-to-PDF-and-send request was correctly refused because the current assistant is text-only; this confirms the safety boundary but does not satisfy file-processing or Telegram file-delivery evidence. File upload/processing, report retrieval, worker stop/start replay, and explicit recovery-code expiry evidence remain open.
+
+**Follow-up acceptance update — 23 November 2026:** The owner verified metadata-only file handling for `ryze-baseline-test-20261123135610940.md` (`text/markdown`, `113` bytes); the system explicitly confirmed that file content was not executed. This closes the current metadata-inspection safety check, but generated report/file delivery remains open. Worker stop/start replay behavior and duplicate/replayed inbound-event prevention were reported PASS. Recovery-code expiry remains intentionally pending for a later verification pass.
 
 ## Restore and Telegram backup checkpoint
 
@@ -197,4 +201,4 @@ The owner completed the dashboard Telegram login-code flow on the target Windows
 - [x] Apply restore only during the next Windows startup, preserving current live data first.
 - [x] Include Telegram `worker.env` and Telethon session files in protected backups while excluding `.venv`.
 - [ ] Verify restore on the target Windows computer, including Telegram session recovery and preserved-copy review.
-- [ ] Keep outbound Telegram replies disabled until owner approval, pause/stop, suppression, duplicate, and result-validation controls pass.
+- [ ] Verify autonomous Telegram same-chat pause/stop, sender/chat/task/message eligibility, duplicate prevention, content/result validation, acknowledgement, and failure logging on target Windows; no per-message owner approval is required for this bounded scope.

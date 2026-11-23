@@ -52,7 +52,7 @@ const contents = [
   `RYZE_STORAGE_DIR=${dotenvValue(storageDir)}`,
   "RYZE_FREELLMAPI_BASE_URL=",
   "RYZE_FREELLMAPI_API_KEY=",
-  "RYZE_FREELLMAPI_MODEL=auto",
+  "RYZE_FREELLMAPI_MODEL=",
   "",
 ].join("\n");
 writeFileSync(envPath, contents, { flag: "wx", mode: 0o600 });

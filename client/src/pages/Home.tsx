@@ -326,6 +326,16 @@ export default function Home() {
       toast.error(mutationError.message);
     },
   });
+  const stage1SelfTest = trpc.ryze.stage1SelfTest.useMutation({
+    onSuccess: result => {
+      setStage1Console(result.consoleText);
+      toast.success("Stage 1 self-test completed. Review PASS, WARN, and NOT_RUN results.");
+    },
+    onError: mutationError => {
+      setStage1Console(`RYZE STAGE 1 SELF-TEST FAILED\n\n${mutationError.message}`);
+      toast.error(mutationError.message);
+    },
+  });
   const privateBackup = trpc.ryze.privateBackup.useMutation({
     onSuccess: async result => { await utils.ryze.privateBackups.invalidate(); toast.success(`Private backup created: ${result.backupDirectory}`); },
     onError: mutationError => toast.error(mutationError.message),
@@ -340,6 +350,7 @@ export default function Home() {
     if (!selectedPrivateBackup && privateBackups.data?.[0]) setSelectedPrivateBackup(privateBackups.data[0].backupPath);
   }, [privateBackups.data, selectedPrivateBackup]);
   const [baselineConsole, setBaselineConsole] = useState("");
+  const [stage1Console, setStage1Console] = useState("");
   const updateSettings = trpc.ryze.updateSettings.useMutation({
     onSuccess: async () => {
       await refresh();
@@ -630,6 +641,9 @@ export default function Home() {
           runBaseline={() => operationalBaseline.mutate()}
           baselineRunning={operationalBaseline.isPending}
           baselineConsole={baselineConsole}
+          runStage1SelfTest={() => stage1SelfTest.mutate()}
+          stage1SelfTestRunning={stage1SelfTest.isPending}
+          stage1Console={stage1Console}
           runPrivateBackup={() => privateBackup.mutate()}
           privateBackupRunning={privateBackup.isPending}
           privateBackups={privateBackups.data ?? []}
@@ -1385,7 +1399,7 @@ function TelegramSettingsCard({
   return (
     <section className="rounded-[1.5rem] border border-cyan-300/15 bg-cyan-300/[0.035] p-5">
       <div className="flex items-center gap-2 text-sm font-semibold text-cyan-100"><UserRound className="size-4 text-cyan-300" /> Telegram account bridge</div>
-      <p className="mt-3 text-xs leading-5 text-slate-400">One dashboard wizard for one connected Telegram user account. This stage receives sender-authorized text only; direct same-chat replies remain safety-gated until the final send controls and end-to-end tests pass. No broadcast, sales funnel, or unrelated automation is enabled.</p>
+      <p className="mt-3 text-xs leading-5 text-slate-400">One dashboard wizard for one connected Telegram user account. Authorized text can receive a bounded autonomous reply in the exact originating chat. No broadcast, sales funnel, or unrelated automation is enabled.</p>
       <div className="mt-4 rounded-xl border border-violet-300/15 bg-violet-300/[0.04] p-3">
         <div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold text-slate-200">Connection wizard</span><Badge className="border border-violet-300/20 bg-violet-300/10 text-violet-200">{bridge?.phase ?? "not_configured"}</Badge></div>
         <p className="mt-2 text-[11px] leading-5 text-slate-500">{bridge?.message ?? "Enter the Telegram API details below to prepare the private local worker."}</p>
@@ -1454,6 +1468,9 @@ function SettingsView({
   runBaseline,
   baselineRunning,
   baselineConsole,
+  runStage1SelfTest,
+  stage1SelfTestRunning,
+  stage1Console,
   runPrivateBackup,
   privateBackupRunning,
   privateBackups,
@@ -1503,6 +1520,9 @@ function SettingsView({
   runBaseline: () => void;
   baselineRunning: boolean;
   baselineConsole: string;
+  runStage1SelfTest: () => void;
+  stage1SelfTestRunning: boolean;
+  stage1Console: string;
   runPrivateBackup: () => void;
   privateBackupRunning: boolean;
   privateBackups: { name: string; backupPath: string; modifiedAt: string; kind: string }[];
@@ -1642,7 +1662,7 @@ function SettingsView({
               </li>
               <li className="flex items-center gap-2">
                 <LockKeyhole className="size-3.5 text-rose-300" /> Telegram
-                bridge disabled
+                broadcasts and proactive messages disabled
               </li>
               <li className="flex items-center gap-2">
                 <LockKeyhole className="size-3.5 text-rose-300" /> Arbitrary
@@ -1705,6 +1725,38 @@ function SettingsView({
                 {!privateBackups.length ? <p className="mt-2 text-[11px] text-slate-500">No protected Ryze backups were found under Documents\RyzeFramework-backups.</p> : null}
               </div>
             </div>
+          </section>
+          <section className="rounded-[1.5rem] border border-violet-300/15 bg-violet-300/[0.04] p-5">
+            <div className="flex items-center gap-2 text-sm font-semibold text-violet-100">
+              <ShieldCheck className="size-4 text-violet-300" /> Stage 1 acceptance self-test
+            </div>
+            <p className="mt-3 text-xs leading-5 text-slate-400">
+              Runs safe local checks for runtime configuration, the server-side action boundary, worker prerequisites, file limits, and integration status. It never sends a Telegram message, enters a login code, or exposes secrets. Results marked NOT_RUN require the real target-Windows test.
+            </p>
+            <Button
+              onClick={runStage1SelfTest}
+              disabled={!localBuild || stage1SelfTestRunning}
+              className="mt-4 w-full rounded-xl bg-violet-400/15 text-violet-100 hover:bg-violet-400/25"
+            >
+              {stage1SelfTestRunning ? <Loader2 className="mr-2 size-4 animate-spin" /> : <ShieldCheck className="mr-2 size-4" />}
+              {stage1SelfTestRunning ? "Running self-test…" : "Run Stage 1 self-test"}
+            </Button>
+            {stage1Console ? (
+              <div className="mt-5 border-t border-white/[0.08] pt-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-semibold text-slate-200">Acceptance report</p>
+                  <Button
+                    variant="outline"
+                    onClick={() => { void navigator.clipboard.writeText(stage1Console); toast.success("Stage 1 report copied to clipboard."); }}
+                    className="h-8 rounded-lg border-white/10 px-2 text-xs text-slate-200"
+                  >
+                    <Copy className="mr-1.5 size-3.5" /> Copy
+                  </Button>
+                </div>
+                <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap break-words rounded-xl border border-white/[0.06] bg-[#05070d] p-3 text-[11px] leading-5 text-slate-400">{stage1Console}</pre>
+                <p className="mt-2 text-[11px] text-slate-500">Copy this report here for review. It intentionally excludes secrets and Telegram message contents.</p>
+              </div>
+            ) : null}
           </section>
           {baselineConsole ? (
             <section className="rounded-[1.5rem] border border-white/[0.08] bg-black/30 p-5">

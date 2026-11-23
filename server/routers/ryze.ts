@@ -41,6 +41,7 @@ import {
   sendOpenCodePrompt,
 } from "../openCode";
 import { createPrivateBackup, listPrivateBackups, requestPrivateRestore, runOperationalBaseline } from "../operationalBaseline";
+import { runStage1SelfTest } from "../stage1SelfTest";
 import { ENV } from "../_core/env";
 import { protectedProcedure, router } from "../_core/trpc";
 import {
@@ -323,6 +324,7 @@ export const ryzeRouter = router({
   operationalBaseline: protectedProcedure.mutation(({ ctx }) =>
     runOperationalBaseline(ctx.user.id)
   ),
+  stage1SelfTest: protectedProcedure.mutation(() => runStage1SelfTest()),
   privateBackup: protectedProcedure.mutation(() => createPrivateBackup()),
   privateBackups: protectedProcedure.query(() => listPrivateBackups()),
   requestPrivateRestore: protectedProcedure

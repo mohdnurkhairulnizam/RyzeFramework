@@ -30,8 +30,8 @@ const workspace = path.join(dataRoot, "opencode-workspace");
 mkdirSync(workspace, { recursive: true });
 const gatewayUrl = readEnv("RYZE_FREELLMAPI_BASE_URL").replace(/\/+$/, "");
 const gatewayKey = readEnv("RYZE_FREELLMAPI_API_KEY");
-const gatewayModel = readEnv("RYZE_FREELLMAPI_MODEL") || "auto";
-const gatewayConfigured = Boolean(gatewayUrl && gatewayKey);
+const gatewayModel = readEnv("RYZE_FREELLMAPI_MODEL").trim();
+const gatewayConfigured = Boolean(gatewayUrl && gatewayKey && gatewayModel);
 const denyAll = [{ action: "*", resource: "*", effect: "deny" }];
 const selectedModel = gatewayConfigured
   ? { name: `FreeLLMAPI (${gatewayModel})`, modelID: gatewayModel }
@@ -63,4 +63,4 @@ const config = {
 writeFileSync(path.join(workspace, "opencode.json"), `${JSON.stringify(config, null, 2)}\n`, { mode: 0o600 });
 console.log(gatewayConfigured
   ? "Managed OpenCode chat-only configuration is ready."
-  : "Managed OpenCode chat-only configuration is ready; add the FreeLLMAPI URL and key to enable AI chat.");
+  : "Managed OpenCode chat-only configuration is ready; add the FreeLLMAPI URL, exact model ID, and key to enable AI chat.");

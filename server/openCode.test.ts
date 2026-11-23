@@ -8,7 +8,7 @@ vi.mock("./_core/env", () => ({
     openCodeServerPassword: "test-password",
     freeLlmApiBaseUrl: "https://gateway.example/v1",
     freeLlmApiKey: "gateway-test-key",
-    freeLlmApiModel: "auto",
+    freeLlmApiModel: "test-model",
   },
 }));
 
