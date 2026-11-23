@@ -65,18 +65,15 @@ async function protectWorkerRoot() {
 }
 async function repairWorkerAcls() {
   if (process.platform !== "win32") return;
+  await mkdir(workerRoot(), { recursive: true });
   try {
-    await execFileAsync("icacls.exe", [workerRoot(), "/reset"], { windowsHide: true });
+    await execFileAsync("icacls.exe", [workerRoot(), "/reset", "/T", "/C"], { windowsHide: true });
   } catch {
-    throw new Error("Ryze could not repair access to the local Telegram worker folder. Stop Ryze and run the operational baseline before retrying.");
-  }
-  try {
-    await execFileAsync("icacls.exe", [workerEnvPath(), "/reset"], { windowsHide: true });
-  } catch {
-    // worker.env may not exist on a first setup; the write below creates it.
+    throw new Error("Ryze could not repair access to the local Telegram worker files. Stop Ryze and run the operational baseline before retrying.");
   }
 }
 async function ensurePythonEnvironment() {
+  await repairWorkerAcls();
   const pythonPath = workerPythonPath();
   try { await readFile(pythonPath); return pythonPath; } catch { /* create below */ }
   const python = process.platform === "win32" ? "py" : "python3";

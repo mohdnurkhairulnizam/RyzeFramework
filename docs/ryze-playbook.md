@@ -277,13 +277,14 @@ Then run `Install-Ryze.cmd` from a newly extracted installer. Do not copy the ol
 
 ### `EPERM` when selecting **Prepare Telegram**
 
-If the dashboard reports an error opening:
+If the dashboard reports an error opening `worker.env`, or Python reports a permission error for a path such as:
 
 ```text
 %LOCALAPPDATA%\RyzeFramework\telegram-worker\worker.env
+C:\Users\User\AppData\Local\RyzeFramework\telegram-worker\.venv\.gitignore
 ```
 
-the existing worker folder or environment file may have a stale file-level ACL. Select **Prepare Telegram** again in the dashboard. The current revision automatically resets the ACL on the existing Telegram worker folder and `worker.env` before writing the updated local configuration. It preserves the worker configuration and Telegram session; it does not delete or replace the account session.
+the existing worker folder or one of its files may have a stale file-level ACL. This is the same Windows failure pattern previously seen with `opencode.json` and Ryze log files. Select **Prepare Telegram** again in the dashboard. The current revision automatically resets ACLs recursively across the existing Telegram worker tree before writing the configuration or creating/updating the Python environment. It preserves the worker configuration, virtual-environment contents, and Telegram session; it does not delete or replace the account session.
 
 If the retry still fails, stop Ryze, run the one-button operational baseline, and preserve the diagnostic console output. Do not paste `worker.env`, Telegram API credentials, login codes, recovery codes, session files, or other secrets into support messages.
 
