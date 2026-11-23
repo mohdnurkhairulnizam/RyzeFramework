@@ -2,8 +2,8 @@
 
 A simple user manual for installing, starting, using, verifying, and troubleshooting RyzeFramework. This is a living document and will be updated progressively as new features are completed.
 
-**Current revision:** `Telegram staged worker setup`
-**Current stage:** Stage 1 foundation; Telegram inbound-only deployment is staged for target-Windows testing.
+**Current revision:** `Telegram inbound verification`
+**Current stage:** Stage 1 foundation; Telegram inbound-only deployment is verified on the target Windows computer. Outbound replies remain disabled.
 
 Use the three project documents this way:
 
@@ -31,7 +31,7 @@ RyzeFramework is currently a local Windows application with:
 
 A successful chat response is evidence of the text-chat path only. It is not evidence that Ryze can safely plan and execute arbitrary real-world operations.
 
-**Latest verification:** On 23 November 2026, the target Windows installation passed the one-button operational baseline. Backup creation, restore rehearsal, database/log records, uploaded-file record, and Windows ACL checks all returned `PASS`. Stop/start restart behavior was also reported good. This verifies the local baseline and restart path; it does not complete the broader Stage 1 integration and safety requirements.
+**Latest verification:** On 23 November 2026, the target Windows installation passed the one-button operational baseline, restart test, and staged Telegram inbound test. Backup creation, restore rehearsal, database/log records, uploaded-file record, Windows ACL checks, Telegram login-code flow, worker startup, authorized sender handling, unauthorized-sender ignoring, recovery-code temporary authorization, and worker pause/resume/stop controls were reported successful. This verifies the local baseline and inbound Telegram path; it does not complete the broader Stage 1 integration and outbound safety requirements.
 
 ## 2. What is available now
 
@@ -43,7 +43,7 @@ The current system provides:
 - A one-click operational baseline check with a copyable diagnostic console.
 - Optional OpenCode + FreeLLMAPI text chat when configured.
 
-The following remain incomplete or disabled: arbitrary shell commands, Telegram outbound replies, email delivery, unsupervised external actions, and general-purpose tool execution. Telegram account control is available in the local Settings panel, but Telethon login and persistent worker lifecycle remain staged until the dashboard process bridge is completed.
+The following remain incomplete or disabled: arbitrary shell commands, Telegram outbound replies, email delivery, unsupervised external actions, and general-purpose tool execution. Telegram account control, Telethon login, and the dashboard-controlled inbound worker lifecycle are available and verified; persistent service supervision and outbound safety controls remain future work.
 
 As the system progresses, this manual will gain new sections for each user-facing feature. Technical status belongs in the updated blueprint, not in this manual.
 
@@ -107,6 +107,8 @@ The button performs a safe, non-destructive check:
 
 Use **Copy** in the diagnostic console and paste the full output into the support/debug conversation if a check is marked `FAIL` or if startup/permissions behave unexpectedly.
 
+For a backup without the test task, test file, restore rehearsal, or ACL diagnostic steps, use **Create private backup** in the same Windows computer baseline panel. It creates a protected backup under `Documents\RyzeFramework-backups` and displays the backup path. Treat the backup as sensitive because it may contain configuration secrets and personal data.
+
 Expected result:
 
 - Backup: `PASS`
@@ -154,9 +156,11 @@ This stage uses the private RyzeTel bridge pattern for local secret handling and
 3. Enter the Telegram API ID, API hash, and phone number in the **Connection wizard**, then select **Prepare Telegram**. These values are written only to the protected local worker folder.
 4. Select **Start login**. Enter the Telegram phone code in the dashboard. If Telegram requests two-step verification, enter that password in the dashboard. The fields are cleared after submission.
 5. After the phase changes to `authorized`, select **Start receiving**.
-6. Send a harmless test message from the permanent admin Telegram identity. Confirm that Ryze records an inbound task or activity event. Direct replies remain disabled in this staged release.
-7. From another Telegram account, send only the exact permanent or one-time recovery code. Confirm that this sender is temporarily authorized for one hour. Other senders remain ignored.
+6. Send a harmless test message from the permanent admin Telegram identity. Confirm that Ryze records an inbound task or activity event. Direct replies remain disabled.
+7. From another Telegram account, send an ordinary message and confirm it is ignored. Then send only the exact permanent or one-time recovery code. Confirm that this sender is temporarily authorized for one hour and that a subsequent harmless message is recorded.
 8. Use **Pause**, **Resume**, and **Stop worker** from the dashboard. Do not register a Windows scheduled task yet.
+
+**Target-Windows verification record — 23 November 2026:** The owner reported success through Telegram login code, authorized worker startup, permanent-admin inbound handling, unauthorized-sender ignoring, recovery-code temporary authorization, and dashboard pause/resume/stop controls. This is inbound-only evidence; Ryze did not send an automatic Telegram reply.
 
 If the dashboard wizard is unavailable in an older package, use the policy-safe `Configure-TelegramWorker.cmd` and `Start-TelegramWorker.cmd` launchers described above. The dashboard wizard is the intended setup path for this revision.
 
@@ -330,7 +334,7 @@ Still required before Stage 1 is complete:
 - Repeat start/stop and backup/restore evidence from the target Windows installation.
 - Exact model/provider metadata capture and controlled provider-failure tests.
 - Complete file-processing and report-delivery acceptance evidence.
-- Telethon worker deployment and live authorization test.
+- Outbound Telegram approval, duplicate prevention, suppression, and result-validation controls.
 - Explicit owner approval, pause/stop, suppression, and duplicate-send controls before any outbound action.
 - Result validation for real approved operations.
 

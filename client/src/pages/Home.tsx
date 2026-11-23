@@ -326,6 +326,10 @@ export default function Home() {
       toast.error(mutationError.message);
     },
   });
+  const privateBackup = trpc.ryze.privateBackup.useMutation({
+    onSuccess: result => toast.success(`Private backup created: ${result.backupDirectory}`),
+    onError: mutationError => toast.error(mutationError.message),
+  });
   const [baselineConsole, setBaselineConsole] = useState("");
   const updateSettings = trpc.ryze.updateSettings.useMutation({
     onSuccess: async () => {
@@ -617,6 +621,8 @@ export default function Home() {
           runBaseline={() => operationalBaseline.mutate()}
           baselineRunning={operationalBaseline.isPending}
           baselineConsole={baselineConsole}
+          runPrivateBackup={() => privateBackup.mutate()}
+          privateBackupRunning={privateBackup.isPending}
         />
       )}
     </DashboardLayout>
@@ -1431,6 +1437,8 @@ function SettingsView({
   runBaseline,
   baselineRunning,
   baselineConsole,
+  runPrivateBackup,
+  privateBackupRunning,
 }: {
   localBuild: boolean;
   integrationStatus?: {
@@ -1473,6 +1481,8 @@ function SettingsView({
   runBaseline: () => void;
   baselineRunning: boolean;
   baselineConsole: string;
+  runPrivateBackup: () => void;
+  privateBackupRunning: boolean;
 }) {
   return (
     <div className="mx-auto max-w-6xl">
@@ -1641,6 +1651,20 @@ function SettingsView({
                 Available on the installed local Windows build.
               </p>
             ) : null}
+            <div className="mt-5 border-t border-white/[0.08] pt-4">
+              <p className="text-xs leading-5 text-slate-400">
+                Need only a recovery copy? Create a protected backup without running the test records or restore rehearsal.
+              </p>
+              <Button
+                variant="outline"
+                onClick={runPrivateBackup}
+                disabled={!localBuild || privateBackupRunning || baselineRunning}
+                className="mt-3 w-full rounded-xl border-emerald-300/20 bg-emerald-300/[0.04] text-emerald-100 hover:bg-emerald-300/[0.12]"
+              >
+                {privateBackupRunning ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Download className="mr-2 size-4" />}
+                {privateBackupRunning ? "Creating backup…" : "Create private backup"}
+              </Button>
+            </div>
           </section>
           {baselineConsole ? (
             <section className="rounded-[1.5rem] border border-white/[0.08] bg-black/30 p-5">

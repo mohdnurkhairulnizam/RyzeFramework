@@ -4,7 +4,7 @@
 
 This is a local-first starter for the target Windows computer. The dashboard and SQLite database run on the computer. Uploaded and generated file bytes are stored in a private local folder. The web server listens only on `127.0.0.1`; it does not open a Windows Firewall port. No Docker or hosted database/object storage is required.
 
-The ZIP contains no owner password, FreeLLMAPI key, Telegram session, or other user credentials. Without gateway settings, the local safe demo is available. OpenCode + FreeLLMAPI text chat can be configured after installation using your actual gateway endpoint and key. Telegram account setup, live replies, and owner approval for outbound actions remain disabled/incomplete.
+The ZIP contains no owner password, FreeLLMAPI key, Telegram session, or other user credentials. Without gateway settings, the local safe demo is available. OpenCode + FreeLLMAPI text chat can be configured after installation using your actual gateway endpoint and key. Telegram inbound setup is available through the dashboard and has been target-Windows verified; live replies and owner approval for outbound actions remain disabled/incomplete.
 
 ## Before installing
 
@@ -63,7 +63,7 @@ These are ordinary local files protected by Windows account permissions; the dat
 
 ## Back up and restore
 
-Stop Ryze first, then run `Backup-Ryze.cmd` from the installed folder. It writes a ZIP under `Documents\RyzeFramework-backups` containing the SQLite database, files, and protected configuration needed for recovery. The archive may include your FreeLLMAPI key, session-signing secret, and personal task/file data. Keep it private and store an additional copy somewhere safe.
+Stop Ryze first, then run `Backup-Ryze.cmd` from the installed folder, or use **Settings → Local Windows baseline → Create private backup** in the dashboard. The dashboard button writes a protected backup folder under `Documents\RyzeFramework-backups` containing the SQLite database, files, and protected configuration needed for recovery. The archive may include your FreeLLMAPI key, session-signing secret, and personal task/file data. Keep it private and store an additional copy somewhere safe.
 
 To restore, stop Ryze and preserve the current `%LOCALAPPDATA%\RyzeFramework` folder first. Extract the backup and restore its `data` folder to that location; restore `config\app.env` to the installed program's `.env` only if you intend to restore that account/configuration and gateway key too. Never overwrite newer data without first making a separate backup.
 

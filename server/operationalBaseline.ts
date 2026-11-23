@@ -112,6 +112,42 @@ async function protectBackupDirectory(target: string) {
   );
 }
 
+export async function createPrivateBackup() {
+  if (!ENV.localMode)
+    throw new Error("Private backup is available only in the local Windows build.");
+  const runStamp = stamp();
+  const databaseFile = ENV.databasePath;
+  const filesDirectory = ENV.storageDir;
+  const installDirectory = process.cwd();
+  const envFile = path.join(installDirectory, ".env");
+  const backupRoot = path.join(homeDocuments(), "RyzeFramework-backups");
+  const backupDirectory = path.join(backupRoot, `Ryze-backup-${runStamp}`);
+  await mkdir(backupRoot, { recursive: true });
+  await mkdir(path.join(backupDirectory, "data"), { recursive: true });
+  await mkdir(path.join(backupDirectory, "config"), { recursive: true });
+  await protectBackupDirectory(backupRoot);
+  await protectBackupDirectory(backupDirectory);
+  const databaseCopied = await copyIfPresent(databaseFile, path.join(backupDirectory, "data", "ryze.sqlite"));
+  await copyIfPresent(`${databaseFile}-wal`, path.join(backupDirectory, "data", "ryze.sqlite-wal"));
+  await copyIfPresent(`${databaseFile}-shm`, path.join(backupDirectory, "data", "ryze.sqlite-shm"));
+  const filesCopied = await copyIfPresent(filesDirectory, path.join(backupDirectory, "data", "files"));
+  const configCopied = await copyIfPresent(envFile, path.join(backupDirectory, "config", "app.env"));
+  if (!databaseCopied || !configCopied)
+    throw new Error("The local database or .env configuration is missing; no usable backup was created.");
+  const manifest = {
+    format: "ryze-private-backup-v1",
+    createdAt: new Date().toISOString(),
+    warning: "Private backup: may contain the owner password hash, signing secret, gateway key, and personal data.",
+    entries: {
+      databaseBytes: await sizeOf(path.join(backupDirectory, "data", "ryze.sqlite")),
+      filesBytes: filesCopied ? await sizeOf(path.join(backupDirectory, "data", "files")) : 0,
+      configIncluded: configCopied,
+    },
+  };
+  await writeFile(path.join(backupDirectory, "manifest.json"), JSON.stringify(manifest, null, 2), { mode: 0o600 });
+  return { backupDirectory, manifest };
+}
+
 export async function runOperationalBaseline(userId: number) {
   if (!ENV.localMode)
     throw new Error(
