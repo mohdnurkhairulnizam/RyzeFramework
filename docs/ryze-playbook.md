@@ -160,6 +160,19 @@ This stage uses the private RyzeTel bridge pattern for local secret handling and
 
 If the dashboard wizard is unavailable in an older package, use the policy-safe `Configure-TelegramWorker.cmd` and `Start-TelegramWorker.cmd` launchers described above. The dashboard wizard is the intended setup path for this revision.
 
+#### What is an approved Telegram chat ID?
+
+An approved chat ID is the **numeric ID of the Telegram conversation** that Ryze is allowed to receive messages from. It is a safety allowlist and is separate from the Telegram API ID, API hash, phone number, Telegram username, permanent admin identity, and recovery code.
+
+The **Permanent admin Telegram identity** and the **approved chat ID** answer different questions: the admin identity says **who** may send commands by default; the approved chat ID says **which conversation** may reach Ryze. In a private one-to-one chat with the admin, the two numeric values are often the same. In a group, the admin's identity is the person's ID or username, while the approved chat ID is the group's separate negative numeric ID.
+
+- For a private one-to-one chat, the chat ID is normally the other person's numeric Telegram user ID. If the connected Telegram account is chatting with the permanent admin, this is normally the permanent admin's numeric Telegram ID.
+- For a group or supergroup, the chat ID is normally a negative numeric value.
+- Multiple approved chats can be entered as comma-separated numeric values.
+- Do not enter `@username`, a phone number, the Telegram API ID, or the recovery code in this field.
+
+Keep the chat ID private when sharing diagnostics. Do not paste Telegram credentials, login codes, session files, or private conversation identifiers into a support message. The current staged worker requires at least one approved chat ID before it will receive messages; this prevents an accidentally connected account from monitoring unrelated conversations.
+
 The `.cmd` launchers use a process-only PowerShell execution-policy bypass. They do not change the computer's permanent PowerShell execution policy. The underlying `.ps1` files remain available for advanced users.
 
 If an older installation reports `RYZE_WORKER_TOKEN is missing`, install this revision with `Update-Ryze.cmd`. The updater adds one new random local worker token to the existing `.env` while preserving the owner password, FreeLLMAPI settings, database, files, and logs. The configuration helper also repairs a missing token if needed; restart Ryze before running the worker check so the server loads it.
