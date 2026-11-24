@@ -42,6 +42,8 @@
 - Target Windows: worker stop/start replay PASS.
 - Target Windows: duplicate/replayed inbound-event prevention PASS.
 - Target Windows: one-hour recovery-code expiry observation PASS; after expiry the temporary sender was no longer authorized.
+- Target Windows: physical backup/restore including Telegram session recovery PASS.
+- Target Windows: provider fault simulation PASS for timeout, rate limit, refusal, and malformed response; no network call was made.
 - Workspace: TypeScript check PASS.
 - Workspace: 46 Vitest tests PASS across 16 files, including blank, explicit `auto`, and named FreeLLMAPI model-selector coverage plus Stage 1 hardening boundaries.
 - Workspace: 4 Python worker tests PASS.
@@ -49,13 +51,13 @@
 
 ## Remaining gates before Stage 1 operational status
 
-- Target Windows self-test should report runtime schema `v1` and the explicitly configured FreeLLMAPI selector; blank remains incomplete, while deliberate `auto` and named selectors are valid.
+- Re-run the target-Windows Stage 1 self-test after the latest package and retain its report; deliberate `auto` and named selectors are valid.
 - Complete Telegram acknowledgement-mismatch and provider timeout/failure evidence.
-- Verify restore/rollback of the server and worker configuration, including Telegram session recovery.
+- Verify rollback of the server and worker configuration; physical restore and Telegram session recovery are PASS.
 - Verify generated report/file retrieval and delivery; metadata inspection alone is not file delivery.
-- Define and implement structured action proposals before any future tools.
-- Define the narrow action allowlist, permission requirements, rejection behavior, and strict result validators.
-- Add controlled provider timeout/rate-limit/cancellation tests without granting shell access.
+- Keep the implemented structured action-proposal boundary and narrow allowlist under regression coverage.
+- Keep the implemented narrow action allowlist, rejection behavior, and strict result validators under regression coverage.
+- Live target-Windows provider timeout/failure evidence remains open; deterministic local timeout/rate-limit/refusal/malformed-response tests are PASS.
 - Apply the documented message-content retention and operational rollback policy on target Windows and retain evidence.
 - Record evidence against all nine origin Stage 1 criteria. Do not mark Stage 1 complete from architecture statements alone.
 
@@ -67,8 +69,8 @@ The retention and rollback policy is in `docs/stage-1-retention-rollback.md`. Au
 
 ## Latest repository state
 
-- Latest commit: `ab9a5a9` (`record recovery expiry and Windows evidence steps`).
-- Previous implementation commit: `6ade2c5` (`harden Stage 1 runtime and execution boundaries`).
+- Latest commit: `040bd09` (`record provider fault simulation evidence`).
+- Previous provider-test commit: `0c92700` (`add dashboard provider fault self-test`).
 - Branch `stable-merge` is pushed to `origin/stable-merge`.
 - Refreshed package is generated from the latest pushed commit after this handoff update; verify its SHA-256 from the delivery message.
 
