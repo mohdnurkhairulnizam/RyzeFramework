@@ -45,7 +45,7 @@
 - Target Windows: physical backup/restore including Telegram session recovery PASS.
 - Target Windows: provider fault simulation PASS for timeout, rate limit, refusal, and malformed response; no network call was made.
 - Workspace: TypeScript check PASS.
-- Workspace: 46 Vitest tests PASS across 16 files, including blank, explicit `auto`, and named FreeLLMAPI model-selector coverage plus Stage 1 hardening boundaries.
+- Workspace: 47 Vitest tests PASS across 17 files, including blank, explicit `auto`, and named FreeLLMAPI model-selector coverage plus Stage 1 hardening boundaries.
 - Workspace: 4 Python worker tests PASS.
 - Workspace: local production build PASS.
 
@@ -69,7 +69,7 @@ The retention and rollback policy is in `docs/stage-1-retention-rollback.md`. Au
 
 ## Latest repository state
 
-- Latest commit: `040bd09` (`record provider fault simulation evidence`).
+- Latest commit: `0d12c10` (`align Stage 1 evidence documents`).
 - Previous provider-test commit: `0c92700` (`add dashboard provider fault self-test`).
 - Branch `stable-merge` is pushed to `origin/stable-merge`.
 - Refreshed package is generated from the latest pushed commit after this handoff update; verify its SHA-256 from the delivery message.
@@ -85,3 +85,21 @@ A protected Settings action now runs a deterministic simulation of timeout, rate
 ### Verified provider-fault simulation evidence
 
 Target-Windows dashboard report received on 24 November 2026: PASS for timeout, rate limit, refusal, and malformed response. The report confirmed deterministic local simulation, no network calls, unchanged runtime configuration, and no secret/message exposure. Live-provider behavior remains a separate evidence item.
+
+## Next-AI continuation instructions
+
+Clone or pull branch `stable-merge` and read this handoff before changing code. The current checkout is Stage 1 foundation hardening, not Stage 1 operational completion. Preserve the stable Windows startup/ACL behavior and do not request or expose secrets.
+
+Already implemented and evidence-backed: runtime schema `v1` with fail-closed validation; explicit FreeLLMAPI model selection including deliberate `auto`; structured v1 no-side-effect action proposals; narrow server-side allowlist; strict file/generated-artifact/Telegram acknowledgement validators; autonomous same-chat Telegram controls; physical backup/restore with Telegram session recovery; one-hour recovery-code expiry; and the dashboard deterministic provider-fault simulation with copyable logs.
+
+Continue in this order:
+
+1. Re-run the target-Windows Stage 1 self-test from the latest package and retain its report.
+2. Add a simulation-only dashboard report for Telegram acknowledgement mismatch if useful, while keeping real acknowledgement validation unchanged.
+3. Decide and implement a safe controlled live-provider diagnostic only if it can preserve the normal configuration and avoid secret exposure; never label local simulation as live evidence.
+4. Capture exact model/provider identity only from non-secret metadata actually returned by the gateway; report `NOT_REPORTED` rather than guessing.
+5. Finish rollback evidence on target Windows without replacing live data unexpectedly.
+6. Do not claim Telegram file delivery until actual document sending and acknowledgement verification are implemented; current text-only Telegram behavior is intentional.
+7. Update all evidence documents and keep Stage 1 `PARTIAL`, `NOT_RUN`, `NOT_IMPLEMENTED`, and `FAIL` distinctions explicit.
+
+The next AI must run `pnpm run check`, `pnpm test`, `pnpm run worker:test`, `pnpm run build:local`, and `git diff --check` before committing. Coding commits must contain exactly one trailer: `Co-authored-by: Manus <dev-agent@manus.ai>`.
