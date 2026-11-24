@@ -3,7 +3,7 @@
 **Status date:** 25 November 2026
 **Working branch:** `feature/telegram-file-transfer`
 **Base:** verified `stable-merge` baseline `e8e7660`
-**Pushed feature commit:** `8761def` (`feat: implement bounded Telegram file transfer`)
+**Branch state:** pushed to `origin/feature/telegram-file-transfer`; ready for owner-run target-Windows verification.
 **Stage disposition:** Stage 1 is still **PARTIAL**, not operationally complete. The owner will run the new file-receipt and same-chat return tests on the target Windows computer using the update ZIP prepared from this branch.
 
 ## Read first
