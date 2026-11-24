@@ -75,3 +75,7 @@ The retention and rollback policy is in `docs/stage-1-retention-rollback.md`. Au
 ## Important constraints
 
 Never request or expose `.env`, API credentials, worker tokens, passwords, login codes, recovery codes, Telegram session files, backup contents, or Gmail passwords. Preserve the stable Windows ACL/startup behavior. The user wants the dashboard to remain the primary configuration center and the Playbook to remain simple.
+
+## Continuation update: provider fault dashboard test
+
+A protected Settings action now runs a deterministic simulation of timeout, rate-limit (HTTP 429), refusal/error, and malformed-response handling. It produces a copyable report and explicitly states that no network request, provider secret read, configuration change, or Telegram send occurred. Treat this as simulation evidence, not live-provider evidence.

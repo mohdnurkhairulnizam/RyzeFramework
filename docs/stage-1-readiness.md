@@ -138,3 +138,15 @@ Immediate next step: complete target-Windows acceptance evidence for the autonom
 - [`Blueprint implementation map`](./blueprint-implementation.md), which records the repository's Stage 1 status and implementation gates.
 - [`Telegram user-account integration`](./telegram-user-account-integration.md) and [`worker README`](../worker/README.md), for the local Telethon setup and operational constraints.
 - [`Verification notes`](./verification.md), for the safe hosted/demo test evidence.
+
+### Provider fault simulation evidence
+
+The dashboard now provides a protected, deterministic provider-fault self-test. It reports PASS/FAIL for timeout, HTTP 429/rate-limit, refusal/error, and malformed response classification, with a copyable non-secret report. This is local simulation evidence only; live OpenCode/FreeLLMAPI fault behavior remains a separate target-Windows acceptance item.
+
+### Newly reported target-Windows evidence
+
+- Physical backup and restore, including Telegram session recovery: PASS.
+- Real one-hour recovery-code expiry observation: PASS.
+- Generated Markdown note creation and local file-store save: PASS.
+- Telegram generated-note same-chat text response: PASS.
+- Telegram file/document delivery: not implemented; do not mark as PASS.

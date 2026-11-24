@@ -44,6 +44,7 @@ import { createPrivateBackup, listPrivateBackups, requestPrivateRestore, runOper
 import { runStage1SelfTest } from "../stage1SelfTest";
 import { proposalForDemoAction } from "../actionProposal";
 import { validateFileMetadata, validateGeneratedArtifact } from "../resultValidators";
+import { runProviderFaultSelfTest } from "../providerFaultSelfTest";
 import { ENV } from "../_core/env";
 import { protectedProcedure, router } from "../_core/trpc";
 import {
@@ -339,6 +340,7 @@ export const ryzeRouter = router({
     runOperationalBaseline(ctx.user.id)
   ),
   stage1SelfTest: protectedProcedure.mutation(() => runStage1SelfTest()),
+  providerFaultSelfTest: protectedProcedure.mutation(() => runProviderFaultSelfTest()),
   privateBackup: protectedProcedure.mutation(() => createPrivateBackup()),
   privateBackups: protectedProcedure.query(() => listPrivateBackups()),
   requestPrivateRestore: protectedProcedure

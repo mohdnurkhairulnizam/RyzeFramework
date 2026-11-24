@@ -406,3 +406,7 @@ New Ryze backups include the Telegram worker's `worker.env` and Telethon session
 Ryze replies only when all of these conditions are true: the sender is the permanent admin or has a current one-hour authorization; the message is text; the worker is running and not paused; OpenCode and FreeLLMAPI are available; and the reply is sent to the same originating chat. Check the Telegram channel log for `ignored`, `queued`, `sent`, or `send-failed` entries.
 
 If the worker is paused, select **Resume** and send a new test message. If the worker was stopped, select **Start receiving**. If the sender was temporarily authorized, the authorization ends after one hour and the sender must use the recovery-code process again. If the log shows `send-failed`, copy only the non-secret diagnostic text; never copy `worker.env`, login codes, recovery codes, session files, or backup contents.
+
+## Provider fault self-test
+
+In **Settings**, select **Run provider fault self-test**. Ryze locally simulates timeout, HTTP 429/rate-limit, provider refusal, and malformed-response cases. Use **Copy** to copy the report for support. This check does not contact FreeLLMAPI, read API keys, change `.env`, send Telegram messages, or prove live-provider behavior.
