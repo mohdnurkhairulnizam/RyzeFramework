@@ -3,7 +3,8 @@
 **Status date:** 25 November 2026
 **Working branch:** `feature/telegram-file-transfer`
 **Base:** verified `stable-merge` baseline `e8e7660`
-**Stage disposition:** Stage 1 is still **PARTIAL**, not operationally complete. No commit or push has been made.
+**Pushed feature commit:** `8761def` (`feat: implement bounded Telegram file transfer`)
+**Stage disposition:** Stage 1 is still **PARTIAL**, not operationally complete. The owner will run the new file-receipt and same-chat return tests on the target Windows computer using the update ZIP prepared from this branch.
 
 ## Read first
 
@@ -52,7 +53,7 @@ The owner needs to decide whether one safe, end-to-end Markdown-summary task is 
 
 ## Next actions
 
-1. On target Windows, install this branch's reviewed package through the normal update procedure and confirm the additive SQLite migration applies without replacing live data.
+1. On target Windows, install the reviewed package for this branch through the normal update procedure and confirm the additive SQLite migration applies without replacing live data.
 2. In one authorized private chat, test receiving a small `.md` file and request its summary. Confirm the task status/result and same-chat response; note that the configured provider receives the content for this explicit request.
 3. Separately request that Ryze send the latest received file back. Verify same-chat destination, delivered file, and worker acknowledgement. Also test generated Markdown-note delivery if that is part of the claimed path.
 4. Retain non-secret, timestamped evidence. Label the outcomes owner-reported until independently reviewed; do not change the preserved self-test report.
