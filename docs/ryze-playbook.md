@@ -2,7 +2,7 @@
 
 A simple user manual for installing, starting, using, verifying, and troubleshooting RyzeFramework. This is a living document and will be updated progressively as new features are completed.
 
-**Current revision:** `Telegram OpenCode reply verification`
+**Current revision:** `Stage 1 target-Windows evidence`
 **Current stage:** Stage 1 foundation; Telegram inbound handling and one authorized same-chat OpenCode-backed reply are verified. Additional restart, pause, duplicate, and failure-recovery checks remain.
 
 Use the three project documents this way:
@@ -31,7 +31,7 @@ RyzeFramework is currently a local Windows application with:
 
 A successful chat response is evidence of the text-chat path only. It is not evidence that Ryze can safely plan and execute arbitrary real-world operations.
 
-**Latest verification:** On 23 November 2026, the target Windows installation passed the one-button operational baseline, restart test, and staged Telegram inbound test. Backup creation, restore rehearsal, database/log records, uploaded-file record, Windows ACL checks, Telegram login-code flow, worker startup, authorized sender handling, unauthorized-sender ignoring, recovery-code temporary authorization, and worker pause/resume/stop controls were reported successful. Autonomous outbound replies are implemented in the current package but still require target-Windows end-to-end verification.
+**Latest verification:** On 24 November 2026, the target Windows installation passed the one-button operational baseline, restart test, staged Telegram inbound test, autonomous same-chat checks, and the real one-hour recovery-code expiry observation. Backup creation, restore rehearsal, database/log records, uploaded-file record, Windows ACL checks, Telegram login-code flow, worker startup, authorized sender handling, unauthorized-sender ignoring, recovery-code temporary authorization, and worker pause/resume/stop controls were reported successful. Physical restore, controlled provider failure, and Telegram report/file delivery remain open.
 
 ## 2. What is available now
 
@@ -175,11 +175,23 @@ This stage uses the private RyzeTel bridge pattern for local secret handling and
 7. From another Telegram account, send an ordinary message and confirm it is ignored. Then send only the exact permanent or one-time recovery code. Confirm that this sender is temporarily authorized for one hour and that a subsequent harmless message is recorded.
 8. Use **Pause**, **Resume**, and **Stop worker** from the dashboard. Do not register a Windows scheduled task yet.
 
-**Target-Windows verification record — 23 November 2026:** The owner reported success through Telegram login code, authorized worker startup, permanent-admin inbound handling, unauthorized-sender ignoring, recovery-code temporary authorization, dashboard pause/resume/stop controls, and an authorized Telegram prompt routed through the OpenCode workspace with a reply returned to the same chat. Still test pause-before-send, worker restart, duplicate inbound delivery, OpenCode/provider failure, and recovery-code expiry.
+**Target-Windows verification record — 24 November 2026:** The owner reported success through Telegram login code, authorized worker startup, permanent-admin inbound handling, unauthorized-sender ignoring, recovery-code temporary authorization, dashboard pause/resume/stop controls, an authorized Telegram prompt routed through the OpenCode workspace with a reply returned to the same chat, and the real one-hour recovery-code expiry observation. Still test acknowledgement mismatch, controlled provider failure, physical restore/rollback, and report/file delivery.
 
 If the dashboard wizard is unavailable in an older package, use the policy-safe `Configure-TelegramWorker.cmd` and `Start-TelegramWorker.cmd` launchers described above. The dashboard wizard is the intended setup path for this revision.
 
 There is no approved-chat or group allowlist in this design. Authorization is based only on the sender: the permanent admin identity is accepted by default, and another sender is accepted for one hour after sending the exact recovery code. All other senders are ignored.
+
+### 3.9.1 Remaining Stage 1 evidence
+
+Run these checks in order on the installed Windows computer. Do not send or paste `.env`, API keys, worker tokens, login codes, recovery codes, session files, or backup archives.
+
+**Provider fault check:** First create a private backup. The current package has automated timeout, rate-limit, refusal, and malformed-response tests, but it does not ship a fake provider button. Do not deliberately edit the live `.env` with a real key or provider URL. For live evidence, use a separate test copy and a controlled mock OpenAI-compatible gateway that you own: point the test copy to the mock, make it return timeout, HTTP 429, a refusal/error result, and invalid JSON one at a time, then confirm the dashboard reports a sanitized failure, no Telegram reply is sent, and the task is marked failed. If no mock gateway is available, record the automated test result and leave the live-provider gate `NOT_RUN` rather than breaking the working installation.
+
+**Physical backup and restore:** Stop Ryze, select **Create private backup**, and note only the displayed backup name. Confirm the backup manifest reports the database/configuration and, when Telegram is configured, worker configuration/session entries. Select that backup and choose **Restore selected backup**. Start Ryze once so the managed launcher applies the restore. Confirm owner login, one previous task, one file entry, Telegram account status, and worker authorization. Do not delete the pre-restore folder until these checks pass. If anything fails, stop Ryze and restore the preserved `Ryze-pre-restore-*` copy through the same controlled process.
+
+**Generated file retrieval:** In the dashboard, submit `Create a briefing note about the supplied topic`, open **File manifest**, and download the generated Markdown file. Confirm the name, type, and size are shown and the file opens as Markdown. This proves dashboard retrieval. The current Telegram worker sends text only and does not deliver files, so do not mark Telegram file delivery PASS from a text reply or from the JPG-conversion refusal.
+
+**Final self-test:** Open **Settings → Stage 1 acceptance self-test → Run Stage 1 self-test**, select **Copy**, and paste the complete non-secret report into the project review. The expected report should show runtime schema `v1`, an explicit model selector such as `auto`, a PASS for the structured safe-action boundary, and no secret values. A `NOT_RUN` or `WARN` for provider fault injection, physical restore, or file delivery must remain documented rather than being treated as a PASS.
 
 The `.cmd` launchers use a process-only PowerShell execution-policy bypass. They do not change the computer's permanent PowerShell execution policy. The underlying `.ps1` files remain available for advanced users.
 

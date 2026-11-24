@@ -18,7 +18,7 @@
 - OpenCode + FreeLLMAPI text-chat route works on target Windows when configured.
 - Telegram Telethon user-account worker is dashboard-configurable.
 - Permanent admin sender is accepted by default; ordinary unauthorized senders are ignored.
-- Exact recovery-code sender authorization works for one hour; expiry is still pending verification.
+- Exact recovery-code sender authorization works for one hour; target-Windows expiry observation is now PASS.
 - Autonomous replies require no per-message owner approval, are restricted to the exact originating chat, and do not support broadcasts, proactive messages, sales funnels, or unrelated automation.
 - Server-side controls include pause/stop checks, sender/chat/task/message eligibility, durable reply keys, content hashing, Telegram acknowledgement validation, completed-command filtering, and failure logging.
 - Telegram prompt routing uses the shared OpenCode + FreeLLMAPI path rather than the generic safe demo.
@@ -41,6 +41,7 @@
 - Target Windows: metadata inspection of `ryze-baseline-test-20261123135610940.md` (`text/markdown`, `113` bytes), with content not executed, PASS.
 - Target Windows: worker stop/start replay PASS.
 - Target Windows: duplicate/replayed inbound-event prevention PASS.
+- Target Windows: one-hour recovery-code expiry observation PASS; after expiry the temporary sender was no longer authorized.
 - Workspace: TypeScript check PASS.
 - Workspace: 46 Vitest tests PASS across 16 files, including blank, explicit `auto`, and named FreeLLMAPI model-selector coverage plus Stage 1 hardening boundaries.
 - Workspace: 4 Python worker tests PASS.
@@ -52,7 +53,6 @@
 - Complete Telegram acknowledgement-mismatch and provider timeout/failure evidence.
 - Verify restore/rollback of the server and worker configuration, including Telegram session recovery.
 - Verify generated report/file retrieval and delivery; metadata inspection alone is not file delivery.
-- Verify recovery-code expiry after one hour; intentionally deferred by the owner.
 - Define and implement structured action proposals before any future tools.
 - Define the narrow action allowlist, permission requirements, rejection behavior, and strict result validators.
 - Add controlled provider timeout/rate-limit/cancellation tests without granting shell access.
@@ -61,9 +61,9 @@
 
 ## Immediate next implementation action
 
-Continue with target-Windows operational evidence: provider timeout/refusal behavior, physical restore/rollback, generated report/file delivery, and recovery-code expiry. Keep the current structured proposal/validator boundaries and deny-all OpenCode tool policy. Do not start Gmail until Stage 1 is stabilized. Gmail must use Google OAuth; Drive and Photos must remain separate optional scopes.
+Continue with target-Windows operational evidence: provider timeout/refusal behavior, physical restore/rollback, and generated report/file delivery. Keep the current structured proposal/validator boundaries and deny-all OpenCode tool policy. Do not start Gmail until Stage 1 is stabilized. Gmail must use Google OAuth; Drive and Photos must remain separate optional scopes.
 
-The retention and rollback policy is in `docs/stage-1-retention-rollback.md`. Automated tests prove path safety and expiry semantics, but they do not replace live Windows restore or a real one-hour Telegram expiry observation.
+The retention and rollback policy is in `docs/stage-1-retention-rollback.md`. Automated tests prove path safety and expiry semantics; the owner has now supplied the corresponding real one-hour Telegram expiry observation.
 
 ## Latest repository state
 
