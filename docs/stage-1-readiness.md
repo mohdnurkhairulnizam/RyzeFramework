@@ -150,3 +150,7 @@ The dashboard now provides a protected, deterministic provider-fault self-test. 
 - Generated Markdown note creation and local file-store save: PASS.
 - Telegram generated-note same-chat text response: PASS.
 - Telegram file/document delivery: not implemented; do not mark as PASS.
+
+### Target-Windows provider fault self-test result — PASS
+
+On 24 November 2026, the installed dashboard provider fault self-test passed all four deterministic scenarios: timeout, rate limit, refusal, and malformed response. The copied report confirmed no network calls, no provider URL/key/model reads, no Telegram messages, and no runtime configuration changes. This verifies the local error-handling boundary only and does not replace live-provider fault evidence.

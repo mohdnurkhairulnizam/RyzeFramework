@@ -79,3 +79,7 @@ Never request or expose `.env`, API credentials, worker tokens, passwords, login
 ## Continuation update: provider fault dashboard test
 
 A protected Settings action now runs a deterministic simulation of timeout, rate-limit (HTTP 429), refusal/error, and malformed-response handling. It produces a copyable report and explicitly states that no network request, provider secret read, configuration change, or Telegram send occurred. Treat this as simulation evidence, not live-provider evidence.
+
+### Verified provider-fault simulation evidence
+
+Target-Windows dashboard report received on 24 November 2026: PASS for timeout, rate limit, refusal, and malformed response. The report confirmed deterministic local simulation, no network calls, unchanged runtime configuration, and no secret/message exposure. Live-provider behavior remains a separate evidence item.
