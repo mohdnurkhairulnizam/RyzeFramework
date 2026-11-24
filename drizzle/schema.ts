@@ -102,9 +102,12 @@ export const ryzeFiles = sqliteTable("ryze_files", {
   mimeType: text("mimeType").notNull(),
   byteSize: integer("byteSize").notNull(),
   category: text("category").notNull(),
-  source: text("source", { enum: ["upload", "generated"] }).notNull(),
+  source: text("source", { enum: ["upload", "generated", "telegram"] }).notNull(),
+  telegramChatId: text("telegramChatId"),
+  telegramSenderId: text("telegramSenderId"),
+  telegramMessageId: text("telegramMessageId"),
   createdAt: timestampMs("createdAt"),
-});
+}, (table) => [uniqueIndex("ryze_files_telegram_origin_uq").on(table.userId, table.telegramChatId, table.telegramMessageId)]);
 
 export const ryzeSettings = sqliteTable("ryze_settings", {
   userId: integer("userId").primaryKey().references(() => users.id, { onDelete: "cascade" }),

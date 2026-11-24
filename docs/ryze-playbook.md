@@ -2,8 +2,8 @@
 
 A simple user manual for installing, starting, using, verifying, and troubleshooting RyzeFramework. This is a living document and will be updated progressively as new features are completed.
 
-**Current revision:** `Stage 1 target-Windows evidence`
-**Current stage:** Stage 1 foundation; Telegram inbound handling and one authorized same-chat OpenCode-backed reply are verified. Additional restart, pause, duplicate, and failure-recovery checks remain.
+**Current revision:** `Stage 1 bounded Telegram file transfer`
+**Current stage:** Stage 1 remains partial. Bounded Telegram file receipt, opt-in Markdown/text analysis, same-chat file sending, and generated-note delivery are implemented and sandbox-tested. The new file path has not yet been tested on the target Windows/Telegram installation.
 
 Use the three project documents this way:
 
@@ -27,11 +27,12 @@ RyzeFramework is currently a local Windows application with:
 - Optional OpenCode + FreeLLMAPI text chat.
 - OpenCode tools denied by default.
 - Optional Telegram worker with protected local configuration, preflight check, sender authorization, and autonomous same-chat replies.
+- Bounded private-chat file receipt (5 MiB maximum), requested analysis of small text files, and same-chat file delivery bound to the source chat.
 - Telegram replies remain restricted to an authorized sender's original chat; broadcasts, proactive messaging, sales funnels, arbitrary shell execution, and email delivery remain disabled.
 
 A successful chat response is evidence of the text-chat path only. It is not evidence that Ryze can safely plan and execute arbitrary real-world operations.
 
-**Latest verification:** On 24 November 2026, the target Windows installation passed the one-button operational baseline, restart test, staged Telegram inbound test, autonomous same-chat checks, and the real one-hour recovery-code expiry observation. Backup creation, restore rehearsal, database/log records, uploaded-file record, Windows ACL checks, Telegram login-code flow, worker startup, authorized sender handling, unauthorized-sender ignoring, recovery-code temporary authorization, and worker pause/resume/stop controls were reported successful. Physical restore, controlled provider failure, and Telegram report/file delivery remain open.
+**Latest evidence:** The owner reports PASS for the target-Windows baseline, Telegram sender/worker controls, backup/restore, acknowledgement-mismatch and provider-failure checks. The latter two are owner-reported and have not been independently verified here. Sandbox tests pass for the new file-transfer path, but actual Telegram file receive/analysis/send on target Windows remains `NOT_RUN`. The retained 24 November 18:33 self-test is unchanged and shows its own Gate 1/5/8 `NOT_RUN` and Gate 7 `WARN` results.
 
 ## 2. What is available now
 
@@ -42,6 +43,8 @@ The current system provides:
 - Local SQLite data and local file storage.
 - A one-click operational baseline check with a copyable diagnostic console.
 - Optional OpenCode + FreeLLMAPI text chat when configured.
+- Authorized private-chat file upload up to 5 MiB; analysis is limited to UTF-8 TXT, Markdown, CSV, and JSON up to 64 KiB.
+- Explicit same-chat return of a received file and same-chat delivery of eligible generated Markdown notes.
 
 The following remain incomplete or disabled: arbitrary shell commands, broadcasts, proactive Telegram messaging, email delivery, unsupervised external actions, and general-purpose tool execution. Telegram account control, Telethon login, the dashboard-controlled worker lifecycle, and bounded autonomous same-chat replies are available; persistent service supervision and broader tool execution remain future work.
 
@@ -185,11 +188,11 @@ There is no approved-chat or group allowlist in this design. Authorization is ba
 
 Run these checks in order on the installed Windows computer. Do not send or paste `.env`, API keys, worker tokens, login codes, recovery codes, session files, or backup archives.
 
-**Provider fault check:** First create a private backup. The current package has automated timeout, rate-limit, refusal, and malformed-response tests, but it does not ship a fake provider button. Do not deliberately edit the live `.env` with a real key or provider URL. For live evidence, use a separate test copy and a controlled mock OpenAI-compatible gateway that you own: point the test copy to the mock, make it return timeout, HTTP 429, a refusal/error result, and invalid JSON one at a time, then confirm the dashboard reports a sanitized failure, no Telegram reply is sent, and the task is marked failed. If no mock gateway is available, record the automated test result and leave the live-provider gate `NOT_RUN` rather than breaking the working installation.
+**Provider and acknowledgement evidence:** The owner now reports Telegram acknowledgement-mismatch and provider-failure checks as PASS. Record these as **owner-reported PASS, not independently verified in this workspace**; do not change the retained self-test report to retroactively replace its `NOT_RUN` results. The separate dashboard provider-fault self-test simulates timeout, rate limit, refusal, and malformed response locally and does not contact a provider. Do not alter the live `.env` to force a failure. If further live testing is needed, use a separate test copy and a controlled mock gateway.
 
 **Physical backup and restore:** Stop Ryze, select **Create private backup**, and note only the displayed backup name. Confirm the backup manifest reports the database/configuration and, when Telegram is configured, worker configuration/session entries. Select that backup and choose **Restore selected backup**. Start Ryze once so the managed launcher applies the restore. Confirm owner login, one previous task, one file entry, Telegram account status, and worker authorization. Do not delete the pre-restore folder until these checks pass. If anything fails, stop Ryze and restore the preserved `Ryze-pre-restore-*` copy through the same controlled process.
 
-**Generated file retrieval:** In the dashboard, submit `Create a briefing note about the supplied topic`, open **File manifest**, and download the generated Markdown file. Confirm the name, type, and size are shown and the file opens as Markdown. This proves dashboard retrieval. The current Telegram worker sends text only and does not deliver files, so do not mark Telegram file delivery PASS from a text reply or from the JPG-conversion refusal.
+**Generated file retrieval and Telegram delivery:** In the dashboard, submit `Create a briefing note about the supplied topic`, open **File manifest**, and download the generated Markdown file. Confirm its name, type, and size and that it opens as Markdown. In Telegram, an authorized private-chat request for an eligible briefing note can queue that generated Markdown file back to the originating chat. To return a received file, ask `Send me the latest file back`; delivery is restricted to the same authorized private chat. The worker verifies the bytes and destination before acknowledging the Telegram send. These paths are implemented, but target-Windows/live Telegram tests are still `NOT_RUN`; a text reply alone does not prove file delivery.
 
 **Final self-test:** Open **Settings → Stage 1 acceptance self-test → Run Stage 1 self-test**, select **Copy**, and paste the complete non-secret report into the project review. The expected report should show runtime schema `v1`, an explicit model selector such as `auto`, a PASS for the structured safe-action boundary, and no secret values. A `NOT_RUN` or `WARN` for provider fault injection, physical restore, or file delivery must remain documented rather than being treated as a PASS.
 
@@ -206,6 +209,16 @@ Open **Settings → Telegram account bridge** on the local dashboard. The panel 
 Set the permanent admin Telegram user ID in the same panel. Ryze accepts messages from that ID by default and ignores other sender IDs. Save a permanent recovery code for remote recovery, or use **Generate one-time code** when another specific sender needs temporary access. The sender must send only the exact code as the Telegram message; no `RYZE-AUTH` prefix is required. The one-time code is shown only on the local dashboard and expires after 15 minutes. When that sender sends it to the connected account, that sender is accepted for one hour, then the permanent admin-only rule returns. Incoming, ignored, authorization, queued, sent, and failed events appear in the local Telegram channel log. Authorized safe-analysis prompts can receive autonomous replies in the same originating chat; no manual approval is required.
 
 The Connection wizard in this revision performs the local Telethon environment setup, login-code entry, optional two-step-password entry, worker start, pause, resume, stop, and protected session removal from the dashboard. Telegram API credentials and login values remain local and are not displayed in the audit log. The wizard enables inbound handling and bounded same-chat replies. If a reply fails, the Telegram channel log records a sanitized failure reason for diagnosis; do not paste credentials, session files, or backup contents into support chat.
+
+### Telegram private-chat file workflow
+
+Only send files to the connected Ryze account in an authorized **private chat**. Receipt is limited to 5 MiB and these types: TXT, Markdown, CSV, JSON, PDF, DOCX, PNG, and JPEG. If the message has a caption such as `Summarize this attached Markdown file`, Ryze can handle the request with that file. Otherwise, after Ryze confirms receipt, send a follow-up such as `Summarize the attached file` in the same chat within 24 hours. For content analysis, only UTF-8 TXT/Markdown/CSV/JSON files up to 64 KiB are supported. Other allowed files may be stored and returned but are not parsed for meaning.
+
+When you request analysis, the file content is passed to the configured model provider for that request. Ryze treats it as untrusted data and does not enable OpenCode tools. File content itself is excluded from task logs, but the Telegram prompt and the model's answer may be retained in local activity/task records.
+
+To return the latest eligible file from that same authorized private chat, ask `Send me the latest file back`. To request an eligible generated Markdown note, use a bounded prompt such as `Create a briefing note about the supplied topic`; the worker can queue that generated artifact to the originating chat. No group, different-chat, or arbitrary-path delivery is allowed. These paths are implemented but have not yet been tested with live Telegram on the target Windows computer.
+
+The 24-hour limit is a lookup/analysis window, **not** automatic file deletion. Received files stay in local storage; this revision has no in-dashboard file deletion control. Avoid uploading sensitive material until the owner has established an appropriate retention and deletion process. Private backups may also include local file bytes and must be protected.
 
 Gmail is planned as a separate OAuth setup panel. The Gmail account will be authorized through Google consent rather than by storing a Gmail password. Drive and Photos access will be optional scopes and will not be enabled merely because Gmail is connected.
 
@@ -349,7 +362,7 @@ The following are not available in this revision:
 - Email sending or Gmail connection.
 - Google Drive or Google Photos connection.
 - Arbitrary shell commands or unrestricted computer control.
-- Automatic file/report delivery through Telegram.
+- Target-Windows-verified Telegram file/report delivery (the transfer path is implemented, but has not yet been exercised on the target installation).
 - Automatic Windows background supervision after a computer restart.
 
 When these capabilities are added, their setup and test instructions will be added here. Do not enable an unfinished capability by editing configuration files or model instructions.

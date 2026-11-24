@@ -329,12 +329,57 @@ export async function awardSkill(userId: number, domain: string, success: boolea
   await db.update(ryzeSkills).set({ xp, level: 1 + Math.floor(xp / 100), successCount: existing[0].successCount + (success ? 1 : 0), failCount: existing[0].failCount + (success ? 0 : 1), updatedAt: new Date() }).where(eq(ryzeSkills.id, existing[0].id));
 }
 
-export async function saveFileMetadata(userId: number, input: { taskId?: string; storageKey: string; originalName: string; mimeType: string; byteSize: number; category: string; source: "upload" | "generated" }) {
+export async function saveFileMetadata(userId: number, input: { taskId?: string; storageKey: string; originalName: string; mimeType: string; byteSize: number; category: string; source: "upload" | "generated"; telegramOrigin?: { chatId: string; senderId: string; messageId: string } }) {
   const db = await requireDb();
   const id = `file_${nanoid(14)}`;
-  const file = { id, userId, taskId: input.taskId ?? null, storageKey: input.storageKey, url: `/api/files/${id}/download`, originalName: input.originalName, mimeType: input.mimeType, byteSize: input.byteSize, category: input.category, source: input.source };
+  const file = { id, userId, taskId: input.taskId ?? null, storageKey: input.storageKey, url: `/api/files/${id}/download`, originalName: input.originalName, mimeType: input.mimeType, byteSize: input.byteSize, category: input.category, source: input.source, telegramChatId: input.telegramOrigin?.chatId ?? null, telegramSenderId: input.telegramOrigin?.senderId ?? null, telegramMessageId: input.telegramOrigin?.messageId ?? null };
   await db.insert(ryzeFiles).values(file);
   return file;
+}
+
+export async function saveTelegramFileMetadata(userId: number, input: { storageKey: string; originalName: string; mimeType: string; byteSize: number; chatId: string; senderId: string; messageId: string }) {
+  const db = await requireDb();
+  const existing = await db.select().from(ryzeFiles).where(and(
+    eq(ryzeFiles.userId, userId),
+    eq(ryzeFiles.telegramChatId, input.chatId),
+    eq(ryzeFiles.telegramMessageId, input.messageId),
+  )).limit(1);
+  if (existing[0]) return existing[0];
+  const id = `file_${nanoid(14)}`;
+  const file = {
+    id, userId, taskId: null, storageKey: input.storageKey, url: `/api/files/${id}/download`,
+    originalName: input.originalName, mimeType: input.mimeType, byteSize: input.byteSize,
+    category: "uploads", source: "telegram" as const, telegramChatId: input.chatId,
+    telegramSenderId: input.senderId, telegramMessageId: input.messageId,
+  };
+  await db.insert(ryzeFiles).values(file).onConflictDoNothing();
+  const [saved] = await db.select().from(ryzeFiles).where(and(
+    eq(ryzeFiles.userId, userId),
+    eq(ryzeFiles.telegramChatId, input.chatId),
+    eq(ryzeFiles.telegramMessageId, input.messageId),
+  )).limit(1);
+  if (!saved) throw new Error("Telegram file metadata could not be persisted.");
+  return saved;
+}
+
+export async function getLatestTelegramFile(userId: number, chatId: string, senderId: string) {
+  const db = await requireDb();
+  const rows = await db.select().from(ryzeFiles).where(and(
+    eq(ryzeFiles.userId, userId),
+    eq(ryzeFiles.telegramChatId, chatId),
+    eq(ryzeFiles.telegramSenderId, senderId),
+  )).orderBy(desc(ryzeFiles.createdAt)).limit(1);
+  return rows[0] ?? null;
+}
+
+export async function getTelegramFileByOrigin(userId: number, chatId: string, messageId: string) {
+  const db = await requireDb();
+  const rows = await db.select().from(ryzeFiles).where(and(
+    eq(ryzeFiles.userId, userId),
+    eq(ryzeFiles.telegramChatId, chatId),
+    eq(ryzeFiles.telegramMessageId, messageId),
+  )).limit(1);
+  return rows[0] ?? null;
 }
 
 export async function listFiles(userId: number) {

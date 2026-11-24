@@ -2,7 +2,7 @@
 
 RyzeFramework’s planned Telegram interface uses the user-account pattern from the connected **ryzetel** repository. It does **not** use a Telegram bot token or bot webhook.
 
-**Current package boundary:** the local Windows dashboard includes a controlled Telegram setup wizard. It writes the protected local `worker.env`, installs the private worker environment, starts Telethon login, accepts the login code and optional two-step password through transient dashboard fields, and controls start/pause/resume/stop. The worker supports autonomous same-chat replies for authorized inbound messages; target-Windows end-to-end outbound verification remains pending. The older `.cmd` launchers remain as a recovery path.
+**Current package boundary:** the local Windows dashboard includes a controlled Telegram setup wizard. It writes the protected local `worker.env`, installs the private worker environment, starts Telethon login, accepts the login code and optional two-step password through transient dashboard fields, and controls start/pause/resume/stop. This branch implements authorized private-chat text/file receipt, opt-in analysis of bounded text documents, and same-chat text/file delivery. The new file path has passed sandbox tests but remains untested on the target Windows/live Telegram installation. The older `.cmd` launchers remain as a recovery path.
 
 ## Architecture
 
@@ -16,9 +16,9 @@ RyzeFramework dashboard / execution engine
 
 The local worker is the only component that may access Telegram API credentials and Telethon `.session` files. The hosted dashboard receives sanitized health and activity data, not Telegram secrets or raw Telegram objects.
 
-The worker forwards inbound text for sender authorization by Ryze; it does not require a private-chat or group allowlist. If the connected Telegram account is in a group, the same sender-only rule applies: the permanent admin is allowed, a sender that supplies the exact recovery code is allowed for one hour, and every other sender is ignored. The recovery flow accepts the exact permanent or temporary code as the entire Telegram message; it does not require a command prefix. Raw recovery codes are never written to logs or forwarded into task prompts.
+The worker forwards private-chat text and file metadata for sender authorization by Ryze. Groups are not supported: the worker ignores non-private chats and the server independently requires `chatId === senderId`. In a private chat, the permanent admin is allowed, a sender that supplies the exact recovery code is allowed for one hour, and every other sender is ignored. The recovery flow accepts the exact permanent or temporary code as the entire Telegram message; it does not require a command prefix. Raw recovery codes are never written to logs or forwarded into task prompts.
 
-There is no approved-chat or group-member allowlist in this design. The conversation may be a private chat or a group; authorization is based on the sender identity, not the group itself.
+There is no group support or group-member allowlist. Only authorized private chats are processed, with chat identity bound to the sender identity.
 
 ## Login flow
 
@@ -41,6 +41,8 @@ The worker-to-dashboard API should be limited to:
 - Command acknowledgements.
 - Sanitized activity and error events.
 - Validated configuration retrieval.
+- Authenticated raw-binary file intake with bounded size/type and private-chat source metadata.
+- Command-bound binary file download for a validated `send_file` command; no arbitrary path or destination field.
 
 The worker must reject unknown commands and must never interpret a command payload as shell, Python, filesystem or Telegram execution content. Requests use a separate worker bearer token, distinct from Telegram credentials.
 
@@ -50,13 +52,23 @@ The worker must reject unknown commands and must never interpret a command paylo
 - Keep session files on the owner-controlled computer, outside Git, exports and portable packages unless an explicit encrypted migration design is approved.
 - No manual owner approval is required for the approved same-chat reply scope.
 - Check pause/stop state, sender/chat/task/message eligibility, and durable reply records immediately before every outbound message.
+- For file transfer, validate actual bytes, MIME type, size, SHA-256, originating chat/sender, and exact Telegram acknowledgement; do not replay an uncertain send after restart.
 - Apply bounded retry and backoff only to transient worker/API failures.
-- Log sanitized identifiers and event types; never log message bodies, authorization headers or credentials.
+- Keep file bytes, authorization headers, credentials, recovery codes, and session material out of operational logs. Inbound prompt text and model answers may be retained in Telegram/task logs; treat them as personal data and follow the documented retention policy.
 - Preserve diagnostic logs and a last-known-good worker revision before deployment changes.
 
 ## Current status
 
-The pattern is selected as the replacement for the earlier Telegram bot proposal, using the private RyzeTel bridge as an implementation reference for protected worker environment files, preflight heartbeat, session handling, and explicit worker lifecycle stages. The Python worker package and worker API are implemented, and the local Windows dashboard wizard now stages configuration, Telethon login, private code entry, and worker lifecycle control. The owner verified this inbound flow on the target Windows computer: login completed, the worker ran, the permanent admin was accepted, ordinary unauthorized senders were ignored, the exact recovery code temporarily authorized a sender for one hour, and pause/resume/stop controls worked. Autonomous same-chat reply queuing is now implemented without per-message owner approval. It still requires target-Windows verification of pause behavior, duplicate/replay handling, Telegram acknowledgement, and actual recipient/content validation.
+The pattern is selected as the replacement for the earlier Telegram bot proposal, using the private RyzeTel bridge as an implementation reference for protected worker environment files, preflight heartbeat, session handling, and explicit worker lifecycle stages. The Python worker package and worker API are implemented, and the local Windows dashboard wizard stages configuration, Telethon login, private code entry, and worker lifecycle control. The owner reports target-Windows login, authorized sender handling, unauthorized-sender rejection, recovery authorization/expiry, pause/resume/stop, same-chat replies, backup/restore, replay/failure checks, acknowledgement mismatch, and provider failure as PASS. The acknowledgement-mismatch and provider-failure claims are owner-reported and not independently verified here. File receipt, analysis, same-chat file delivery, and generated-note delivery are implemented in this branch but have not yet been tested with live Telegram on target Windows.
+
+## Bounded Telegram file receipt, analysis, and delivery
+
+- Intake is limited to an authorized private chat (`chatId` must equal `senderId`) and a 5 MiB maximum. The allowlist is TXT, Markdown, CSV, JSON, PDF, DOCX, PNG, and JPEG. The worker and server check size/type and actual bytes; the filename is sanitized and the Telegram message ID is numeric. SQLite metadata binds each file to its owner, source chat, sender, and message.
+- Semantic analysis is narrower: UTF-8 TXT, Markdown, CSV, or JSON, up to 64 KiB. It runs only when the authorized user explicitly asks about the file. Content is wrapped as untrusted data for the existing chat-only OpenCode/FreeLLMAPI route; OpenCode tools remain deny-all. The content is not copied into Ryze task logs, but the user's prompt and the model answer may be retained. The configured provider receives the file content for that requested analysis.
+- A received file can be returned only to its originating authorized private chat, using an opaque owner-scoped file ID and a `send_file` command. The worker downloads only after command acknowledgement, validates file ID/name/MIME/size/SHA-256, checks pause state again, and validates the returned Telegram chat/file/message details before reporting success. Generated Markdown artifacts from eligible Telegram tasks are likewise source-bound for same-chat delivery.
+- Repeated or uncertain sends fail closed. If a worker restarts after acknowledging a send command but before its final result is known, the worker reports uncertainty/failure rather than automatically resending a possible duplicate.
+- The 24-hour window is an analysis/lookup limit, not file retention or deletion. Files remain in local storage; automatic expiry and an in-dashboard delete control are not implemented. Do not treat received files as temporary, and avoid sensitive uploads until the owner establishes retention/deletion handling.
+- Workspace verification currently passes: TypeScript check; 49 Vitest tests across 18 files; 8 worker tests; local build (non-fatal chunk-size warning); and `git diff --check`. These results do not establish target-Windows behavior. Target-Windows file receive, analysis, file send, and generated-note delivery remain **NOT_RUN**.
 
 ## Protected backup boundary
 
@@ -64,4 +76,4 @@ The dashboard private backup and Windows ZIP backup now include the Telegram wor
 
 ## Autonomous same-chat replies
 
-The current implementation removes manual owner approval for each reply. After an authorized inbound text creates a Ryze task, the server may queue a reply only for the exact originating chat. The worker sends the reply through the logged-in user account and reports the Telegram message identifier and content hash back to the server. The server checks that the worker is online and not paused, verifies the intended chat and content, records a durable reply key, and does not replay completed commands after restart. Unauthorized senders, different chats, broadcasts, proactive messages, and unrelated automation remain outside this capability.
+The current implementation removes manual per-message approval for the already-authorized bounded scope. After an authorized private-chat message creates a Ryze task, the server may queue text only to its exact originating chat. An explicitly requested file send must be bound to the file's originating authorized private chat. The worker and server validate identifiers, content hashes and Telegram acknowledgement fields, check pause/online state, and avoid replaying completed or uncertain sends. Unauthorized senders, groups, different chats, broadcasts, proactive messages, and unrelated automation remain outside this capability.

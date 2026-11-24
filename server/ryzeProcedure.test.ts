@@ -82,6 +82,7 @@ describe("authenticated PROJECT RYZE procedures", () => {
     const persistedLogs: Array<Record<string, unknown>> = [];
     dbMocks.ensureSession.mockResolvedValue({ id: "session-1", userId: 1 });
     dbMocks.createTask.mockResolvedValue(persistedTask);
+    dbMocks.saveFileMetadata.mockResolvedValue({ id: "file_generated_12345678", userId: 1 });
     dbMocks.updateTask.mockImplementation(async (_userId: number, _taskId: string, values: Record<string, unknown>) => Object.assign(persistedTask, values));
     dbMocks.addTaskLog.mockImplementation(async (_userId: number, taskId: string, actor: string, level: string, message: string) => {
       persistedLogs.push({ id: persistedLogs.length + 1, userId: 1, taskId, actor, level, message });

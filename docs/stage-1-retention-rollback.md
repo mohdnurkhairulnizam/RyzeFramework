@@ -7,7 +7,7 @@ This policy applies to the local Windows deployment. It keeps the dashboard usef
 - Task summaries, structured task events, worker status, and Telegram delivery status are retained in the local SQLite database for operational diagnosis.
 - Telegram message previews are bounded to 500 characters. Recovery codes, API keys, passwords, login codes, raw Telegram objects, session bytes, and worker environment contents are never written to application logs or ordinary exports.
 - The owner should review and prune message content and task history at least monthly. A future maintenance command should retain the last 90 days of operational records and delete older message previews while preserving aggregate failure counters.
-- Generated files and uploaded files remain under the owner-scoped local files directory until the owner deletes them. The current 5 MiB per-file limit and MIME allowlist remain enforced.
+- Generated files and uploaded files remain under the owner-scoped local files directory until the owner deletes them. Telegram's 24-hour lookup window only limits which received file can be selected by a later request; it does not delete the stored file. Automatic file expiry and an in-dashboard file deletion control are not implemented; treat uploads as persistent until a deliberate owner-directed cleanup policy is defined. The current 5 MiB per-file limit and MIME allowlist remain enforced.
 - Private backups are separate from ordinary exports and may contain `.env`, worker configuration, Telegram session files, and personal data. They must remain in the protected `Documents\RyzeFramework-backups` folder and should be pruned by the owner after confirming a newer backup.
 
 ## Rollback

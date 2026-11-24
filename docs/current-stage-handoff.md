@@ -1,105 +1,61 @@
 # RyzeFramework Current Stage Handoff
 
-**Repository branch:** `stable-merge`
-**Handoff date:** 24 November 2026
-**Current milestone:** Stage 1 foundation — runtime configuration and safe execution hardening are implemented; autonomous Telegram/OpenCode acceptance evidence remains in progress.
+**Status date:** 25 November 2026
+**Working branch:** `feature/telegram-file-transfer`
+**Base:** verified `stable-merge` baseline `e8e7660`
+**Stage disposition:** Stage 1 is still **PARTIAL**, not operationally complete. No commit or push has been made.
 
 ## Read first
 
-1. `docs/origin-blueprint.md` — authoritative original direction and completion plan; do not rewrite it.
-2. `docs/blueprint-implementation.md` — current implementation map and checkpoints.
-3. `docs/stage-1-readiness.md` — Stage 1 readiness assessment and operational gates.
-4. `docs/stage-1-task-breakdown.md` — engineering checklist.
-5. `docs/ryze-playbook.md` — user-facing manual only; keep architecture details out of it.
+1. [`origin-blueprint.md`](./origin-blueprint.md) — authoritative source; preserve unchanged.
+2. [`blueprint-implementation.md`](./blueprint-implementation.md) — current implementation/status map.
+3. [`stage-1-readiness.md`](./stage-1-readiness.md) — criterion-by-criterion evidence and remaining gates.
+4. [`stage-1-task-breakdown.md`](./stage-1-task-breakdown.md) — engineering checklist.
+5. [`ryze-playbook.md`](./ryze-playbook.md) — operator instructions and feature limits.
+6. [`telegram-user-account-integration.md`](./telegram-user-account-integration.md) — worker/file-transfer contract.
 
-## Verified implementation
+## Current implementation
 
-- Local React/Vite dashboard, Node/TypeScript server, SQLite persistence, local file storage, and Windows launch/update/backup helpers.
-- OpenCode + FreeLLMAPI text-chat route works on target Windows when configured.
-- Telegram Telethon user-account worker is dashboard-configurable.
-- Permanent admin sender is accepted by default; ordinary unauthorized senders are ignored.
-- Exact recovery-code sender authorization works for one hour; target-Windows expiry observation is now PASS.
-- Autonomous replies require no per-message owner approval, are restricted to the exact originating chat, and do not support broadcasts, proactive messages, sales funnels, or unrelated automation.
-- Server-side controls include pause/stop checks, sender/chat/task/message eligibility, durable reply keys, content hashing, Telegram acknowledgement validation, completed-command filtering, and failure logging.
-- Telegram prompt routing uses the shared OpenCode + FreeLLMAPI path rather than the generic safe demo.
-- Metadata-only file inspection is verified; uploaded content is not executed.
-- Worker stop/start replay behavior and duplicate/replayed inbound-event prevention are reported PASS.
-- A dashboard **Stage 1 acceptance self-test** produces non-secret `PASS`, `WARN`, `FAIL`, and `NOT_RUN` evidence.
-- Implicit FreeLLMAPI model fallback was removed. The model selector must be explicitly configured; an explicit `auto` value is allowed when FreeLLMAPI is intended to select the model.
-- Runtime configuration schema `v1` is emitted by the installer and checked at startup; local/hosted contradictions and incomplete provider pairs fail closed.
-- Structured v1 action proposals are parsed server-side with a narrow no-side-effect allowlist. OpenCode tools remain deny-all.
-- Strict validators cover uploaded/generated file metadata and Telegram acknowledgement shape/content fields.
-- Provider timeout, rate-limit, refusal, and malformed-response tests pass; restore selection and one-hour expiry logic have automated unit coverage.
+- The local dashboard, Node/TypeScript server, SQLite persistence/migrations, local file storage, Windows install/update/backup/restore helpers, and chat-only OpenCode/FreeLLMAPI route remain in place.
+- Telegram uses the owner-authorized Telethon user-account worker. The server accepts authorized private-chat instructions and restricts replies to the exact originating chat. Groups, broadcasts, proactive sends, shell execution, and general-purpose OpenCode tools remain disabled.
+- Bounded Telegram file receipt and same-chat delivery are now implemented on this branch. Uploads use authenticated raw binary requests, at most 5 MiB, an explicit MIME allowlist, actual-byte validation, and server-generated storage keys. Source chat/sender/message IDs are persisted. File sends use an opaque owner-scoped file ID and an acknowledged worker command; they do not accept arbitrary paths or destinations.
+- File analysis is chat-only and opt-in per request. TXT/Markdown/CSV/JSON files up to 64 KiB may be passed as untrusted document data to the configured model provider within a 24-hour lookup window. OpenCode tools remain deny-all; file content is not written into the Ryze task log. The user is told that analysis sends the content to the configured provider.
+- The 24-hour window governs lookup/analysis eligibility; it does **not** delete the local file. Automatic file expiry and an operator deletion workflow are not implemented, so file retention remains a Stage 1 privacy/operations gap.
+- Generated Markdown notes created by an eligible Telegram task are bound to that task's originating authorized private chat and can be queued for delivery there. A worker restart after a send command was acknowledged but before its outcome is known fails closed rather than automatically resending an uncertain send.
 
-## Current test evidence
+## Verification and evidence
 
-- Target Windows: permanent-admin same-chat reply PASS.
-- Target Windows: pause/resume PASS.
-- Target Windows: unauthorized sender rejection PASS.
-- Target Windows: temporary recovery-code authorization PASS.
-- Target Windows: controlled failure handling PASS.
-- Target Windows: metadata inspection of `ryze-baseline-test-20261123135610940.md` (`text/markdown`, `113` bytes), with content not executed, PASS.
-- Target Windows: worker stop/start replay PASS.
-- Target Windows: duplicate/replayed inbound-event prevention PASS.
-- Target Windows: one-hour recovery-code expiry observation PASS; after expiry the temporary sender was no longer authorized.
-- Target Windows: physical backup/restore including Telegram session recovery PASS.
-- Target Windows: provider fault simulation PASS for timeout, rate limit, refusal, and malformed response; no network call was made.
-- Workspace: TypeScript check PASS.
-- Workspace: 47 Vitest tests PASS across 17 files, including blank, explicit `auto`, and named FreeLLMAPI model-selector coverage plus Stage 1 hardening boundaries.
-- Workspace: 4 Python worker tests PASS.
-- Workspace: local production build PASS.
+### Workspace verification — independently run in this sandbox
 
-## Remaining gates before Stage 1 operational status
+- `pnpm run check` — PASS.
+- `pnpm test` — PASS, 49 tests across 18 files (including file-transfer integration tests).
+- `pnpm run worker:test` — PASS, 8 Python worker tests.
+- `pnpm run build:local` — PASS; the existing large JavaScript chunk warning remains non-fatal.
+- `git diff --check` — PASS.
 
-- Re-run the target-Windows Stage 1 self-test after the latest package and retain its report; deliberate `auto` and named selectors are valid.
-- Complete Telegram acknowledgement-mismatch and provider timeout/failure evidence.
-- Verify rollback of the server and worker configuration; physical restore and Telegram session recovery are PASS.
-- Verify generated report/file retrieval and delivery; metadata inspection alone is not file delivery.
-- Keep the implemented structured action-proposal boundary and narrow allowlist under regression coverage.
-- Keep the implemented narrow action allowlist, rejection behavior, and strict result validators under regression coverage.
-- Live target-Windows provider timeout/failure evidence remains open; deterministic local timeout/rate-limit/refusal/malformed-response tests are PASS.
-- Apply the documented message-content retention and operational rollback policy on target Windows and retain evidence.
-- Record evidence against all nine origin Stage 1 criteria. Do not mark Stage 1 complete from architecture statements alone.
+These are sandbox checks. They do not establish behavior on the target Windows installation or a live Telegram account.
 
-## Immediate next implementation action
+### Owner-reported target-Windows evidence
 
-Continue with target-Windows operational evidence: provider timeout/refusal behavior, physical restore/rollback, and generated report/file delivery. Keep the current structured proposal/validator boundaries and deny-all OpenCode tool policy. Do not start Gmail until Stage 1 is stabilized. Gmail must use Google OAuth; Drive and Photos must remain separate optional scopes.
+The owner reports PASS for the previously exercised same-chat Telegram reply, pause/resume, unauthorized sender rejection, temporary recovery-code authorization and expiry, worker stop/start replay and duplicate-event handling, controlled failure handling, physical backup/restore including Telegram session recovery, and provider-related checks. The owner specifically requested that Telegram acknowledgement-mismatch and provider-failure evidence be recorded as **PASS (owner-reported; not independently verified here)**. The deterministic dashboard provider-fault simulation is a separate local simulation PASS, not live-provider evidence.
 
-The retention and rollback policy is in `docs/stage-1-retention-rollback.md`. Automated tests prove path safety and expiry semantics; the owner has now supplied the corresponding real one-hour Telegram expiry observation.
+The retained [`24 November 18:33 acceptance self-test`](./evidence/stage1-acceptance-self-test-2026-11-24-183302.txt) is unchanged and remains authoritative for what that report actually tested: it records Gate 1 and Gate 5 as `NOT_RUN`, Gate 7 as `WARN`, and Gate 8 as `NOT_RUN`. These statuses are not overwritten by later owner-reported results; preserve the difference between the report's timestamped outcomes, owner reports, and independent sandbox tests.
 
-## Latest repository state
+### Telegram file path
 
-- Latest commit: `0d12c10` (`align Stage 1 evidence documents`).
-- Previous provider-test commit: `0c92700` (`add dashboard provider fault self-test`).
-- Branch `stable-merge` is pushed to `origin/stable-merge`.
-- Refreshed package is generated from the latest pushed commit after this handoff update; verify its SHA-256 from the delivery message.
+- Receipt, source binding, command-bound download, integrity checks, and acknowledgement validation pass automated workspace tests.
+- **Target-Windows Telegram file receive, file-content analysis, same-chat file send, and generated-note delivery are NOT_RUN.** No live Telegram or target-Windows file test was performed in this workspace.
 
-## Important constraints
+## Recommended bounded task-execution decision
 
-Never request or expose `.env`, API credentials, worker tokens, passwords, login codes, recovery codes, Telegram session files, backup contents, or Gmail passwords. Preserve the stable Windows ACL/startup behavior. The user wants the dashboard to remain the primary configuration center and the Playbook to remain simple.
+The owner needs to decide whether one safe, end-to-end Markdown-summary task is sufficient evidence for Stage 1's *demonstrated bounded task execution* requirement. Recommended decision: **accept it as the one bounded task example**, provided the owner runs and records it on the target Windows/Telegram installation. The example is: an authorized sender sends a small Markdown file in a private chat and asks Ryze to summarize it; Ryze validates and stores the file, treats its content as untrusted data, sends it only to the configured model provider for the requested chat-only analysis, records a task result, and returns a same-chat text summary. This demonstrates one narrow task, not arbitrary planning, tool execution, or a general-purpose autonomous agent. File-send delivery must be verified separately; a text summary alone does not prove report/file delivery.
 
-## Continuation update: provider fault dashboard test
+## Next actions
 
-A protected Settings action now runs a deterministic simulation of timeout, rate-limit (HTTP 429), refusal/error, and malformed-response handling. It produces a copyable report and explicitly states that no network request, provider secret read, configuration change, or Telegram send occurred. Treat this as simulation evidence, not live-provider evidence.
+1. On target Windows, install this branch's reviewed package through the normal update procedure and confirm the additive SQLite migration applies without replacing live data.
+2. In one authorized private chat, test receiving a small `.md` file and request its summary. Confirm the task status/result and same-chat response; note that the configured provider receives the content for this explicit request.
+3. Separately request that Ryze send the latest received file back. Verify same-chat destination, delivered file, and worker acknowledgement. Also test generated Markdown-note delivery if that is part of the claimed path.
+4. Retain non-secret, timestamped evidence. Label the outcomes owner-reported until independently reviewed; do not change the preserved self-test report.
+5. Define file retention/deletion behavior and complete any remaining Stage 1 operational evidence before declaring Stage 1 complete or starting Stage 2.
 
-### Verified provider-fault simulation evidence
-
-Target-Windows dashboard report received on 24 November 2026: PASS for timeout, rate limit, refusal, and malformed response. The report confirmed deterministic local simulation, no network calls, unchanged runtime configuration, and no secret/message exposure. Live-provider behavior remains a separate evidence item.
-
-## Next-AI continuation instructions
-
-Clone or pull branch `stable-merge` and read this handoff before changing code. The current checkout is Stage 1 foundation hardening, not Stage 1 operational completion. Preserve the stable Windows startup/ACL behavior and do not request or expose secrets.
-
-Already implemented and evidence-backed: runtime schema `v1` with fail-closed validation; explicit FreeLLMAPI model selection including deliberate `auto`; structured v1 no-side-effect action proposals; narrow server-side allowlist; strict file/generated-artifact/Telegram acknowledgement validators; autonomous same-chat Telegram controls; physical backup/restore with Telegram session recovery; one-hour recovery-code expiry; and the dashboard deterministic provider-fault simulation with copyable logs.
-
-Continue in this order:
-
-1. Re-run the target-Windows Stage 1 self-test from the latest package and retain its report.
-2. Add a simulation-only dashboard report for Telegram acknowledgement mismatch if useful, while keeping real acknowledgement validation unchanged.
-3. Decide and implement a safe controlled live-provider diagnostic only if it can preserve the normal configuration and avoid secret exposure; never label local simulation as live evidence.
-4. Capture exact model/provider identity only from non-secret metadata actually returned by the gateway; report `NOT_REPORTED` rather than guessing.
-5. Finish rollback evidence on target Windows without replacing live data unexpectedly.
-6. Do not claim Telegram file delivery until actual document sending and acknowledgement verification are implemented; current text-only Telegram behavior is intentional.
-7. Update all evidence documents and keep Stage 1 `PARTIAL`, `NOT_RUN`, `NOT_IMPLEMENTED`, and `FAIL` distinctions explicit.
-
-The next AI must run `pnpm run check`, `pnpm test`, `pnpm run worker:test`, `pnpm run build:local`, and `git diff --check` before committing. Coding commits must contain exactly one trailer: `Co-authored-by: Manus <dev-agent@manus.ai>`.
+Do not mark Stage 1 operational from the sandbox tests or architecture statements alone. Do not commit or push unless the owner asks. Keep credentials, API keys, worker tokens, recovery codes, Telegram session files, and backup contents out of Git and support messages.

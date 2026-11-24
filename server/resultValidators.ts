@@ -22,6 +22,12 @@ export const telegramAcknowledgementSchema = z.object({
   chatId: z.string().trim().max(120).optional(),
   messageId: z.string().trim().min(1).max(120).optional(),
   contentHash: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+  fileId: z.string().regex(/^file_[a-zA-Z0-9_-]{14}$/).optional(),
+  byteSize: z.number().int().positive().max(5 * 1024 * 1024).optional(),
+  mimeType: z.enum([
+    "text/plain", "text/markdown", "text/csv", "application/json", "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "image/png", "image/jpeg",
+  ]).optional(),
 }).strict();
 
 export function validateFileMetadata(value: unknown) {

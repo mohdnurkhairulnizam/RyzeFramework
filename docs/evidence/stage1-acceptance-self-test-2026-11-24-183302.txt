@@ -1,0 +1,15 @@
+RYZE STAGE 1 ACCEPTANCE SELF-TEST · 24/11/2026, 6:33:02 pm
+Platform: win32 · Local mode: true · Runtime config schema: v1-report
+OpenCode=connected; FreeLLMAPI=connected; chatReady=true
+
+[NOT_RUN] Gate 1 · Autonomous Telegram acceptance evidence: Requires the connected Telegram account on target Windows: pause-before-send, restart, replay, acknowledgement mismatch, worker/API failure, OpenCode failure, unauthorized sender, and recovery-code expiry.
+[PASS] Gate 2 · Versioned runtime and secret contract: Runtime schema v1, local mode, provider URL, model selector (auto), OpenCode endpoint, and worker token are present; secret values were not read into the report.
+[PASS] Gate 3 · Safe action boundary: Shell-like input is blocked by the server-side classifier; ordinary analysis produces a v1 no-side-effect proposal; no tool was executed.
+[PASS] Gate 4 · Worker deployment prerequisites: worker.env present; worker virtual environment present; server worker token present. A live Telegram login/session and restore rehearsal are not performed by this button.
+[NOT_RUN] Gate 5 · Target-Windows end-to-end delivery: Requires a real permanent-admin message and a real recovery-code-authorized sender message. Confirm same-chat content, task status, logs, pause/stop, replay, failure, and invalid-token behavior manually.
+[PASS] Gate 6 · File format, size, and storage boundary: Local storage exists; the application allowlist, strict metadata/generated-artifact validators, and 5 MB upload ceiling are defined. This button does not upload or deliver a user file.
+[WARN] Gate 7 · Operational safety and recovery: Secret redaction and bounded result checks are implemented in the current code. Retention policy, provider failure, worker rollback, and restore evidence still require target-Windows verification.
+[NOT_RUN] Gate 8 · Stage 1 evidence record: Stage 1 cannot be marked operational from this local report alone. Attach this report together with the operational baseline console and target-Windows Telegram test evidence.
+
+Interpretation: PASS means this local deterministic check passed. WARN means setup or evidence is incomplete. NOT_RUN means a real target-Windows/Telegram test is required. FAIL blocks acceptance.
+No secret values, recovery codes, API keys, session paths, or message bodies were included in this report.

@@ -38,5 +38,7 @@ describe("Stage 1 hardening boundaries", () => {
   it("requires a bounded Telegram acknowledgement shape", () => {
     expect(validateTelegramAcknowledgement({ status: "completed", chatId: "123", messageId: "456", contentHash: "a".repeat(64) }).status).toBe("completed");
     expect(() => validateTelegramAcknowledgement({ status: "completed", chatId: "123", messageId: "456", contentHash: "not-a-hash", privateToken: "do-not-accept" })).toThrow();
+    expect(validateTelegramAcknowledgement({ status: "completed", chatId: "123", messageId: "456", contentHash: "b".repeat(64), fileId: `file_${"a".repeat(14)}`, byteSize: 100, mimeType: "text/markdown" }).fileId).toBe(`file_${"a".repeat(14)}`);
+    expect(() => validateTelegramAcknowledgement({ status: "completed", chatId: "123", messageId: "456", contentHash: "b".repeat(64), fileId: "../other", byteSize: 100, mimeType: "text/markdown" })).toThrow();
   });
 });
