@@ -67,8 +67,8 @@ The retention and rollback policy is in `docs/stage-1-retention-rollback.md`. Au
 
 ## Latest repository state
 
-- Latest commit: `6ade2c5` (`harden Stage 1 runtime and execution boundaries`).
-- Previous handoff commit: `c9f9bfc` (`update Stage 1 continuation handoff`).
+- Latest commit: `ab9a5a9` (`record recovery expiry and Windows evidence steps`).
+- Previous implementation commit: `6ade2c5` (`harden Stage 1 runtime and execution boundaries`).
 - Branch `stable-merge` is pushed to `origin/stable-merge`.
 - Refreshed package is generated from the latest pushed commit after this handoff update; verify its SHA-256 from the delivery message.
 
