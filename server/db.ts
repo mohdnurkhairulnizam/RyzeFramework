@@ -308,7 +308,7 @@ const MEMORY_SOURCE_SYSTEM_ID = "local-ryze";
 export async function addMemory(userId: number, input: {
   scope: "core" | "evolving"; kind: string; content: string; tags: string[]; outcome?: "SUCCESS" | "FAIL" | "NEUTRAL";
   category?: Exclude<MemoryCategory, "system">; memoryType?: MemoryType; sourceRef?: string; derivedFrom?: string;
-  createdBy?: "owner" | "ryze_candidate_approved" | "system_process";
+  createdBy?: "owner" | "ryze_candidate_approved" | "system_process"; sensitivity?: MemorySensitivity;
 }) {
   const db = await requireDb();
   if ((input.category && !input.memoryType) || (!input.category && input.memoryType)) throw new Error("Memory category and type must be supplied together.");
@@ -319,7 +319,7 @@ export async function addMemory(userId: number, input: {
     category: input.category ?? null, memoryType: input.memoryType ?? null, ownerScope: `owner:${userId}`,
     sourceSystemId: classified ? MEMORY_SOURCE_SYSTEM_ID : null, branchId: "main", sourceRef: input.sourceRef ?? null, derivedFrom: input.derivedFrom ?? null,
     createdBy: input.createdBy ?? (classified ? "system_process" : null), version: classified ? 1 : null,
-    status: classified ? "active" : "legacy_unclassified", sensitivity: "normal", syncStatus: "local",
+    status: classified ? "active" : "legacy_unclassified", sensitivity: input.sensitivity ?? "normal", syncStatus: "local",
     kind: input.kind.slice(0, 64), content: input.content.slice(0, 5000), tags: JSON.stringify(input.tags.slice(0, 12)), outcome: input.outcome ?? "NEUTRAL",
   });
   return id;

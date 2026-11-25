@@ -23,6 +23,11 @@ import {
   saveOpenCodeSessionId,
   updateSafeSettings,
   updateTask,
+  ensureRyzeIdentity,
+  listIdentityRevisions,
+  updateRyzeIdentity,
+  createSystemMemory,
+  listSystemMemory,
 } from "../db";
 import { storagePut } from "../storage";
 import { deleteUserFile } from "../fileRetention";
@@ -41,6 +46,8 @@ import {
   getIntegrationStatus,
   sendOpenCodePrompt,
 } from "../openCode";
+import { sqliteMemoryProvider } from "../sqliteMemoryProvider";
+import { buildRetrievalContext, createReviewedMemory, reviewMemory } from "../memoryGovernance";
 import { createPrivateBackup, listPrivateBackups, requestPrivateRestore, runOperationalBaseline } from "../operationalBaseline";
 import { runStage1SelfTest } from "../stage1SelfTest";
 import { proposalForDemoAction } from "../actionProposal";
@@ -493,4 +500,67 @@ export const ryzeRouter = router({
   exportData: protectedProcedure.query(({ ctx }) =>
     exportUserSandbox(ctx.user.id)
   ),
+  memoryReview: protectedProcedure
+    .input(z.object({
+      category: z.enum(["system", "experience", "personal"]),
+      memoryType: z.enum(["episodic", "semantic", "procedural", "preference", "project"]),
+      content: z.string().trim().min(1).max(5000),
+      tags: z.array(z.string().trim().min(1).max(80)).max(12).default([]),
+      sensitivity: z.enum(["normal", "restricted"]).default("normal"),
+    }))
+    .query(({ ctx, input }) => reviewMemory({ ownerId: ctx.user.id, ...input }, sqliteMemoryProvider)),
+  createMemory: protectedProcedure
+    .input(z.object({
+      category: z.enum(["system", "experience", "personal"]),
+      memoryType: z.enum(["episodic", "semantic", "procedural", "preference", "project"]),
+      content: z.string().trim().min(1).max(5000),
+      tags: z.array(z.string().trim().min(1).max(80)).max(12).default([]),
+      sourceRef: z.string().trim().max(500).optional(),
+      sensitivity: z.enum(["normal", "restricted"]).default("normal"),
+      ownerConfirmed: z.boolean().default(false),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await createReviewedMemory({
+          ownerId: ctx.user.id,
+          category: input.category,
+          memoryType: input.memoryType,
+          content: input.content,
+          tags: input.tags,
+          sensitivity: input.sensitivity,
+          source: { sourceSystemId: "dashboard", sourceRef: input.sourceRef },
+          createdBy: "owner",
+          ownerConfirmed: input.ownerConfirmed,
+        }, sqliteMemoryProvider);
+      } catch (error) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Owner confirmation is required." });
+      }
+    }),
+  listMemory: protectedProcedure
+    .input(z.object({ query: z.string().trim().max(500).optional(), category: z.enum(["system", "experience", "personal"]).optional(), memoryType: z.enum(["episodic", "semantic", "procedural", "preference", "project"]).optional(), project: z.string().trim().max(160).optional(), limit: z.number().int().min(1).max(50).default(20) }).optional())
+    .query(({ ctx, input }) => sqliteMemoryProvider.search({ ownerId: ctx.user.id, ...input })),
+  getMemory: protectedProcedure
+    .input(z.object({ memoryId: z.string().trim().min(1).max(100) }))
+    .query(({ ctx, input }) => sqliteMemoryProvider.retrieve(ctx.user.id, input.memoryId)),
+  updateMemory: protectedProcedure
+    .input(z.object({ memoryId: z.string().trim().min(1).max(100), content: z.string().trim().min(1).max(5000), tags: z.array(z.string().trim().min(1).max(80)).max(12).default([]), sourceRef: z.string().trim().max(500).optional() }))
+    .mutation(({ ctx, input }) => sqliteMemoryProvider.update(ctx.user.id, input.memoryId, { content: input.content, tags: input.tags, source: { sourceSystemId: "dashboard", sourceRef: input.sourceRef } })),
+  archiveMemory: protectedProcedure
+    .input(z.object({ memoryId: z.string().trim().min(1).max(100) }))
+    .mutation(async ({ ctx, input }) => { await sqliteMemoryProvider.archive(ctx.user.id, input.memoryId); return { archived: true }; }),
+  deleteMemory: protectedProcedure
+    .input(z.object({ memoryId: z.string().trim().min(1).max(100), ownerConfirmed: z.literal(true) }))
+    .mutation(async ({ ctx, input }) => { await sqliteMemoryProvider.delete(ctx.user.id, input.memoryId); return { deleted: true }; }),
+  retrievalContext: protectedProcedure
+    .input(z.object({ query: z.string().trim().max(500).optional(), category: z.enum(["system", "experience", "personal"]).optional(), memoryType: z.enum(["episodic", "semantic", "procedural", "preference", "project"]).optional(), project: z.string().trim().max(160).optional(), includeRestricted: z.boolean().default(false), limit: z.number().int().min(1).max(12).default(12) }).optional())
+    .query(({ ctx, input }) => buildRetrievalContext({ ownerId: ctx.user.id, ...input }, sqliteMemoryProvider)),
+  identity: protectedProcedure.query(({ ctx }) => ensureRyzeIdentity(ctx.user.id)),
+  identityRevisions: protectedProcedure.query(({ ctx }) => listIdentityRevisions(ctx.user.id)),
+  updateIdentity: protectedProcedure
+    .input(z.object({ name: z.string().trim().min(1).max(120), role: z.string().trim().min(1).max(240), description: z.string().trim().min(1).max(2000), communicationStyle: z.string().trim().min(1).max(2000), workingPrinciples: z.string().trim().min(1).max(4000), ownerConfirmed: z.literal(true) }))
+    .mutation(({ ctx, input }) => updateRyzeIdentity(ctx.user.id, input)),
+  systemMemory: protectedProcedure.query(({ ctx }) => listSystemMemory(ctx.user.id)),
+  createSystemMemory: protectedProcedure
+    .input(z.object({ memoryType: z.enum(["episodic", "semantic", "procedural", "preference", "project"]), content: z.string().trim().min(1).max(5000), tags: z.array(z.string().trim().min(1).max(80)).max(12).default([]), sourceRef: z.string().trim().max(500).optional(), sensitivity: z.enum(["normal", "restricted"]).default("normal"), ownerConfirmed: z.literal(true) }))
+    .mutation(({ ctx, input }) => createSystemMemory(ctx.user.id, input)),
 });

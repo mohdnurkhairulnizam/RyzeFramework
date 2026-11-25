@@ -66,7 +66,7 @@ export class SqliteMemoryProvider implements MemoryProvider {
     const id = await addMemory(input.ownerId, {
       scope: input.category === "personal" ? "core" : "evolving", kind: input.memoryType,
       category: input.category, memoryType: input.memoryType, content: input.content, tags: input.tags ?? [],
-      sourceRef: source.sourceRef, derivedFrom: source.derivedFrom?.[0], createdBy: input.createdBy ?? "owner",
+      sourceRef: source.sourceRef, derivedFrom: source.derivedFrom?.[0], createdBy: input.createdBy ?? "owner", sensitivity: input.sensitivity,
     });
     return (await this.retrieve(input.ownerId, id))!;
   }

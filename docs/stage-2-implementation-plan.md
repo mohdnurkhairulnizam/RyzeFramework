@@ -1,11 +1,11 @@
 # Stage 2 — Identity and Advanced Memory: Implementation Plan
 
-**Planning status:** The v1 memory and identity contract is defined in [`memory-identity-contract.md`](./memory-identity-contract.md). The owner approved the exact additive Gate 2 migration/repository slice on 25 November 2026; that slice is implemented and validated. Owner-confirmation UX, duplicate/conflict review, bounded contextual retrieval, and target-Windows export/restore evidence remain proposed/open.
+**Planning status:** The v1 memory and identity contract is defined in [`memory-identity-contract.md`](./memory-identity-contract.md). Gate 2 and the provider-neutral SQLite fallback were implemented and validated on 25 November 2026. Gate 3 is now active: owner-confirmation management APIs, duplicate/conflict review, protected identity/System Memory controls, and bounded contextual retrieval.
 **Stage status:** Stage 1 is closed for sequencing as **PARTIAL**; Stage 2 is the next active stage. This does not certify Stage 1 completion or waive its outstanding criteria.
 
 ## Next design decision
 
-Review the defined v1 memory and identity contract, then approve the exact additive SQLite migration, owner-confirmation UX, legacy-row handling, and backup/restore test plan before implementation. The contract defines intended behavior; it is not evidence that the schema, APIs, or controls already exist. Do not begin by importing the full Everything Claude Code (ECC) catalog or changing Ryze's agent/skill instructions.
+The v1 contract, additive SQLite migration, legacy-row handling, and provider-neutral fallback are implemented. The remaining approval boundary is the owner-facing management behavior and any later external-provider proof of concept. The contract defines intended behavior; passing backend tests is not target-Windows or live-skill acceptance. Do not begin by importing the full Everything Claude Code (ECC) catalog or changing Ryze's agent/skill instructions.
 
 Keep the Telegram request to create a new Markdown file on hold as a Stage 2 capability investigation. Do not modify the live Ryze skill/intent rules until the memory, capability, permission, and rollback boundaries have been reviewed. The backend route already present is not proof that Ryze can understand or safely perform that request.
 
@@ -30,7 +30,7 @@ The owner's attached Stage 2 proposal is adopted as a **Workstream**, not as a n
 
 ## Current baseline
 
-Ryze already has a local SQLite `ryze_memory` table with owner ID, `core`/`evolving` scope, kind, content, tags, outcome, and creation time. `searchMemory` and safe memory actions exist. The table is not the origin blueprint's full model: it does not separately encode the three top-level categories, the five secondary types, provenance, source-system identity, version, or synchronization state. The `ryze_skills` table stores XP and success/failure counts by domain; it is not a controlled, versioned skill catalog. System identity is not yet a distinct permanent identity/profile subsystem.
+Ryze now has an additive local SQLite `ryze_memory` model with legacy `core`/`evolving` scope plus categories, types, provenance, source-system identity, version, sensitivity, and synchronization state. The provider-neutral `MemoryProvider` and SQLite fallback are implemented; duplicate/conflict review and bounded retrieval are now exposed through owner-authenticated Gate 3 procedures. The `ryze_skills` table remains an XP counter rather than a controlled, versioned skill catalog. System identity and protected System Memory are distinct versioned subsystems.
 
 The project pins `@opencode/cli` at `2.3.0` in `package.json`, and its managed OpenCode workspace is generated as a chat-only configuration with deny-all permissions. Verify the actual OpenCode binary/version on the target Windows installation before any adapter compatibility claim. Keep the configured FreeLLMAPI gateway, Windows-local SQLite, Telegram worker, and Ryze task lifecycle intact.
 
@@ -77,17 +77,19 @@ Record the current commit and a verified local backup before schema or memory ch
 
 The v1 contract is documented in [`memory-identity-contract.md`](./memory-identity-contract.md), including categories/types, identity boundaries, provenance, conservative capture, duplicate handling, versioning, legacy rows, retrieval, and backup/restore invariants. Review it before freezing implementation details. In particular, specify the exact deletion/retention behavior for backups, the owner-confirmation flow, and representative category/type examples in the implementation test set. Do not start the schema migration until the contract and migration blueprint are approved.
 
-### Gate 2 — Migration and repository layer
+### Gate 2 — Migration and repository layer — COMPLETE
 
 Design an additive SQLite migration with a rollback/backup plan. Test migration against copies containing representative legacy rows, missing optional fields, and duplicate records. Verify that old search results remain available and no row content or identity is lost. Add owner-scoped repository functions and validation before changing dashboard or OpenCode prompts.
 
-### Gate 3 — Memory management and identity
+Completed in commits `4993cf6` and `3876c2c`: additive migration, legacy preservation, owner-scoped repository functions, identity/System Memory tables, provider-neutral `MemoryProvider`, SQLite fallback, append-first provenance, and automated validation. External providers remain uninstalled and SQLite remains authoritative.
 
-Implement inspectable create/search/read/update/archive flows. Add a stable Ryze identity/profile record separately from user profile/preferences and protected System Memory. Enforce user ownership in the database layer, not only in prompt text. System Memory edits should require explicit owner review and retain the prior version.
+### Gate 3 — Memory management and identity — ACTIVE
 
-### Gate 4 — Contextual retrieval and duplicate handling
+Implement inspectable create/search/read/update/archive flows through owner-authenticated APIs. Add duplicate/conflict review before activation, bounded retrieval context, and stable Ryze identity/profile controls separately from user profile/preferences and protected System Memory. Enforce user ownership in the database layer, not only in prompt text. System Memory edits require explicit owner review and retain the prior version.
 
-Implement bounded retrieval using measured SQLite search first. Add duplicate suggestions and conflict display without silently merging records. Preserve source/derived relationships. Validate retrieval against a fixed, owner-approved test set and record false positives/false negatives.
+### Gate 4 — Contextual retrieval and duplicate handling — FOLLOW-ON VALIDATION
+
+The first bounded retrieval and duplicate/conflict review slice is implemented in Gate 3. Gate 4 must now measure it using a fixed, owner-approved test set, record false positives/false negatives, validate stale and similarly named project behavior, and improve ranking only when measurements justify it. Preserve source/derived relationships and never silently merge records.
 
 ### Gate 5 — Export, restore, and Windows acceptance
 

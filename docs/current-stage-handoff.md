@@ -30,20 +30,27 @@ Stage 1's open evidence stays visible but does not block beginning Stage 2. Do n
 
 ## Verification and evidence
 
-### Stage 2 Gate 2 implementation checkpoint — 25 November 2026
+### Stage 2 Gate 2 implementation checkpoint — COMPLETE — 25 November 2026
 
 - The owner approved the exact additive memory/identity migration and repository slice after reviewing the v1 contract.
 - SQLite migration `0005_special_argent` preserves legacy memory IDs, content, tags, outcomes, timestamps, and `core`/`evolving` scope; it adds nullable classification/provenance/version fields without guessing category or type. Ambiguous rows remain searchable as `legacy_unclassified`.
 - Separate owner-scoped Ryze identity/profile revisions and protected System Memory tables are implemented. Identity changes are append/versioned; System Memory has a dedicated repository boundary and is not writable through model output.
 - Explicit safe-memory flows now classify owner preferences as Personal/Preference and task summaries as Experience/Episodic. Portable exports include identity, revisions, and System Memory metadata while continuing to exclude credentials, Telegram sessions, and file bytes.
-- Focused preservation, identity-versioning, protected-memory, and owner-isolation tests were added. Workspace validation passes: TypeScript check, 59 Vitest tests, 9 worker tests, local build, and `git diff --check`. The build retains the existing non-fatal large-chunk warning.
-- This is a Gate 2 implementation slice, not Stage 2 completion. Dashboard management UX, duplicate/conflict review UI, bounded contextual retrieval, export/restore round-trip on target Windows, and all nine Stage 2 acceptance evidence items remain open.
+- Focused preservation, identity-versioning, protected-memory, owner-isolation, and provider tests were added. Workspace validation passes: TypeScript check, 65 Vitest tests, 9 worker tests, local build, and `git diff --check`. The build retains the existing non-fatal large-chunk warning.
+- Gate 2 is complete, including the provider-neutral `MemoryProvider` abstraction and SQLite fallback in commit `3876c2c`. This is not Stage 2 completion. Gate 3 is active; its first backend slice is recorded below.
 - The attached advanced-memory proposal is recorded as a gated external-provider evaluation workstream. No Hindsight, MemPalace, ECC, automatic capture, cross-agent sharing, or live skill/intent changes were enabled.
+
+### Stage 2 Gate 3 first implementation slice — 25 November 2026
+
+- Added protected owner-authenticated procedures for memory review/create/list/read/update/archive/delete, identity/profile and revision inspection/update, System Memory review/create, and bounded retrieval context.
+- Duplicate review distinguishes exact duplicates, likely conflicts, and similar records. Exact duplicates are returned rather than silently duplicated; conflicts require explicit owner confirmation; updates remain append-first and source-linked.
+- Retrieval is bounded to 12 entries, returns excerpts plus provenance/version metadata, excludes restricted records unless explicitly requested, and preserves owner scoping. Personal Memory is not shared across owners.
+- This is a backend/API slice, not a claim that dashboard UX, target-Windows acceptance, export/restore round-trip, or all nine Stage 2 acceptance criteria are complete.
 
 ### Workspace verification — independently run in this sandbox
 
 - `pnpm run check` — PASS.
-- `pnpm test` — PASS, 57 tests across 19 files, including new summary-file delivery, original-file return, stale-duplicate, and retention/deletion tests.
+- `pnpm test` — PASS, 65 tests across 21 files, including Gate 3 governance tests for duplicate/conflict review, restricted retrieval, bounded excerpts, and owner isolation.
 - `pnpm run worker:test` — PASS, 9 Python worker tests.
 - `pnpm run build:local` — PASS; the existing large JavaScript chunk warning remains non-fatal.
 - `git diff --check` — PASS.
@@ -80,7 +87,7 @@ The owner has reported bounded README file feedback on target Windows using `d35
 
 ## Next actions
 
-1. Begin with [`stage-2-implementation-plan.md`](./stage-2-implementation-plan.md): agree the identity/memory contract, then design and test a lossless additive SQLite migration. Keep the existing memory rows available and do not assume current `core` scope equals protected System Memory.
+1. Continue Gate 3 from [`stage-2-implementation-plan.md`](./stage-2-implementation-plan.md): complete owner-confirmation management APIs, duplicate/conflict review, protected identity/System Memory controls, and bounded contextual retrieval. Keep the existing memory rows available and do not assume current `core` scope equals protected System Memory.
 2. Keep ECC at audit/research level for now. It cannot substitute for memory design or any Stage 1/2 acceptance gate; any later experiment needs a pinned version, target-Windows compatibility check, isolated workspace, and Ryze deny-all permission boundary.
 3. Preserve the Stage 1 residual register. The summary-file skill/intent issue is held for Stage 2 design; target-Windows automatic 30-day expiry remains a separate verification item. Early File Manifest deletion and existing-file return remain owner-reported PASS.
 4. Preserve the 24 November self-test unchanged and distinguish its historical `NOT_RUN`/`WARN` statuses from later owner reports and sandbox checks. Stage 1 remains PARTIAL unless its nine criteria are later completed with evidence.
