@@ -8,7 +8,7 @@
 
 The owner reports that text-only Telegram input now succeeds and Ryze can read a provided file and return feedback. The attached sanitized conversation excerpt shows a request to read/explain `README.md` followed by a response summarizing its contents. Record this as **PASS (owner-reported)** for text-only ingress and file-reading feedback.
 
-The corrected Windows update ZIP for `d35b770` had been provided shortly before the reported test, but the owner did not explicitly echo the installed commit or ZIP checksum. Therefore, attribution to that exact package is **probable by chronology, not independently confirmed**. Do not represent this as an independently verified Windows test.
+The owner subsequently explicitly confirmed that the successful test used package commit `d35b770b357c3d81660951be2ff533976d591e06`. Package attribution is therefore **owner-confirmed**; the ZIP checksum was not separately reconfirmed. This remains owner-reported Windows evidence, not an independently verified test.
 
 The conversation excerpt also shows a request to return a file and a text confirmation. This is not sufficient by itself to verify the returned attachment's bytes or destination. Existing owner-reported file receipt/send evidence remains separately labeled; confirm the exact build and actual same-chat file attachment when convenient.
 
@@ -20,4 +20,4 @@ Workspace verification for the fix: `pnpm run check` PASS; `pnpm test` PASS (51 
 
 ## Stage disposition
 
-Stage 1 remains **PARTIAL**. This report closes the text-only ingress failure as owner-reported PASS, and records file-reading feedback as owner-reported PASS. It does not close the remaining Stage 1 acceptance criteria. In particular, exact package identity, target-Windows verification of actual file return, generated-note delivery, remaining operational/failure/rollback evidence, and file retention/deletion policy remain separate items. The 24-hour lookup window does not delete stored files. Preserve the 24 November 18:33 self-test unchanged; its earlier `NOT_RUN`/`WARN` entries remain that test's historical results.
+Stage 1 remains **PARTIAL**. This report closes the text-only ingress failure as owner-reported PASS, and records file-reading feedback as owner-reported PASS on the owner-confirmed `d35b770` package. It does not close the remaining Stage 1 acceptance criteria. Target-Windows verification of actual file return, generated-note delivery, remaining operational/failure/rollback evidence, and file retention/deletion policy remain separate items. The 24-hour lookup window does not delete stored files. Preserve the 24 November 18:33 self-test unchanged; its earlier `NOT_RUN`/`WARN` entries remain that test's historical results.
