@@ -45,7 +45,7 @@ Stage 1's open evidence stays visible but does not block beginning Stage 2. Do n
 - Added protected owner-authenticated procedures for memory review/create/list/read/update/archive/delete, identity/profile and revision inspection/update, System Memory review/create, and bounded retrieval context.
 - Duplicate review distinguishes exact duplicates, likely conflicts, and similar records. Exact duplicates are returned rather than silently duplicated; conflicts require explicit owner confirmation; updates remain append-first and source-linked.
 - Retrieval is bounded to 12 entries, returns excerpts plus provenance/version metadata, excludes restricted records unless explicitly requested, and preserves owner scoping. Personal Memory is not shared across owners.
-- This is a backend/API slice, not a claim that dashboard UX, target-Windows acceptance, export/restore round-trip, or all nine Stage 2 acceptance criteria are complete.
+- The dashboard Memory vault UX is now implemented in `client/src/components/MemoryGovernancePanel.tsx`. It is still not a claim that target-Windows acceptance, export/restore round-trip, or all nine Stage 2 acceptance criteria are complete.
 
 ### Workspace verification — independently run in this sandbox
 

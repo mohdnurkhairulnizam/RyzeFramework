@@ -85,7 +85,7 @@ Completed in commits `4993cf6` and `3876c2c`: additive migration, legacy preserv
 
 ### Gate 3 — Memory management and identity — ACTIVE
 
-Implement inspectable create/search/read/update/archive flows through owner-authenticated APIs. Add duplicate/conflict review before activation, bounded retrieval context, and stable Ryze identity/profile controls separately from user profile/preferences and protected System Memory. Enforce user ownership in the database layer, not only in prompt text. System Memory edits require explicit owner review and retain the prior version.
+Implement inspectable create/search/read/update/archive flows through owner-authenticated APIs and the dashboard Memory vault. Add duplicate/conflict review before activation, bounded retrieval context, and stable Ryze identity/profile controls separately from user profile/preferences and protected System Memory. The first dashboard governance panel is implemented; target-Windows acceptance and export/restore evidence remain open. Enforce user ownership in the database layer, not only in prompt text. System Memory edits require explicit owner review and retain the prior version.
 
 ### Gate 4 — Contextual retrieval and duplicate handling — FOLLOW-ON VALIDATION
 

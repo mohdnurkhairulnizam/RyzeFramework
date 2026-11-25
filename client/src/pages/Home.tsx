@@ -1,5 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import DashboardLayout from "@/components/DashboardLayout";
+import MemoryGovernancePanel from "@/components/MemoryGovernancePanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { FILE_RETENTION_MS } from "@shared/fileRetention";
 import {
   Activity,
+  Archive,
   Bot,
   BrainCircuit,
   CheckCircle2,
@@ -23,18 +25,21 @@ import {
   FileText,
   FolderOpen,
   Gauge,
+  History,
   KeyRound,
   Loader2,
   LockKeyhole,
   MessageSquareText,
   Network,
   Plus,
+  RefreshCcw,
   Settings2,
   ShieldCheck,
   Sparkles,
   TerminalSquare,
   Trash2,
   UserRound,
+  Eye,
   XCircle,
 } from "lucide-react";
 import {
@@ -615,7 +620,7 @@ export default function Home() {
         />
       )}
       {activeView === "memory" && (
-        <MemoryView memory={data?.memory ?? []} skills={data?.skills ?? []} />
+        <MemoryGovernancePanel legacyMemory={data?.memory ?? []} skills={data?.skills ?? []} />
       )}
       {activeView === "files" && (
         <FilesView
