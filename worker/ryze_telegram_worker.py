@@ -221,7 +221,7 @@ class RuntimeApi:
         })
 
     def inbound(self, *, chat_id: str, sender_id: str, sender_username: str, sender_name: str, text: str, message_id: str, is_private: bool, file_id: str | None = None) -> dict[str, Any]:
-        return self.request("POST", "/inbound", {
+        payload = {
             "workerId": self.config.worker_id,
             "chatId": chat_id[:120],
             "senderId": sender_id[:120],
@@ -230,8 +230,10 @@ class RuntimeApi:
             "text": text[:5000],
             "messageId": message_id[:120],
             "isPrivate": is_private,
-            "fileId": file_id,
-        })
+        }
+        if file_id is not None:
+            payload["fileId"] = file_id
+        return self.request("POST", "/inbound", payload)
 
     def commands(self, after: int) -> list[dict[str, Any]]:
         return self.request("GET", "/commands", query={"workerId": self.config.worker_id, "after": after}).get("commands", [])

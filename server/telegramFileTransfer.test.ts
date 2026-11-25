@@ -82,6 +82,20 @@ describe("Telegram file transfer boundary", () => {
     expect(restored.status).toBe(202);
     expect(await restored.json()).toMatchObject({ accepted: true, replyQueued: true });
 
+    const currentWorkerPayload = await fetch(endpoint, {
+      method: "POST", headers: { ...auth, "Content-Type": "application/json" },
+      body: JSON.stringify({ ...legacy, messageId: "9023", isPrivate: true }),
+    });
+    expect(currentWorkerPayload.status).toBe(202);
+    expect(await currentWorkerPayload.json()).toMatchObject({ accepted: true, replyQueued: true });
+
+    const formerWorkerPayload = await fetch(endpoint, {
+      method: "POST", headers: { ...auth, "Content-Type": "application/json" },
+      body: JSON.stringify({ ...legacy, messageId: "9024", isPrivate: true, fileId: null }),
+    });
+    expect(formerWorkerPayload.status).toBe(400);
+    expect(await formerWorkerPayload.json()).toMatchObject({ error: { code: "INVALID_INBOUND" } });
+
     const mismatchedChat = await fetch(endpoint, {
       method: "POST", headers: { ...auth, "Content-Type": "application/json" },
       body: JSON.stringify({ ...legacy, chatId: "98765", messageId: "9021" }),

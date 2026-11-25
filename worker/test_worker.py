@@ -5,6 +5,7 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent
 SOURCE = ROOT / "ryze_telegram_worker.py"
@@ -17,6 +18,16 @@ def load_function(name, extra=None):
     namespace.update(extra or {})
     exec(compile(ast.Module(body=[node], type_ignores=[]), str(SOURCE), "exec"), namespace)
     return namespace[name]
+
+
+def load_method(class_name, method_name, extra=None):
+    tree = ast.parse(SOURCE.read_text(encoding="utf-8"))
+    class_node = next(item for item in tree.body if isinstance(item, ast.ClassDef) and item.name == class_name)
+    node = next(item for item in class_node.body if isinstance(item, ast.FunctionDef) and item.name == method_name)
+    namespace = {"Any": Any}
+    namespace.update(extra or {})
+    exec(compile(ast.Module(body=[node], type_ignores=[]), str(SOURCE), "exec"), namespace)
+    return namespace[method_name]
 
 
 class WorkerSafetyTests(unittest.TestCase):
@@ -44,6 +55,31 @@ class WorkerSafetyTests(unittest.TestCase):
         self.assertIn('PRIVATE_CHAT_REQUIRED', source)
         self.assertIn('FILE_ORIGIN_VALIDATION_FAILED', source)
         self.assertIn('automationPaused', source)
+
+    def test_inbound_payload_omits_absent_file_id_but_preserves_caption_file_id(self):
+        inbound = load_method("RuntimeApi", "inbound")
+
+        class FakeApi:
+            config = type("Config", (), {"worker_id": "primary"})()
+
+            def request(self, method, path, payload):
+                self.call = (method, path, payload)
+                return {"accepted": True}
+
+        api = FakeApi()
+        common = {
+            "chat_id": "12345", "sender_id": "12345", "sender_username": "owner",
+            "sender_name": "Owner", "text": "Status update", "message_id": "9050",
+            "is_private": True,
+        }
+        inbound(api, **common)
+        method, path, text_payload = api.call
+        self.assertEqual((method, path), ("POST", "/inbound"))
+        self.assertNotIn("fileId", text_payload)
+        self.assertTrue(text_payload["isPrivate"])
+
+        inbound(api, **common, file_id="file_12345678901234")
+        self.assertEqual(api.call[2]["fileId"], "file_12345678901234")
 
     def test_filename_sanitization_blocks_path_components(self):
         safe_name = load_function("safe_telegram_filename", {"Path": Path})
