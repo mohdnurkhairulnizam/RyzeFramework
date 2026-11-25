@@ -33,6 +33,8 @@ Double-click `Start-Ryze.cmd` in the **installed folder**. It starts OpenCode an
 
 Enter the owner password you set during installation. Keep the address as `127.0.0.1`; do not replace it with the computer's network IP or expose the port to other devices. Logs are under `%LOCALAPPDATA%\RyzeFramework\logs`.
 
+For the synthetic Stage 2 preflight and its separate target-Windows acceptance work, follow the [Stage 2 One-Click Preflight guide](./stage2-one-click-test.md). Use a disposable VM or separate Windows user profile; do not install a test build over your only working Ryze installation.
+
 ## Configure OpenCode + FreeLLMAPI text chat
 
 This step requires your own OpenAI-compatible FreeLLMAPI API base URL, model ID, and unified API key. The correct endpoint depends on your FreeLLMAPI account/service; this package does not guess it. For hosted gateways, use the HTTPS API base URL supplied by that service, including its API path (often `/v1`). HTTP is accepted only for a gateway running on this computer's loopback address.

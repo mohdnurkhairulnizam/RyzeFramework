@@ -50,6 +50,7 @@ import { sqliteMemoryProvider } from "../sqliteMemoryProvider";
 import { buildRetrievalContext, createReviewedMemory, reviewMemory } from "../memoryGovernance";
 import { createPrivateBackup, listPrivateBackups, requestPrivateRestore, runOperationalBaseline } from "../operationalBaseline";
 import { runStage1SelfTest } from "../stage1SelfTest";
+import { runStage2SelfTest } from "../stage2SelfTest";
 import { proposalForDemoAction } from "../actionProposal";
 import { validateFileMetadata, validateGeneratedArtifact } from "../resultValidators";
 import { runProviderFaultSelfTest } from "../providerFaultSelfTest";
@@ -365,6 +366,12 @@ export const ryzeRouter = router({
     runOperationalBaseline(ctx.user.id)
   ),
   stage1SelfTest: protectedProcedure.mutation(() => runStage1SelfTest()),
+  stage2SelfTest: protectedProcedure.mutation(() => {
+    if (!ENV.localMode) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "The Stage 2 preflight is available only in the local Windows build." });
+    }
+    return runStage2SelfTest();
+  }),
   providerFaultSelfTest: protectedProcedure.mutation(() => runProviderFaultSelfTest()),
   privateBackup: protectedProcedure.mutation(() => createPrivateBackup()),
   privateBackups: protectedProcedure.query(() => listPrivateBackups()),

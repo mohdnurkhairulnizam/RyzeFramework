@@ -64,4 +64,44 @@ describe("SQLite MemoryProvider fallback", () => {
     await sqliteMemoryProvider.delete(ownerId, project.id);
     expect(await sqliteMemoryProvider.retrieve(ownerId, project.id)).toBeNull();
   });
+
+  it("stores and retrieves each of the five contract memory types", async () => {
+    const fixtures = [
+      { category: "experience", memoryType: "episodic", content: "Synthetic episode fixture" },
+      { category: "experience", memoryType: "semantic", content: "Synthetic semantic fixture" },
+      { category: "experience", memoryType: "procedural", content: "Synthetic procedure fixture" },
+      { category: "personal", memoryType: "preference", content: "Synthetic preference fixture" },
+      { category: "experience", memoryType: "project", content: "Synthetic project fixture" },
+    ] as const;
+
+    for (const fixture of fixtures) {
+      const stored = await sqliteMemoryProvider.store({ ownerId, ...fixture });
+      const retrieved = await sqliteMemoryProvider.retrieve(ownerId, stored.id);
+      expect(retrieved).toMatchObject({
+        category: fixture.category,
+        memoryType: fixture.memoryType,
+        content: fixture.content,
+        status: "active",
+      });
+    }
+  });
+
+  it("retains the record and archive state across a SQLite close and reopen", async () => {
+    const entry = await sqliteMemoryProvider.store({
+      ownerId,
+      category: "experience",
+      memoryType: "episodic",
+      content: "Synthetic restart persistence fixture",
+    });
+    await sqliteMemoryProvider.archive(ownerId, entry.id);
+
+    await db.closeDb();
+    await db.getDb();
+
+    expect(await sqliteMemoryProvider.retrieve(ownerId, entry.id)).toMatchObject({
+      id: entry.id,
+      content: "Synthetic restart persistence fixture",
+      status: "archived",
+    });
+  });
 });

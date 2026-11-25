@@ -349,6 +349,20 @@ export default function Home() {
       toast.error(mutationError.message);
     },
   });
+  const stage2SelfTest = trpc.ryze.stage2SelfTest.useMutation({
+    onSuccess: result => {
+      setStage2Console(result.consoleText);
+      toast.success(
+        result.ok
+          ? "Stage 2 preflight completed. Windows acceptance remains a separate step."
+          : "Stage 2 preflight found an issue. Review the report."
+      );
+    },
+    onError: mutationError => {
+      setStage2Console(`RYZE STAGE 2 PREFLIGHT FAILED\n\n${mutationError.message}`);
+      toast.error(mutationError.message);
+    },
+  });
   const providerFaultSelfTest = trpc.ryze.providerFaultSelfTest.useMutation({
     onSuccess: result => { setProviderFaultConsole(result.consoleText); toast.success("Provider fault self-test completed. Review the report."); },
     onError: mutationError => { setProviderFaultConsole(`RYZE PROVIDER FAULT SELF-TEST FAILED\n\n${mutationError.message}`); toast.error(mutationError.message); },
@@ -368,6 +382,7 @@ export default function Home() {
   }, [privateBackups.data, selectedPrivateBackup]);
   const [baselineConsole, setBaselineConsole] = useState("");
   const [stage1Console, setStage1Console] = useState("");
+  const [stage2Console, setStage2Console] = useState("");
   const [providerFaultConsole, setProviderFaultConsole] = useState("");
   const updateSettings = trpc.ryze.updateSettings.useMutation({
     onSuccess: async () => {
@@ -664,6 +679,9 @@ export default function Home() {
           runStage1SelfTest={() => stage1SelfTest.mutate()}
           stage1SelfTestRunning={stage1SelfTest.isPending}
           stage1Console={stage1Console}
+          runStage2SelfTest={() => stage2SelfTest.mutate()}
+          stage2SelfTestRunning={stage2SelfTest.isPending}
+          stage2Console={stage2Console}
           runProviderFaultSelfTest={() => providerFaultSelfTest.mutate()}
           providerFaultSelfTestRunning={providerFaultSelfTest.isPending}
           providerFaultConsole={providerFaultConsole}
@@ -1516,6 +1534,9 @@ function SettingsView({
   runStage1SelfTest,
   stage1SelfTestRunning,
   stage1Console,
+  runStage2SelfTest,
+  stage2SelfTestRunning,
+  stage2Console,
   runProviderFaultSelfTest,
   providerFaultSelfTestRunning,
   providerFaultConsole,
@@ -1571,6 +1592,9 @@ function SettingsView({
   runStage1SelfTest: () => void;
   stage1SelfTestRunning: boolean;
   stage1Console: string;
+  runStage2SelfTest: () => void;
+  stage2SelfTestRunning: boolean;
+  stage2Console: string;
   runProviderFaultSelfTest: () => void;
   providerFaultSelfTestRunning: boolean;
   providerFaultConsole: string;
@@ -1806,6 +1830,38 @@ function SettingsView({
                 </div>
                 <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap break-words rounded-xl border border-white/[0.06] bg-[#05070d] p-3 text-[11px] leading-5 text-slate-400">{stage1Console}</pre>
                 <p className="mt-2 text-[11px] text-slate-500">Copy this report here for review. It intentionally excludes secrets and Telegram message contents.</p>
+              </div>
+            ) : null}
+          </section>
+          <section className="rounded-[1.5rem] border border-cyan-300/15 bg-cyan-300/[0.04] p-5">
+            <div className="flex items-center gap-2 text-sm font-semibold text-cyan-100">
+              <ClipboardCheck className="size-4 text-cyan-300" /> Stage 2 acceptance preflight
+            </div>
+            <p className="mt-3 text-xs leading-5 text-slate-400">
+              Runs focused memory, identity, governance, owner-scope, and export tests using synthetic fixtures in a temporary folder. It does not read or change your Ryze database, files, credentials, Telegram session, or backups. Windows restart, ACL, and real backup/restore checks remain separate.
+            </p>
+            <Button
+              onClick={runStage2SelfTest}
+              disabled={!localBuild || stage2SelfTestRunning}
+              className="mt-4 w-full rounded-xl bg-cyan-400/15 text-cyan-100 hover:bg-cyan-400/25"
+            >
+              {stage2SelfTestRunning ? <Loader2 className="mr-2 size-4 animate-spin" /> : <ClipboardCheck className="mr-2 size-4" />}
+              {stage2SelfTestRunning ? "Running isolated tests…" : "Run Stage 2 preflight"}
+            </Button>
+            {stage2Console ? (
+              <div className="mt-5 border-t border-white/[0.08] pt-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-semibold text-slate-200">Stage 2 test log</p>
+                  <Button
+                    variant="outline"
+                    onClick={() => { void navigator.clipboard.writeText(stage2Console); toast.success("Stage 2 test log copied to clipboard."); }}
+                    className="h-8 rounded-lg border-white/10 px-2 text-xs text-slate-200"
+                  >
+                    <Copy className="mr-1.5 size-3.5" /> Copy
+                  </Button>
+                </div>
+                <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap break-words rounded-xl border border-white/[0.06] bg-[#05070d] p-3 text-[11px] leading-5 text-slate-400">{stage2Console}</pre>
+                <p className="mt-2 text-[11px] text-slate-500">Copy the full log and paste it into your review conversation. It is designed to omit secrets and private user content.</p>
               </div>
             ) : null}
           </section>

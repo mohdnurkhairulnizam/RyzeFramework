@@ -30,6 +30,7 @@ import { ENV } from "./_core/env";
 import { buildPortableExport } from "./ryzeExport";
 import { filterOwnedRecords, requireOwnedRecord } from "./ryzeOwnership";
 import { FILE_RETENTION_MS } from "../shared/fileRetention";
+import { ensureStage2SchemaCompatibility } from "./stage2SchemaCompatibility";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 let _sqlite: Database.Database | null = null;
@@ -44,6 +45,7 @@ export async function getDb() {
     _db = drizzle(_sqlite);
     const { migrate } = await import("drizzle-orm/better-sqlite3/migrator");
     migrate(_db, { migrationsFolder: path.resolve(process.cwd(), "drizzle/sqlite") });
+    ensureStage2SchemaCompatibility(_sqlite);
   }
   return _db;
 }

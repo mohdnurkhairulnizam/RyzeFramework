@@ -14,7 +14,7 @@ $nodeMajor = [int](& node -p "Number(process.versions.node.split('.')[0])")
 if ($nodeMajor -lt 22 -or $nodeMajor -ge 25) { throw "Node.js 22 or 24 is required; found $(& node --version)." }
 
 if (Test-Path (Join-Path $InstallDirectory '.env')) {
-  throw "Local configuration already exists at $InstallDirectory. This script will not overwrite it; use the existing installation's upgrade procedure."
+  throw "Local configuration already exists at $InstallDirectory. Install-Ryze.cmd is for first-time installation and will not overwrite it. For an existing installation, extract the ZIP to a temporary folder and run Update-Ryze.cmd. Your current installation and data were not changed."
 }
 if ((Resolve-Path -LiteralPath $SourceDirectory).Path -eq [IO.Path]::GetFullPath($InstallDirectory)) {
   throw 'Extract the ZIP to a temporary folder; do not install over the extracted package.'
