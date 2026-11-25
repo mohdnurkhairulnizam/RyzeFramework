@@ -20,6 +20,9 @@ import {
   ryzeTelegramAccounts,
   ryzeTelegramAccess,
   ryzeTelegramLogs,
+  ryzeIdentityProfiles,
+  ryzeIdentityRevisions,
+  ryzeSystemMemory,
   type User,
   users,
 } from "../drizzle/schema";
@@ -297,17 +300,88 @@ export async function addTaskLog(userId: number, taskId: string, actor: "ryze" |
   await db.insert(ryzeTaskLogs).values({ id: undefined, userId, taskId, sequence, actor, level, message: message.slice(0, 2000) });
 }
 
-export async function addMemory(userId: number, input: { scope: "core" | "evolving"; kind: string; content: string; tags: string[]; outcome?: "SUCCESS" | "FAIL" | "NEUTRAL" }) {
+type MemoryCategory = "system" | "experience" | "personal";
+type MemoryType = "episodic" | "semantic" | "procedural" | "preference" | "project";
+type MemorySensitivity = "normal" | "restricted";
+const MEMORY_SOURCE_SYSTEM_ID = "local-ryze";
+
+export async function addMemory(userId: number, input: {
+  scope: "core" | "evolving"; kind: string; content: string; tags: string[]; outcome?: "SUCCESS" | "FAIL" | "NEUTRAL";
+  category?: Exclude<MemoryCategory, "system">; memoryType?: MemoryType; sourceRef?: string;
+  createdBy?: "owner" | "ryze_candidate_approved" | "system_process";
+}) {
   const db = await requireDb();
+  if ((input.category && !input.memoryType) || (!input.category && input.memoryType)) throw new Error("Memory category and type must be supplied together.");
+  const classified = Boolean(input.category && input.memoryType);
   await db.insert(ryzeMemory).values({
-    id: `mem_${nanoid(14)}`,
-    userId,
-    scope: input.scope,
-    kind: input.kind.slice(0, 64),
-    content: input.content.slice(0, 5000),
-    tags: JSON.stringify(input.tags.slice(0, 12)),
-    outcome: input.outcome ?? "NEUTRAL",
+    id: `mem_${nanoid(14)}`, userId, scope: input.scope, legacyScope: input.scope,
+    category: input.category ?? null, memoryType: input.memoryType ?? null, ownerScope: `owner:${userId}`,
+    sourceSystemId: classified ? MEMORY_SOURCE_SYSTEM_ID : null, branchId: "main", sourceRef: input.sourceRef ?? null,
+    createdBy: input.createdBy ?? (classified ? "system_process" : null), version: classified ? 1 : null,
+    status: classified ? "active" : "legacy_unclassified", sensitivity: "normal", syncStatus: "local",
+    kind: input.kind.slice(0, 64), content: input.content.slice(0, 5000), tags: JSON.stringify(input.tags.slice(0, 12)), outcome: input.outcome ?? "NEUTRAL",
   });
+}
+
+export async function searchClassifiedMemory(userId: number, input: { query?: string; category?: Exclude<MemoryCategory, "system">; memoryType?: MemoryType; limit?: number }) {
+  const db = await requireDb();
+  const terms = (input.query ?? "").trim().split(/\s+/).filter(term => term.length > 2).slice(0, 5);
+  const filters = [eq(ryzeMemory.userId, userId), eq(ryzeMemory.status, "active")];
+  if (input.category) filters.push(eq(ryzeMemory.category, input.category));
+  if (input.memoryType) filters.push(eq(ryzeMemory.memoryType, input.memoryType));
+  if (terms.length) filters.push(like(ryzeMemory.content, `%${terms.join("%")}%`));
+  return db.select().from(ryzeMemory).where(and(...filters)).orderBy(desc(ryzeMemory.updatedAt), desc(ryzeMemory.createdAt)).limit(Math.min(Math.max(input.limit ?? 8, 1), 50));
+}
+
+export async function getRyzeIdentity(userId: number) {
+  const db = await requireDb();
+  const [profile] = await db.select().from(ryzeIdentityProfiles).where(and(eq(ryzeIdentityProfiles.userId, userId), eq(ryzeIdentityProfiles.id, `identity_${userId}`))).limit(1);
+  return profile ?? null;
+}
+
+export async function ensureRyzeIdentity(userId: number) {
+  const db = await requireDb();
+  const existing = await getRyzeIdentity(userId);
+  if (existing) return existing;
+  const profile = { id: `identity_${userId}`, userId, name: "Ryze", role: "single-owner local assistant", description: "A careful local assistant for the owner's approved work.", communicationStyle: "Clear, concise, and explicit about uncertainty and boundaries.", workingPrinciples: "Protect owner data, preserve sources, use bounded actions, and never bypass permissions.", version: 1 } as const;
+  await db.insert(ryzeIdentityProfiles).values(profile);
+  await db.insert(ryzeIdentityRevisions).values({ id: `identity_revision_${userId}_1`, profileId: profile.id, userId: profile.userId, name: profile.name, role: profile.role, description: profile.description, communicationStyle: profile.communicationStyle, workingPrinciples: profile.workingPrinciples, version: profile.version, changedBy: "system_process" });
+  return getRyzeIdentity(userId);
+}
+
+export async function listIdentityRevisions(userId: number) {
+  const db = await requireDb();
+  return db.select().from(ryzeIdentityRevisions).where(eq(ryzeIdentityRevisions.userId, userId)).orderBy(desc(ryzeIdentityRevisions.version));
+}
+
+export async function updateRyzeIdentity(userId: number, input: { name: string; role: string; description: string; communicationStyle: string; workingPrinciples: string }) {
+  const db = await requireDb();
+  const current = await ensureRyzeIdentity(userId);
+  const version = current!.version + 1;
+  const values = { name: input.name.trim().slice(0, 120), role: input.role.trim().slice(0, 240), description: input.description.trim().slice(0, 2000), communicationStyle: input.communicationStyle.trim().slice(0, 2000), workingPrinciples: input.workingPrinciples.trim().slice(0, 4000) };
+  await db.insert(ryzeIdentityRevisions).values({ id: `identity_revision_${userId}_${version}`, profileId: current!.id, userId, ...values, version, changedBy: "owner" });
+  await db.update(ryzeIdentityProfiles).set({ ...values, version, updatedAt: new Date() }).where(and(eq(ryzeIdentityProfiles.id, current!.id), eq(ryzeIdentityProfiles.userId, userId)));
+  return getRyzeIdentity(userId);
+}
+
+export async function createSystemMemory(userId: number, input: { memoryType: MemoryType; content: string; tags: string[]; sourceRef?: string; derivedFrom?: string; sensitivity?: MemorySensitivity }) {
+  const db = await requireDb();
+  const id = `sysmem_${nanoid(14)}`;
+  await db.insert(ryzeSystemMemory).values({ id, userId, memoryType: input.memoryType, content: input.content.slice(0, 5000), tags: JSON.stringify(input.tags.slice(0, 12)), sourceSystemId: MEMORY_SOURCE_SYSTEM_ID, branchId: "main", sourceRef: input.sourceRef ?? null, derivedFrom: input.derivedFrom ?? null, createdBy: "owner", version: 1, status: "active", sensitivity: input.sensitivity ?? "normal", syncStatus: "local" });
+  const [created] = await db.select().from(ryzeSystemMemory).where(and(eq(ryzeSystemMemory.id, id), eq(ryzeSystemMemory.userId, userId))).limit(1);
+  return created!;
+}
+
+export async function searchSystemMemory(userId: number, query?: string) {
+  const db = await requireDb();
+  const terms = (query ?? "").trim().split(/\s+/).filter(term => term.length > 2).slice(0, 5);
+  const where = terms.length ? and(eq(ryzeSystemMemory.userId, userId), eq(ryzeSystemMemory.status, "active"), like(ryzeSystemMemory.content, `%${terms.join("%")}%`)) : and(eq(ryzeSystemMemory.userId, userId), eq(ryzeSystemMemory.status, "active"));
+  return db.select().from(ryzeSystemMemory).where(where).orderBy(desc(ryzeSystemMemory.updatedAt)).limit(20);
+}
+
+export async function listSystemMemory(userId: number) {
+  const db = await requireDb();
+  return db.select().from(ryzeSystemMemory).where(eq(ryzeSystemMemory.userId, userId)).orderBy(desc(ryzeSystemMemory.updatedAt));
 }
 
 export async function searchMemory(userId: number, query: string) {
@@ -460,7 +534,7 @@ export function scopeDashboardData<
   };
 }
 
-export function buildUserScopedExport(userId: number, dashboard: any) {
+export function buildUserScopedExport(userId: number, dashboard: any, stage2?: { identity?: unknown; identityRevisions?: unknown[]; systemMemory?: unknown[] }) {
   const scoped = scopeDashboardData(userId, dashboard);
   return buildPortableExport({
     settings: scoped.settings,
@@ -468,13 +542,19 @@ export function buildUserScopedExport(userId: number, dashboard: any) {
     tasks: scoped.tasks,
     taskLogs: scoped.logs,
     memory: scoped.memory,
+    identity: stage2?.identity,
+    identityRevisions: stage2?.identityRevisions,
+    systemMemory: stage2?.systemMemory,
     skills: scoped.skills,
     files: scoped.files,
   });
 }
 
 export async function exportUserSandbox(userId: number) {
-  return buildUserScopedExport(userId, await getDashboard(userId));
+  const [dashboard, identity, identityRevisions, systemMemory] = await Promise.all([
+    getDashboard(userId), ensureRyzeIdentity(userId), listIdentityRevisions(userId), listSystemMemory(userId),
+  ]);
+  return buildUserScopedExport(userId, dashboard, { identity, identityRevisions, systemMemory });
 }
 
 export async function upsertWorkerHeartbeat(userId: number, input: {

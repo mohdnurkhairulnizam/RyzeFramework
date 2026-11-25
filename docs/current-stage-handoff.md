@@ -30,6 +30,16 @@ Stage 1's open evidence stays visible but does not block beginning Stage 2. Do n
 
 ## Verification and evidence
 
+### Stage 2 Gate 2 implementation checkpoint — 25 November 2026
+
+- The owner approved the exact additive memory/identity migration and repository slice after reviewing the v1 contract.
+- SQLite migration `0005_special_argent` preserves legacy memory IDs, content, tags, outcomes, timestamps, and `core`/`evolving` scope; it adds nullable classification/provenance/version fields without guessing category or type. Ambiguous rows remain searchable as `legacy_unclassified`.
+- Separate owner-scoped Ryze identity/profile revisions and protected System Memory tables are implemented. Identity changes are append/versioned; System Memory has a dedicated repository boundary and is not writable through model output.
+- Explicit safe-memory flows now classify owner preferences as Personal/Preference and task summaries as Experience/Episodic. Portable exports include identity, revisions, and System Memory metadata while continuing to exclude credentials, Telegram sessions, and file bytes.
+- Focused preservation, identity-versioning, protected-memory, and owner-isolation tests were added. Workspace validation passes: TypeScript check, 59 Vitest tests, 9 worker tests, local build, and `git diff --check`. The build retains the existing non-fatal large-chunk warning.
+- This is a Gate 2 implementation slice, not Stage 2 completion. Dashboard management UX, duplicate/conflict review UI, bounded contextual retrieval, export/restore round-trip on target Windows, and all nine Stage 2 acceptance evidence items remain open.
+- The attached advanced-memory proposal is recorded as a gated external-provider evaluation workstream. No Hindsight, MemPalace, ECC, automatic capture, cross-agent sharing, or live skill/intent changes were enabled.
+
 ### Workspace verification — independently run in this sandbox
 
 - `pnpm run check` — PASS.

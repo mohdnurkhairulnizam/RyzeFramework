@@ -1,6 +1,6 @@
 # Stage 2 — Identity and Advanced Memory: Implementation Plan
 
-**Planning status:** The v1 memory and identity contract is defined in [`memory-identity-contract.md`](./memory-identity-contract.md). The implementation plan and migration remain proposed; no code changes are authorized by this document.
+**Planning status:** The v1 memory and identity contract is defined in [`memory-identity-contract.md`](./memory-identity-contract.md). The owner approved the exact additive Gate 2 migration/repository slice on 25 November 2026; that slice is implemented and validated. Owner-confirmation UX, duplicate/conflict review, bounded contextual retrieval, and target-Windows export/restore evidence remain proposed/open.
 **Stage status:** Stage 1 is closed for sequencing as **PARTIAL**; Stage 2 is the next active stage. This does not certify Stage 1 completion or waive its outstanding criteria.
 
 ## Next design decision
@@ -8,6 +8,25 @@
 Review the defined v1 memory and identity contract, then approve the exact additive SQLite migration, owner-confirmation UX, legacy-row handling, and backup/restore test plan before implementation. The contract defines intended behavior; it is not evidence that the schema, APIs, or controls already exist. Do not begin by importing the full Everything Claude Code (ECC) catalog or changing Ryze's agent/skill instructions.
 
 Keep the Telegram request to create a new Markdown file on hold as a Stage 2 capability investigation. Do not modify the live Ryze skill/intent rules until the memory, capability, permission, and rollback boundaries have been reviewed. The backend route already present is not proof that Ryze can understand or safely perform that request.
+
+## Adopted workstream — external memory-provider evaluation (gated)
+
+The owner's attached Stage 2 proposal is adopted as a **Workstream**, not as a new stage and not as authorization to install a provider. It is useful for structured audit, comparison, proof-of-concept, and validation, but it must remain subordinate to this contract and the nine Stage 2 acceptance criteria.
+
+### Milestones and tasks
+
+1. **Architecture audit:** map the current SQLite memory, task/log, ownership, export, OpenCode, and worker boundaries. Retain SQLite as the operational and authoritative store until a measured alternative is approved.
+2. **Candidate research:** inspect Hindsight, MemPalace, and only then other candidates as justified, including source retention, owner/project isolation, local deployment, model/API compatibility, licensing, maintenance, resource use, failure behavior, and integration surface. Published claims are not evidence.
+3. **Isolated proof of concept:** use sanitized representative records and a provider-neutral adapter. Measure persistence, retrieval relevance, source attribution, project isolation, contradiction handling, failure recovery, CPU/RAM, and FreeLLMAPI compatibility. Do not send private production data or replace SQLite.
+4. **Architecture decision:** select retain, defer, or reject for each candidate. A provider may be adopted only if it materially improves retrieval while preserving source records, owner scoping, rollback, and operation when unavailable.
+5. **Validation:** run the existing regression suite plus provider-failure, restart, export/restore, and target-Windows checks. Record actual results and limitations; do not mark Stage 2 complete from a benchmark or provider installation alone.
+
+### Contract corrections to the proposal
+
+- “Automatic memory formation” is not enabled by default. Capture remains explicit, inspectable, and owner-approved under this contract.
+- “Share relevant knowledge between authorised agents” is deferred until ownership, project boundaries, and later multi-agent/branch semantics are defined; it is not a Stage 2 permission to expose Personal Memory.
+- ECC remains a research/reference boundary. No hooks, agents, skills, tools, auto-approval, or production instruction changes are installed as part of this workstream.
+- The unified memory interface is desirable, but it must first wrap the approved Ryze repository and remain provider-neutral; it must not become a second authoritative store.
 
 ## Current baseline
 

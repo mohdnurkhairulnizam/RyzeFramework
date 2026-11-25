@@ -138,6 +138,9 @@ export async function runSafeDemo(
           await addMemory(userId, {
             scope: "core",
             kind: "preference",
+            category: "personal",
+            memoryType: "preference",
+            createdBy: "owner",
             content,
             tags: content
               .toLowerCase()
@@ -223,6 +226,10 @@ export async function runSafeDemo(
     await addMemory(userId, {
       scope: "evolving",
       kind: "task_summary",
+      category: "experience",
+      memoryType: "episodic",
+      createdBy: "system_process",
+      sourceRef: task.id,
       content: summary,
       tags: [action, skillDomain],
       outcome: "SUCCESS",

@@ -6,6 +6,9 @@ export type PortableExport = {
   tasks: unknown[];
   taskLogs: unknown[];
   memory: unknown[];
+  identity?: unknown;
+  identityRevisions?: unknown[];
+  systemMemory?: unknown[];
   skills: unknown[];
   files: unknown[];
   localization: {
@@ -25,6 +28,7 @@ export function buildPortableExport(data: Omit<PortableExport, "schemaVersion" |
         "Import this JSON into the local PROJECT RYZE migration utility.",
         "Copy referenced files using the file manifest; file bytes are kept outside the database.",
         "Provider and integration flags export as disabled. Configure any computer secrets locally rather than copying hosted credentials.",
+        "Identity revisions and protected System Memory are included; credentials, Telegram sessions, and file bytes are excluded.",
       ],
     },
   };
