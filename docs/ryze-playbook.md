@@ -3,7 +3,7 @@
 A simple user manual for installing, starting, using, verifying, and troubleshooting RyzeFramework. This is a living document and will be updated progressively as new features are completed.
 
 **Current revision:** `Stage 1 bounded Telegram file transfer`
-**Current stage:** Stage 1 remains partial. Bounded Telegram file receipt, opt-in Markdown/text analysis, same-chat file sending, and generated-note delivery are implemented and sandbox-tested. The new file path has not yet been tested on the target Windows/Telegram installation.
+**Current stage:** Stage 1 remains partial. Bounded Telegram file receipt, opt-in Markdown/text analysis, same-chat file sending, and generated-note delivery are implemented. The owner first reported a file-receipt **FAIL** on ZIP `99112b4`, then reports file receipt works with or without accompanying text and a receipt acknowledgment was returned (**owner-reported PASS; tested package version unknown**). The owner also reports the same-chat file-sending test verified successful (**owner-reported PASS; tested build unknown**). Plain-text-only messages remain undetected (**FAIL, owner-reported**); dashboard event/task status is unknown. The server now accepts the previous stable text worker's legacy payload only when chat and sender IDs match; workspace regression tests pass. The owner must test corrected text ingress and recheck file send on the corrected package. File analysis and generated-note delivery remain **NOT_RUN**.
 
 Use the three project documents this way:
 
@@ -32,7 +32,7 @@ RyzeFramework is currently a local Windows application with:
 
 A successful chat response is evidence of the text-chat path only. It is not evidence that Ryze can safely plan and execute arbitrary real-world operations.
 
-**Latest evidence:** The owner reports PASS for the target-Windows baseline, Telegram sender/worker controls, backup/restore, acknowledgement-mismatch and provider-failure checks. The latter two are owner-reported and have not been independently verified here. Sandbox tests pass for the new file-transfer path, but actual Telegram file receive/analysis/send on target Windows remains `NOT_RUN`. The retained 24 November 18:33 self-test is unchanged and shows its own Gate 1/5/8 `NOT_RUN` and Gate 7 `WARN` results.
+**Latest evidence:** The owner reports PASS for the target-Windows baseline, Telegram sender/worker controls, backup/restore, acknowledgement-mismatch and provider-failure checks. The latter two are owner-reported and have not been independently verified here. File receipt initially failed on `99112b4`; later the owner reports receipt with or without accompanying text and a receipt acknowledgment (**owner-reported PASS; package unknown**), plus successful same-chat file sending (**owner-reported PASS; build unknown**). Plain-text-only detection remains **FAIL (owner-reported)**. Workspace tests cover legacy text API compatibility and the server-side file send/download/ack contract. Retest the corrected text fix and file-send path on the corrected package; file analysis and generated-note delivery remain **NOT_RUN**. The retained 24 November 18:33 self-test is unchanged and shows its own Gate 1/5/8 `NOT_RUN` and Gate 7 `WARN` results.
 
 ## 2. What is available now
 
@@ -58,8 +58,8 @@ Use this procedure whenever a new ZIP or revision is received.
 
 ### 3.1 Prepare safely
 
-1. Keep the current installation running only if you need to export or back it up.
-2. Use `Stop-Ryze.cmd` before updating or backing up.
+1. If the Telegram worker is running, select **Stop worker** in the dashboard. If you started it manually in a terminal, press `Ctrl+C` in that worker terminal.
+2. Use `Stop-Ryze.cmd` before updating or backing up. The updater also stops any orphaned Telethon worker process that belongs to this Ryze installation.
 3. Create a backup before replacing an existing installation.
 4. Never send `.env`, passwords, API keys, SQLite files, Telegram session files, or backup archives in chat.
 5. Extract the new ZIP to a temporary folder. Do not extract it directly over the installed program.
@@ -80,14 +80,14 @@ For an existing installation, use the update procedure below rather than running
 
 ### 3.3 Existing installation update test
 
-1. Run `Stop-Ryze.cmd` from the installed folder.
-2. Create a backup with `Backup-Ryze.cmd`.
-3. Extract the new ZIP to a temporary folder.
-4. Run `Update-Ryze.cmd` from that extracted folder.
-5. Confirm the updater preserves the existing `.env`, database, local files, and logs.
-6. Run `Start-Ryze.cmd` from `%LOCALAPPDATA%\Programs\RyzeFramework`.
-7. Sign in with the existing owner password.
-8. Confirm previous sessions, tasks, and file metadata remain visible.
+1. Stop the Telegram worker from the dashboard if it is running.
+2. Run `Stop-Ryze.cmd` from the installed folder.
+3. Create a backup with `Backup-Ryze.cmd`.
+4. Extract the new ZIP to a temporary folder.
+5. Run `Update-Ryze.cmd` from that extracted folder.
+6. Confirm the updater preserves the existing `.env`, database, local files, and logs.
+7. Run `Start-Ryze.cmd` from `%LOCALAPPDATA%\Programs\RyzeFramework` and sign in with the existing owner password.
+8. Confirm previous sessions, tasks, and file metadata remain visible. Then explicitly start Telegram receiving from the dashboard.
 
 ### 3.4 Run the one-button operational baseline
 
@@ -192,7 +192,9 @@ Run these checks in order on the installed Windows computer. Do not send or past
 
 **Physical backup and restore:** Stop Ryze, select **Create private backup**, and note only the displayed backup name. Confirm the backup manifest reports the database/configuration and, when Telegram is configured, worker configuration/session entries. Select that backup and choose **Restore selected backup**. Start Ryze once so the managed launcher applies the restore. Confirm owner login, one previous task, one file entry, Telegram account status, and worker authorization. Do not delete the pre-restore folder until these checks pass. If anything fails, stop Ryze and restore the preserved `Ryze-pre-restore-*` copy through the same controlled process.
 
-**Generated file retrieval and Telegram delivery:** In the dashboard, submit `Create a briefing note about the supplied topic`, open **File manifest**, and download the generated Markdown file. Confirm its name, type, and size and that it opens as Markdown. In Telegram, an authorized private-chat request for an eligible briefing note can queue that generated Markdown file back to the originating chat. To return a received file, ask `Send me the latest file back`; delivery is restricted to the same authorized private chat. The worker verifies the bytes and destination before acknowledging the Telegram send. These paths are implemented, but target-Windows/live Telegram tests are still `NOT_RUN`; a text reply alone does not prove file delivery.
+**Receipt/reply retest:** The owner first reported that ZIP `99112b4` produced no Telegram detection, log, or receipt (**FAIL, not independently verified**), then reports file receipt works with or without accompanying text and a receipt acknowledgment was returned (**PASS, owner-reported; exact package version unknown**). The owner also reports the same-chat file-sending test verified successful (**PASS, owner-reported; build unknown**). Plain-text-only messages remain undetected (**FAIL, owner-reported**). Code review found that the previous stable text worker omitted `isPrivate`, which the newer server required; the API now safely accepts that legacy shape only when chat and sender IDs are identical. This passes automated regression tests but still needs target-Windows verification. On retest, record the package version, stop/update/start the worker, then send one harmless text-only message before file-only and file-with-caption messages. Confirm event/log/task, file metadata/storage, and replies separately. Retest file send on that corrected build and retain only sanitized diagnostics.
+
+**Generated file retrieval and Telegram delivery:** In the dashboard, submit `Create a briefing note about the supplied topic`, open **File manifest**, and download the generated Markdown file. Confirm its name, type, and size and that it opens as Markdown. In Telegram, an authorized private-chat request for an eligible briefing note can queue that generated Markdown file back to the originating chat. To return a received file, ask `Send me the latest file back`; delivery is restricted to the same authorized private chat. The worker verifies the bytes and destination before acknowledging the Telegram send. These paths remain **NOT_RUN** on target Windows/live Telegram pending a successful corrected-package receipt; a text reply alone does not prove file delivery.
 
 **Final self-test:** Open **Settings → Stage 1 acceptance self-test → Run Stage 1 self-test**, select **Copy**, and paste the complete non-secret report into the project review. The expected report should show runtime schema `v1`, an explicit model selector such as `auto`, a PASS for the structured safe-action boundary, and no secret values. A `NOT_RUN` or `WARN` for provider fault injection, physical restore, or file delivery must remain documented rather than being treated as a PASS.
 

@@ -10,11 +10,11 @@ This checklist turns the origin blueprint and current repository status into an 
 - [x] Autonomous Telegram same-chat replies are implemented without per-message approval; server checks, durable reply keys, content hashing, and Telegram acknowledgement validation remain enforced.
 - [x] Build a Windows installer/launcher/stop/backup package using local SQLite and a protected local file directory.
 - [x] Add a first-run scrypt owner password, localhost/Origin checks, rate limiting, and Windows install/backup guidance.
-- [x] Current feature branch passes TypeScript check, 49 Vitest tests across 18 files, 8 Python worker tests, local production build, and `git diff --check`; target-Windows file-transfer verification remains separate.
+- [x] Current local corrective branch passes TypeScript check, 51 Vitest tests across 18 files, 8 Python worker tests, local production build, and `git diff --check`; target-Windows text/file-transfer verification remains separate.
 - [x] Install the latest ZIP on the target Windows computer, repair ACLs on existing SQLite database/WAL/SHM files without deleting contents, sign in, and reach the Ryze dashboard.
 - [x] Complete one harmless model-backed text chat from the target Windows dashboard through OpenCode and the local FreeLLMAPI gateway; general OpenCode tool execution remains disabled.
 - [x] Configure the local gateway at `http://127.0.0.1:31415/v1` and receive a completed model reply. The exact model ID and upstream provider route were not recorded; no API key is stored in Git.
-- [x] Telegram inbound and bounded same-chat paths are implemented. The owner reports earlier same-chat, pause/restart/replay, recovery, backup/restore, and failure checks PASS; acknowledgement mismatch and provider failure are specifically owner-reported PASS, not independently verified here. New Telegram file receipt/send has workspace tests but no target-Windows/live Telegram evidence.
+- [x] Telegram inbound and bounded same-chat paths are implemented. The owner reports earlier same-chat, pause/restart/replay, recovery, backup/restore, and failure checks PASS; acknowledgement mismatch and provider failure are specifically owner-reported PASS, not independently verified here. The owner now reports file receipt works with or without accompanying text and the same-chat file-sending test succeeded (tested package/build unknown), while text-only messages remain undetected. A safe legacy text-payload compatibility fix and regression test pass in workspace; corrected-build Windows verification remains pending. File-send API/download/ack integration also passes workspace tests.
 - [x] Manual owner approval was intentionally removed for the approved same-chat scope; pause/stop, eligibility, duplicate, and result-validation controls remain required.
 - [ ] All nine Stage 1 origin completion criteria pass in the intended deployment environment.
 
@@ -23,7 +23,7 @@ This checklist turns the origin blueprint and current repository status into an 
 - [x] Confirm the execution target and local data architecture: the owner selected the target Windows computer; this package uses local SQLite and a local files directory, so it does not require hosted database/object storage endpoints.
 - [x] Document supported installer runtimes: 64-bit Windows 10+, Node.js 22 or 24 LTS, pnpm 10.18.0. The optional Python/Telethon worker is not installed by this ZIP.
 - [x] Owner reports target-Windows operational baseline, repeat start/stop, backup/restore, and ACL checks as PASS. Confirm any remaining runtime-version or newly-created-file ACL checks from retained evidence before closing deployment validation.
-- [x] A reviewed rollback baseline exists at `stable-merge` commit `e8e7660`; this feature branch is intentionally uncommitted and has not been pushed.
+- [x] A reviewed rollback baseline exists at `stable-merge` commit `e8e7660`; `feature/telegram-file-transfer` is the authorized delivery branch. Track the final corrective commit and tested-package revision in the delivery record.
 - [x] Inventory local installer settings without reading secret values; keep the generated `.env`, database, file bytes, and Telegram session data out of Git.
 - [x] Document local config/data paths, Windows account ACLs, stop-before-backup steps, and a database/files/config backup helper in `docs/windows-installation.md`.
 - [x] Add a dashboard **Create private backup** action that creates a protected recovery copy without running diagnostic test records.

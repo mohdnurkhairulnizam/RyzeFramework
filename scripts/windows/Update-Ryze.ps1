@@ -23,6 +23,20 @@ foreach ($pidName in @('ryze.pid', 'opencode.pid')) {
   }
 }
 
+$WorkerEntry = [IO.Path]::GetFullPath((Join-Path $InstallDirectory 'worker\ryze_telegram_worker.py'))
+$workerProcesses = @(Get-CimInstance Win32_Process | Where-Object {
+  $_.Name -match '^pythonw?\.exe$' -and $_.CommandLine -and
+  $_.CommandLine.IndexOf($WorkerEntry, [StringComparison]::OrdinalIgnoreCase) -ge 0
+})
+foreach ($workerProcess in $workerProcesses) {
+  Write-Host "Stopping the existing Ryze Telegram worker (PID $($workerProcess.ProcessId)) before replacing worker code."
+  Stop-Process -Id $workerProcess.ProcessId -Force -ErrorAction Stop
+  try { Wait-Process -Id $workerProcess.ProcessId -Timeout 10 -ErrorAction SilentlyContinue } catch { }
+  if (Get-Process -Id $workerProcess.ProcessId -ErrorAction SilentlyContinue) {
+    throw "Telegram worker PID $($workerProcess.ProcessId) could not be stopped; no application files were updated."
+  }
+}
+
 Write-Host 'This update replaces application code only. It preserves the installed .env, SQLite database, local files, and logs.'
 Write-Host 'Back up Ryze first if you have not done so recently.' -ForegroundColor Yellow
 $excludeDirs = @(

@@ -55,7 +55,8 @@ const inboundSchema = z.object({
   senderName: z.string().trim().max(160).default(""),
   text: z.string().trim().min(1).max(5000),
   messageId: z.string().trim().regex(/^\d{1,32}$/),
-  isPrivate: z.boolean(),
+  // The stable pre-file worker omitted this field. Infer private only for a 1:1 Telegram chat below.
+  isPrivate: z.boolean().optional(),
   fileId: fileIdSchema.optional(),
 });
 const eventSchema = z.object({
@@ -359,7 +360,8 @@ export function registerWorkerRoutes(app: Express) {
     const input = inboundSchema.safeParse(parsePayload(req.body));
     if (!input.success) return void jsonError(res, 400, "INVALID_INBOUND", "Inbound Telegram message is invalid.");
     const userId = await ownerId();
-    if (!input.data.isPrivate || input.data.chatId !== input.data.senderId) {
+    const isPrivate = input.data.isPrivate ?? input.data.chatId === input.data.senderId;
+    if (!isPrivate || input.data.chatId !== input.data.senderId) {
       await addTelegramLog(userId, { direction: "system", telegramUserId: input.data.senderId, chatId: input.data.chatId, messagePreview: "Telegram message ignored because Stage 1 accepts private chats only.", status: "ignored-non-private" });
       return void res.status(202).json({ accepted: false, ignored: true });
     }

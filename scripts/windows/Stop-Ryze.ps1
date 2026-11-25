@@ -3,6 +3,20 @@ $DataRoot = Join-Path $env:LOCALAPPDATA 'RyzeFramework'
 $RyzePidFile = Join-Path $DataRoot 'ryze.pid'
 $OpenCodePidFile = Join-Path $DataRoot 'opencode.pid'
 $stopped = @()
+$InstallRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$WorkerEntry = [IO.Path]::GetFullPath((Join-Path $InstallRoot 'worker\ryze_telegram_worker.py'))
+$workerProcesses = @(Get-CimInstance Win32_Process | Where-Object {
+  $_.Name -match '^pythonw?\.exe$' -and $_.CommandLine -and
+  $_.CommandLine.IndexOf($WorkerEntry, [StringComparison]::OrdinalIgnoreCase) -ge 0
+})
+foreach ($workerProcess in $workerProcesses) {
+  Stop-Process -Id $workerProcess.ProcessId -Force -ErrorAction Stop
+  try { Wait-Process -Id $workerProcess.ProcessId -Timeout 10 -ErrorAction SilentlyContinue } catch { }
+  if (Get-Process -Id $workerProcess.ProcessId -ErrorAction SilentlyContinue) {
+    throw "Telegram worker PID $($workerProcess.ProcessId) could not be stopped."
+  }
+  $stopped += 'Telegram worker'
+}
 
 if (Test-Path $RyzePidFile) {
   $targetPid = 0

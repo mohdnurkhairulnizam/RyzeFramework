@@ -70,6 +70,33 @@ async function uploadFile(overrides: Record<string, string> = {}, body = Buffer.
 }
 
 describe("Telegram file transfer boundary", () => {
+  it("accepts stable text-only worker payloads without weakening the private-chat boundary", async () => {
+    const endpoint = `${baseUrl}/api/worker/v1/inbound`;
+    const legacy = {
+      workerId: "primary", chatId: "12345", senderId: "12345", senderUsername: "owner",
+      senderName: "Owner", text: "Give me a brief status update.", messageId: "9020",
+    };
+    const restored = await fetch(endpoint, {
+      method: "POST", headers: { ...auth, "Content-Type": "application/json" }, body: JSON.stringify(legacy),
+    });
+    expect(restored.status).toBe(202);
+    expect(await restored.json()).toMatchObject({ accepted: true, replyQueued: true });
+
+    const mismatchedChat = await fetch(endpoint, {
+      method: "POST", headers: { ...auth, "Content-Type": "application/json" },
+      body: JSON.stringify({ ...legacy, chatId: "98765", messageId: "9021" }),
+    });
+    expect(mismatchedChat.status).toBe(202);
+    expect(await mismatchedChat.json()).toMatchObject({ accepted: false, ignored: true });
+
+    const explicitlyNonPrivate = await fetch(endpoint, {
+      method: "POST", headers: { ...auth, "Content-Type": "application/json" },
+      body: JSON.stringify({ ...legacy, messageId: "9022", isPrivate: false }),
+    });
+    expect(explicitlyNonPrivate.status).toBe(202);
+    expect(await explicitlyNonPrivate.json()).toMatchObject({ accepted: false, ignored: true });
+  });
+
   it("stores only authorized private-chat file bytes with immutable source binding", async () => {
     const unauthorized = await uploadFile({ "X-Ryze-Sender-Id": "98765", "X-Ryze-Chat-Id": "98765", "X-Ryze-Message-Id": "9000" });
     expect(unauthorized.status).toBe(202);
@@ -98,6 +125,24 @@ describe("Telegram file transfer boundary", () => {
     expect(await duplicate.json()).toMatchObject({ accepted: true, duplicate: true, fileId: received.fileId });
     const unsupported = await uploadFile({ "X-Ryze-File-Name": "virus.exe", "X-Ryze-Mime-Type": "application/octet-stream", "X-Ryze-Message-Id": "9003" });
     expect(unsupported.status).toBe(415);
+  });
+
+  it("keeps captioned-file receipt and its linked private text request working", async () => {
+    const upload = await uploadFile({ "X-Ryze-Message-Id": "9030", "X-Ryze-Has-Caption": "true" });
+    expect(upload.status).toBe(202);
+    const received = await upload.json() as { accepted: boolean; fileId: string };
+    expect(received.accepted).toBe(true);
+
+    const caption = await fetch(`${baseUrl}/api/worker/v1/inbound`, {
+      method: "POST", headers: { ...auth, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        workerId: "primary", chatId: "12345", senderId: "12345", senderUsername: "owner",
+        senderName: "Owner", text: "Please summarize the content of this file.", messageId: "9030",
+        isPrivate: true, fileId: received.fileId,
+      }),
+    });
+    expect(caption.status).toBe(202);
+    expect(await caption.json()).toMatchObject({ accepted: true, replyQueued: true });
   });
 
   it("serves only the command-bound bytes and accepts exact same-chat delivery acknowledgements once", async () => {

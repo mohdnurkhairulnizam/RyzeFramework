@@ -3,8 +3,8 @@
 **Status date:** 25 November 2026
 **Working branch:** `feature/telegram-file-transfer`
 **Base:** verified `stable-merge` baseline `e8e7660`
-**Branch state:** pushed to `origin/feature/telegram-file-transfer`; ready for owner-run target-Windows verification.
-**Stage disposition:** Stage 1 is still **PARTIAL**, not operationally complete. The owner will run the new file-receipt and same-chat return tests on the target Windows computer using the update ZIP prepared from this branch.
+**Branch state:** `feature/telegram-file-transfer` contains the validated release candidate with backward-compatible text ingress, regression tests, and scoped worker shutdown before update. The package is intended for target-laptop testing; use the delivery record/Git history for the exact commit and artifact identity.
+**Stage disposition:** Stage 1 is still **PARTIAL**, not operationally complete. The owner first reported that the `99112b4` update failed to detect/log/receive a file (**FAIL**). The owner later reports file receipt works with or without accompanying text and that a receipt acknowledgment was returned (**owner-reported PASS for receipt; tested package version unknown**). The owner also reports the same-chat file-sending test was verified successful (**owner-reported PASS; exact package/build not captured**). Plain-text-only messages are still not detected (**FAIL, owner-reported**); dashboard log/task status is unknown. The corrected candidate has workspace regression coverage, but requires a controlled target-laptop retest.
 
 ## Read first
 
@@ -29,7 +29,7 @@
 ### Workspace verification — independently run in this sandbox
 
 - `pnpm run check` — PASS.
-- `pnpm test` — PASS, 49 tests across 18 files (including file-transfer integration tests).
+- `pnpm test` — PASS, 51 tests across 18 files (including restored legacy text-ingress compatibility, captioned-file, and file-transfer integration tests).
 - `pnpm run worker:test` — PASS, 8 Python worker tests.
 - `pnpm run build:local` — PASS; the existing large JavaScript chunk warning remains non-fatal.
 - `git diff --check` — PASS.
@@ -45,7 +45,8 @@ The retained [`24 November 18:33 acceptance self-test`](./evidence/stage1-accept
 ### Telegram file path
 
 - Receipt, source binding, command-bound download, integrity checks, and acknowledgement validation pass automated workspace tests.
-- **Target-Windows Telegram file receive, file-content analysis, same-chat file send, and generated-note delivery are NOT_RUN.** No live Telegram or target-Windows file test was performed in this workspace.
+- **Receipt/send chronology:** the owner first reported no detection, log, or receipt using the `99112b4` update ZIP (**FAIL**); the owner now reports file receipt works with or without accompanying text and a receipt acknowledgment was returned (**PASS for receipt, owner-reported; tested package/version unknown**). The owner also reports the same-chat file-sending test successful (**PASS, owner-reported; build/version unknown**). Caption text processing, dashboard logs, and stored metadata were not independently inspected. **Text-only inbound detection: FAIL (owner-reported);** dashboard event/task status is unknown. File analysis and generated-note delivery remain **NOT_RUN**.
+- **Compatibility correction:** the previous stable text worker omitted `isPrivate`, which the newer API had made mandatory. The API now accepts a missing flag only for a matching one-to-one chat/sender ID; explicit non-private and mismatched-ID cases remain ignored. The regression tests pass. This is a plausible compatibility fix, not target-Windows proof. Scoped worker shutdown remains a separate update-lifecycle safeguard. The server-side same-chat file-send/download/ack integration test passes.
 
 ## Recommended bounded task-execution decision
 
@@ -53,10 +54,10 @@ The owner needs to decide whether one safe, end-to-end Markdown-summary task is 
 
 ## Next actions
 
-1. On target Windows, install the reviewed package for this branch through the normal update procedure and confirm the additive SQLite migration applies without replacing live data.
-2. In one authorized private chat, test receiving a small `.md` file and request its summary. Confirm the task status/result and same-chat response; note that the configured provider receives the content for this explicit request.
-3. Separately request that Ryze send the latest received file back. Verify same-chat destination, delivered file, and worker acknowledgement. Also test generated Markdown-note delivery if that is part of the claimed path.
+1. Use the separately named corrected Windows package delivered with this revision and confirm its version/checksum; update normally, confirm the updater stops the Ryze-owned worker, and confirm existing configuration/data remain intact.
+2. Restart the Telegram worker and send one harmless text-only message first. Confirm an incoming event/log/task and reply; if it still fails, record worker status (running/paused/offline) and sanitized non-secret worker/API errors. Do not share credentials or message contents. Then test file-only and file-with-caption receipt separately, recording receipt and caption-task behavior independently.
+3. Re-run the same-chat file-send test on the corrected package (the owner reports a successful send on an unspecified build); verify destination, actual delivered file, and worker acknowledgement. Also test generated Markdown-note delivery if that is part of the claimed path.
 4. Retain non-secret, timestamped evidence. Label the outcomes owner-reported until independently reviewed; do not change the preserved self-test report.
 5. Define file retention/deletion behavior and complete any remaining Stage 1 operational evidence before declaring Stage 1 complete or starting Stage 2.
 
-Do not mark Stage 1 operational from the sandbox tests or architecture statements alone. Do not commit or push unless the owner asks. Keep credentials, API keys, worker tokens, recovery codes, Telegram session files, and backup contents out of Git and support messages.
+Do not mark Stage 1 operational from the sandbox tests or architecture statements alone. The owner authorized committing and pushing the validated correction on this feature branch. Record the resulting branch commit and package SHA-256 in the delivery response, and keep credentials, API keys, worker tokens, recovery codes, Telegram session files, and backup contents out of Git and support messages.
