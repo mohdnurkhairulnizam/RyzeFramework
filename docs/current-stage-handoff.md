@@ -3,12 +3,12 @@
 **Status date:** 25 November 2026
 **Working branch:** `feature/telegram-file-transfer`
 **Base:** verified `stable-merge` baseline `e8e7660`
-**Branch state:** `feature/telegram-file-transfer` is pushed through `f3f15fb` (`fix(telegram): restore legacy text ingress compatibility`). That change accepts legacy text payloads without `isPrivate` only when chat and sender IDs match; its regression tests pass in workspace. The owner's latest report says text-only messages still are not received, so this change is **not a confirmed fix** and root cause remains open.
-**Stage disposition:** Stage 1 remains **PARTIAL**. Latest owner report: on the latest version tested, text-only Telegram messages still are not received (**FAIL, owner-reported**), while file messages are received successfully both with and without accompanying text (**PASS, owner-reported**). The exact installed commit/package was not captured in the report. The owner previously reported same-chat file sending successful (**PASS, owner-reported; tested build unknown**). Preserve these as separate outcomes; file receipt does not prove plain-text ingress works.
+**Branch state:** `feature/telegram-file-transfer` is pushed through `d35b770b357c3d81660951be2ff533976d591e06` (`fix(telegram): omit absent file id on text ingress`). The root cause was that text-only worker requests serialized `fileId: null`, which the API schema rejects as `400 INVALID_INBOUND`; the worker now omits `fileId` only when there is no attachment. A real file ID is still included for captioned-file processing. Focused regression tests and workspace checks pass.
+**Stage disposition:** Stage 1 remains **PARTIAL**. The owner now reports text-only ingress and file-reading feedback **PASS (owner-reported)** after the corrected Windows package was provided; the attached conversation excerpt shows a request to read/explain `README.md` and a returned summary. The installed commit/checksum was not explicitly echoed, so association with `d35b770` is by chronology and is not independently verified. File receipt with and without accompanying text remains **PASS (owner-reported)**. Same-chat file-send success was reported previously on a build not identified; the latest excerpt shows a file-return request/confirmation but does not independently verify attachment bytes. Keep these outcomes distinct.
 
-## Immediate continuation task — fix text-only Telegram ingress
+## Immediate continuation task — close the remaining Stage 1 evidence
 
-The next agent should clone/pull `feature/telegram-file-transfer`, read this handoff, and investigate **only the unresolved plain-text inbound path first**. Do not treat the `isPrivate` compatibility change in `f3f15fb` as sufficient: the latest owner report says text-only receipt still fails. Compare the known-good stable text path (`stable-merge` baseline `e8e7660`) with the feature branch and trace one ordinary private text message through Telethon event selection, worker payload construction, authenticated API route/schema, sender authorization, task/log creation, and reply queueing. Identify the actual drop/failure point before changing code. Add focused tests for the real worker payload and route behavior; use sanitized diagnostics only, never message bodies or secrets. Keep file receipt intact: owner-reported receipt succeeds for both file-only and file-with-caption messages. Make the smallest evidence-driven fix, run the relevant checks, then prepare a new laptop-test package only after a code fix is ready. Do not claim the issue fixed until the owner verifies text-only receipt on that package.
+The text-only ingress regression is fixed in `d35b770` and the owner reports successful text-only file feedback on Windows. The fix omits `fileId` when absent; it does not alter file upload, receipt, delivery, download, or acknowledgement handling. The updated source package and evidence are recorded in [`Stage 1 Windows text-ingress/file-feedback evidence`](./evidence/stage1-windows-text-ingress-file-feedback-2026-11-25.md). Capture the installed package identity if available. Next, verify the actual same-chat file return and any remaining Stage 1 acceptance scenarios on the target system; separately complete generated-note delivery, retention/deletion, operational/failure/rollback evidence, and the other completion gates. Never include message bodies or secrets in diagnostics.
 
 ## Read first
 
@@ -33,8 +33,8 @@ The next agent should clone/pull `feature/telegram-file-transfer`, read this han
 ### Workspace verification — independently run in this sandbox
 
 - `pnpm run check` — PASS.
-- `pnpm test` — PASS, 51 tests across 18 files (including restored legacy text-ingress compatibility, captioned-file, and file-transfer integration tests).
-- `pnpm run worker:test` — PASS, 8 Python worker tests.
+- `pnpm test` — PASS, 51 tests across 18 files (including the text-only `fileId` null regression, captioned-file, and file-transfer integration tests).
+- `pnpm run worker:test` — PASS, 9 Python worker tests.
 - `pnpm run build:local` — PASS; the existing large JavaScript chunk warning remains non-fatal.
 - `git diff --check` — PASS.
 
@@ -44,13 +44,15 @@ These are sandbox checks. They do not establish behavior on the target Windows i
 
 The owner reports PASS for the previously exercised same-chat Telegram reply, pause/resume, unauthorized sender rejection, temporary recovery-code authorization and expiry, worker stop/start replay and duplicate-event handling, controlled failure handling, physical backup/restore including Telegram session recovery, and provider-related checks. The owner specifically requested that Telegram acknowledgement-mismatch and provider-failure evidence be recorded as **PASS (owner-reported; not independently verified here)**. The deterministic dashboard provider-fault simulation is a separate local simulation PASS, not live-provider evidence.
 
+The owner now reports text-only ingress and file-reading feedback as **PASS (owner-reported)** after the `d35b770` update package was provided. The attached excerpt records a request to explain `README.md` and a returned response. The exact installed commit/checksum was not echoed; see the linked Windows evidence addendum and preserve this qualification.
+
 The retained [`24 November 18:33 acceptance self-test`](./evidence/stage1-acceptance-self-test-2026-11-24-183302.txt) is unchanged and remains authoritative for what that report actually tested: it records Gate 1 and Gate 5 as `NOT_RUN`, Gate 7 as `WARN`, and Gate 8 as `NOT_RUN`. These statuses are not overwritten by later owner-reported results; preserve the difference between the report's timestamped outcomes, owner reports, and independent sandbox tests.
 
 ### Telegram file path
 
 - Receipt, source binding, command-bound download, integrity checks, and acknowledgement validation pass automated workspace tests.
-- **Receipt/send chronology:** the owner first reported no detection, log, or receipt using the `99112b4` update ZIP (**FAIL**); the owner now reports file receipt works with or without accompanying text and a receipt acknowledgment was returned (**PASS for receipt, owner-reported; tested package/version unknown**). The owner also reports the same-chat file-sending test successful (**PASS, owner-reported; build/version unknown**). Caption text processing, dashboard logs, and stored metadata were not independently inspected. **Text-only inbound detection: FAIL (owner-reported);** dashboard event/task status is unknown. File analysis and generated-note delivery remain **NOT_RUN**.
-- **Compatibility correction:** the previous stable text worker omitted `isPrivate`, which the newer API had made mandatory. The API now accepts a missing flag only for a matching one-to-one chat/sender ID; explicit non-private and mismatched-ID cases remain ignored. The regression tests pass. This is a plausible compatibility fix, not target-Windows proof. Scoped worker shutdown remains a separate update-lifecycle safeguard. The server-side same-chat file-send/download/ack integration test passes.
+- **Receipt/send chronology:** the owner first reported no detection, log, or receipt using the `99112b4` update ZIP (**FAIL**); the owner later reported file receipt with and without accompanying text (**PASS, owner-reported; tested package/version then unknown**). Same-chat file sending was also previously reported **PASS** on a build not identified. The latest owner report confirms text-only ingress and file-reading feedback **PASS (owner-reported)** after the `d35b770` package was supplied; exact installed package identity is not independently confirmed. The pasted excerpt contains file-return confirmation text, but does not independently verify attachment bytes/destination. Generated-note delivery remains **NOT_RUN**.
+- **Root cause and fix:** text-only worker payloads included `fileId: null`; Zod's optional-but-not-nullable file ID schema returned `400 INVALID_INBOUND` before application logging, task creation, or reply queueing. Commit `d35b770` omits the key only when there is no file; captioned-file requests keep their real ID. Regression tests exercise both payload forms, the API's `null` rejection, current text-only acceptance, and existing file paths. No separate bridge was added and the file-transfer implementation was not changed.
 
 ## Recommended bounded task-execution decision
 
@@ -58,10 +60,10 @@ The owner needs to decide whether one safe, end-to-end Markdown-summary task is 
 
 ## Next actions
 
-1. Diagnose and fix the text-only Telegram receive failure as described above. First establish the exact failure point; do not make another speculative schema-only change.
-2. Protect and regression-test the working file-only and file-with-caption receipt paths, and preserve the existing same-chat file-send/download/ack behavior.
-3. Run workspace validation, push the corrective source change to `feature/telegram-file-transfer`, and only then create a distinct Windows test package for the owner. Record its exact commit and checksum.
-4. Have the owner verify text-only receipt on that package and retain non-secret evidence. Keep text-only status **FAIL** until that confirmation; keep the owner's file receipt reports separately labeled **owner-reported PASS**.
-5. Complete file analysis/generated-note delivery, retention/deletion, rollback, and all other Stage 1 evidence before declaring Stage 1 complete or starting Stage 2.
+1. Record the owner's text-only/file-feedback result as **owner-reported PASS**; obtain the installed package identity if available and retain only sanitized evidence.
+2. Verify actual file-only and captioned-file receipt, and confirm same-chat file return on the corrected Windows package without changing the preserved file-transfer implementation.
+3. Complete and record generated-note delivery, remaining Telegram/reliability/error/rollback checks, and other Stage 1 acceptance gates separately.
+4. Define and implement file retention/deletion behavior; the 24-hour lookup window currently does not delete stored files.
+5. Preserve the 24 November self-test unchanged, distinguish its historical `NOT_RUN`/`WARN` statuses from later owner reports, and do not declare Stage 1 complete until all nine criteria are demonstrated in the intended deployment environment.
 
 Do not mark Stage 1 operational from sandbox tests or architecture statements alone. Preserve the 24 November acceptance self-test unchanged and distinguish its results from later owner reports and workspace checks. Keep credentials, API keys, worker tokens, recovery codes, Telegram session files, and backup contents out of Git and support messages.
