@@ -3,21 +3,21 @@
 **Status date:** 25 November 2026
 **Working branch:** `feature/telegram-file-transfer`
 **Base:** verified `stable-merge` baseline `e8e7660`
-**Previously committed source fix:** Commit `d35b770b357c3d81660951be2ff533976d591e06` (`fix(telegram): omit absent file id on text ingress`) fixes text-only worker payloads by omitting absent `fileId` while retaining real IDs for captioned-file processing. **Current continuation:** the working tree is based on `786f2c435a86a01c9e7af2416ce0e5543913bc66`; generated-summary attachment, 30-day retention, earlier deletion, stale-duplicate handling, and documentation changes are uncommitted on this branch. Full verification passed on the earlier code state. The existing Windows source ZIP/checksum predate the latest documentation edits; regenerate before distributing a package that should include the reconciled docs.
-**Stage disposition:** Stage 1 remains **PARTIAL**. The owner reports text-only ingress, file-reading feedback, and return/opening of the existing file as **PASS (owner-reported)** on the previously confirmed `d35b770` package. On 25 November, the owner additionally reported File Manifest early deletion **PASS on target Windows**; exact tested ZIP/checksum was not restated. The owner chose automatic deletion after 30 days with earlier deletion available; the early-delete UI is now Windows-verified by owner report, while automatic expiry still needs target-Windows evidence. The owner's latest Telegram conversation confirms that `make a short Markdown summary of README.md and send the summary as a file` still resends `README.md`, and Ryze says it is text-only and cannot create/write files. Treat new-summary creation as a **current user-visible FAIL / capability-and-skill gap**, not as passed by backend tests. Defer that benchmark until Ryze's file-creation skill/intent capability is solved, then rerun it. The existing-file return remains a separate passing path. Stage 1 is not complete.
+**Current baseline:** Commit `c58bdad` (`feat: add Telegram file retention and summary artifacts`) is the current committed version on `feature/telegram-file-transfer`. **Stage disposition:** At the owner's direction, Stage 1 is **PARTIAL — closed for sequencing, not complete**. Its nine origin criteria remain unwaived, and the retained self-test's historical results are unchanged. The owner reports File Manifest early deletion PASS on target Windows (exact tested package/checksum not restated); automatic 30-day expiry still needs Windows verification. Existing-file return is separately owner-reported PASS on `d35b770`. The latest summary-as-file request still resends `README.md`, and Ryze says it cannot create/write files. The owner has placed changes to the live agent skill/intent layer on hold and directed that this capability be handled in Stage 2 planning. Backend tests are not live skill acceptance. Stage 2 is now active; see [`stage-2-implementation-plan.md`](./stage-2-implementation-plan.md).
 
-## Immediate continuation task — close the remaining Stage 1 evidence
+## Stage transition — preserve residual evidence and start Stage 2
 
-The text-only ingress regression is fixed in `d35b770`; the owner reports successful text-only file feedback and existing-file return/opening on that package. The current backend has a narrowly matched generated-summary route and an integration test, but the owner's latest natural-language request still gets routed to existing-file resend; Ryze then says it cannot create files. Therefore the user-facing summary-attachment benchmark is **deferred** until the Ryze skill/intent capability can recognize that request and understand that it may create a new artifact. Do not claim the backend test proves the skill/capability works. After that prerequisite is addressed, test both the new-summary attachment and the separately preserved existing-file return. The owner chose 30-day retention with early deletion; File Manifest early deletion is now **PASS (owner-reported target-Windows)**. Automatic expiry and the startup/hourly cleanup still need target-Windows verification. Cleanup covers active file bytes and metadata, not prior backups, task logs, or Telegram copies. Remaining work includes other Stage 1 gates. Never include message bodies or secrets in diagnostics.
+Stage 1's open evidence stays visible but does not block beginning Stage 2. Do not declare Stage 1 operational or waive its original criteria. Keep the new-summary capability on hold for Stage 2 boundary design; do not modify Ryze's live skill/intent rules without review. The owner reports File Manifest early deletion PASS; verify automatic expiry separately on Windows. Cleanup covers active file bytes and metadata, not prior backups, task logs, or Telegram copies. Never include message bodies or secrets in diagnostics.
 
 ## Read first
 
-1. [`origin-blueprint.md`](./origin-blueprint.md) — authoritative source; preserve unchanged.
+1. [`origin-blueprint.md`](./origin-blueprint.md) — authoritative design baseline; original content is preserved, with dated status addenda appended.
 2. [`blueprint-implementation.md`](./blueprint-implementation.md) — current implementation/status map.
 3. [`stage-1-readiness.md`](./stage-1-readiness.md) — criterion-by-criterion evidence and remaining gates.
 4. [`stage-1-task-breakdown.md`](./stage-1-task-breakdown.md) — engineering checklist.
 5. [`ryze-playbook.md`](./ryze-playbook.md) — operator instructions and feature limits.
 6. [`telegram-user-account-integration.md`](./telegram-user-account-integration.md) — worker/file-transfer contract.
+7. [`stage-2-implementation-plan.md`](./stage-2-implementation-plan.md) — next-stage memory plan and ECC proposal assessment.
 
 ## Current implementation
 
@@ -42,11 +42,11 @@ These results verify the backend route and file-retention implementation only; t
 
 These are sandbox checks. They do not establish behavior on the target Windows installation or a live Telegram account.
 
-### Windows package prepared from the current worktree
+### Previously prepared Windows package — stale; do not distribute as the current version
 
-- `RyzeFramework-Windows-Source-2026-11-25.zip` — source installer package, 218 archive entries (217 source files plus package manifest); a separate `.sha256` file accompanies the ZIP.
-- ZIP integrity and required installer/source entries were checked. Git history, `node_modules`, `dist`/build output, real environment files, SQLite/user data, Telegram sessions, logs, backups, and existing archives are excluded. The package builds on Windows during installation/update and requires internet access for locked dependencies.
-- Package base commit is `786f2c435a86a01c9e7af2416ce0e5543913bc66`; it also contains the uncommitted changes listed at the top of this handoff. No commit or push has been made.
+- `/home/ubuntu/RyzeFramework-Windows-Source-2026-11-25.zip` was prepared from an earlier worktree based on `786f2c435a86a01c9e7af2416ce0e5543913bc66`; its checksum accompanies it.
+- It predates commit `c58bdad` and the current documentation updates, so it is not the current source package. Regenerate and re-verify the ZIP and checksum before Windows distribution.
+- The older ZIP excluded Git history, `node_modules`, build output, real environment files, SQLite/user data, Telegram sessions, logs, backups, and existing archives. It required internet access for Windows dependency installation.
 
 ### Owner-reported target-Windows evidence
 
@@ -70,10 +70,9 @@ The owner has reported bounded README file feedback on target Windows using `d35
 
 ## Next actions
 
-1. Record the owner's text-only/file-feedback result as **owner-reported PASS** on the owner-confirmed `d35b770` package; retain only sanitized evidence.
-2. Record the owner-confirmed same-chat existing-file return as PASS. Verify any remaining file-only/captioned-file receipt cases on the corrected Windows package without changing the preserved file-transfer implementation.
-3. Address Ryze's skill/intent capability so a natural-language request to create a new file is recognized as allowed and routed to the supported artifact workflow. Only after that fix, rerun the deferred summary-file benchmark and confirm the new attachment differs from the source; separately verify `Send me the latest file back` still returns the original.
-4. Record owner-reported PASS for File Manifest early deletion. Verify automatic 30-day expiry on Windows separately. Both mechanisms remove active local storage only; they do not remove prior backup copies, task logs, or Telegram-delivered copies.
-5. Preserve the 24 November self-test unchanged, distinguish its historical `NOT_RUN`/`WARN` statuses from later owner reports, and do not declare Stage 1 complete until all nine criteria are demonstrated in the intended deployment environment.
+1. Begin with [`stage-2-implementation-plan.md`](./stage-2-implementation-plan.md): agree the identity/memory contract, then design and test a lossless additive SQLite migration. Keep the existing memory rows available and do not assume current `core` scope equals protected System Memory.
+2. Keep ECC at audit/research level for now. It cannot substitute for memory design or any Stage 1/2 acceptance gate; any later experiment needs a pinned version, target-Windows compatibility check, isolated workspace, and Ryze deny-all permission boundary.
+3. Preserve the Stage 1 residual register. The summary-file skill/intent issue is held for Stage 2 design; target-Windows automatic 30-day expiry remains a separate verification item. Early File Manifest deletion and existing-file return remain owner-reported PASS.
+4. Preserve the 24 November self-test unchanged and distinguish its historical `NOT_RUN`/`WARN` statuses from later owner reports and sandbox checks. Stage 1 remains PARTIAL unless its nine criteria are later completed with evidence.
 
 Do not mark Stage 1 operational from sandbox tests or architecture statements alone. Preserve the 24 November acceptance self-test unchanged and distinguish its results from later owner reports and workspace checks. Keep credentials, API keys, worker tokens, recovery codes, Telegram session files, and backup contents out of Git and support messages.

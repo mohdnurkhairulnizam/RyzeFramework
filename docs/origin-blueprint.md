@@ -1176,3 +1176,15 @@ The Telegram interface is based on the connected RyzeTel implementation, not a b
 The worker is the only component allowed to access Telegram API credentials and session files. It sends only sanitized telemetry to the dashboard over an authenticated worker API. The worker must have a process lock so two instances cannot open the same Telethon SQLite session concurrently. Outbound actions require explicit approval, honour pause/stop state and suppression rules, use bounded retry/backoff for transient worker-to-dashboard failures, and log sanitized identifiers only.
 
 This replaces the earlier Telegram bot proposal. Bot tokens, bot webhooks and bot-specific authentication are not part of the current design. The exact Telethon worker deployment, local session protection, owner identity binding, data retention, rate limits and approval UX remain implementation decisions subject to technical verification.
+
+---
+
+## Implementation status addendum — 25 November 2026
+
+This addendum records the owner's sequencing decision. The original technical design above is retained as the authoritative, unmodified baseline; this note does not revise or waive its completion criteria.
+
+**Stage 1 disposition: PARTIAL — closed for sequencing, not complete.** The owner directs the project to proceed to Stage 2 without allowing the missing natural-language file-creation skill to hold up the next stage. This is an administrative partial close only. Stage 1's nine completion criteria remain unchanged and are not represented as passed or waived. Keep its open evidence in the readiness register, including target-Windows verification of automatic 30-day file expiry. File Manifest early deletion is owner-reported PASS on target Windows. The Telegram natural-language request to create a new Markdown summary remains a user-visible failure and is held for Stage 2 capability design; no broad file-writing permission or skill mutation is authorized by this decision.
+
+**Stage 2 is the next active stage: Identity & Advanced Memory.** Begin with an agreed memory and identity contract, then an additive SQLite migration that preserves current records, followed by protected System Memory, distinct Experience and Personal Memory, secondary memory types, provenance, contextual retrieval, duplicate review, and verified export/restoration. The existing local SQLite database remains the first implementation candidate; final technology decisions and Stage 2 acceptance evidence remain subject to review and testing.
+
+The submitted ECC integration proposal is an evaluation input, not an approved implementation. ECC must not replace Ryze's memory, task lifecycle, or permission controller, and it cannot stand in for any Stage 1 or Stage 2 acceptance criterion. Audit compatibility and side effects before considering a separate, isolated experiment. Keep agent skill changes reviewed and versioned.

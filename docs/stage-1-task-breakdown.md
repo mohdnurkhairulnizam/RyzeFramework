@@ -1,6 +1,6 @@
 # Stage 1 — Detailed Task Breakdown and Completion Checklist
 
-This checklist turns the origin blueprint and current repository status into an implementation sequence. A checked item means the capability exists in the current repository or the stated check has actually passed; it does not imply that a live deployment has been configured unless explicitly stated. Keep live credentials out of Git and do not enable external integrations until their safety gates pass. Historical checkpoint text below is superseded by the explicit 25 November reconciliation at the end wherever statuses differ.
+This checklist turns the origin blueprint and current repository status into an implementation sequence. A checked item means the capability exists in the current repository or the stated check has actually passed; it does not imply that a live deployment has been configured unless explicitly stated. Keep live credentials out of Git and do not enable external integrations until their safety gates pass. **Owner decision (25 November 2026): Stage 1 is PARTIAL and closed for sequencing, not complete; the unchecked criteria below remain open and are not waived. Stage 2 may proceed.** The latest transition record at the end supersedes older checkpoint text.
 
 ## Current status at a glance
 
@@ -16,7 +16,7 @@ This checklist turns the origin blueprint and current repository status into an 
 - [x] Configure the local gateway at `http://127.0.0.1:31415/v1` and receive a completed model reply. The exact model ID and upstream provider route were not recorded; no API key is stored in Git.
 - [x] Telegram inbound and bounded same-chat paths are implemented. The owner reports earlier same-chat, pause/restart/replay, recovery, backup/restore, and failure checks PASS; acknowledgement mismatch and provider failure remain owner-reported, not independently verified. The owner reports file receipt, text-only file feedback, and existing-file return on `d35b770`; File Manifest early deletion is now **PASS (owner-reported, target Windows; package revision not restated)**. The latest request for a new Markdown summary still resends the existing README and Ryze says it cannot create files. Defer that benchmark until the skill/intent capability gap is addressed. A narrow backend route/test does not establish user-facing skill behavior. Automatic 30-day expiry remains to be tested on Windows.
 - [x] Manual owner approval was intentionally removed for the approved same-chat scope; pause/stop, eligibility, duplicate, and result-validation controls remain required.
-- [ ] All nine Stage 1 origin completion criteria pass in the intended deployment environment.
+- [ ] All nine Stage 1 origin completion criteria pass in the intended deployment environment. This remains unchecked; the owner has closed Stage 1 as PARTIAL for sequencing only.
 
 ## Workstream 0 — Establish a safe implementation baseline
 
@@ -205,11 +205,12 @@ The owner completed the dashboard Telegram login-code flow on the target Windows
 - [ ] Verify restore on the target Windows computer, including Telegram session recovery and preserved-copy review.
 - [ ] Verify autonomous Telegram same-chat pause/stop, sender/chat/task/message eligibility, duplicate prevention, content/result validation, acknowledgement, and failure logging on target Windows; no per-message owner approval is required for this bounded scope.
 
-## Current reconciliation — 25 November 2026
+## Current reconciliation and partial-close decision — 25 November 2026
 
 - Implemented in the current workspace: a narrowly matched generated-summary backend route and a separate existing-file resend path. However, the owner's latest natural-language request still returned the source file, and Ryze said it cannot create files. Treat this as a capability/skill gap; defer the summary benchmark until Ryze can recognize and invoke file creation. The user selected 30-day automatic deletion with earlier deletion available; active-store expiry, cleanup, and File Manifest delete action are implemented.
 - Full verification passed: `pnpm test` (57 tests across 19 files), `pnpm run worker:test` (9 Python tests), `pnpm check`, `pnpm run build:local`, and `git diff --check`. The standalone build retains a non-fatal large-chunk warning.
 - Owner reports File Manifest early deletion PASS on target Windows (25 November; exact package revision/checksum not restated). The new-summary benchmark is deferred pending the skill fix; existing-file return is separately owner-reported PASS on `d35b770`. Automatic 30-day expiry still needs target-Windows verification. Do not infer user-facing file-creation capability from sandbox backend tests.
 - Retention applies to active file bytes and metadata. It does not erase prior backups, task logs (which may retain prompts/model answers), or copies already sent to Telegram. Keep backup archives private.
 - The owner-reported Telegram acknowledgement-mismatch and provider-failure checks are **PASS (owner-reported; not independently verified here)**. Preserve the 24 November self-test exactly as recorded: Gate 1/5/8 `NOT_RUN`, Gate 7 `WARN`.
-- Stage 1 remains **PARTIAL**. Next, solve the Ryze file-creation skill/intent gap before resuming the deferred summary benchmark. Verify automatic 30-day expiry on Windows; early File Manifest deletion is already owner-reported PASS. Retain sanitized evidence. This does not establish general-purpose execution.
+- The owner directs: Stage 1 is **PARTIAL — closed for sequencing, not complete**; proceed to Stage 2 without waiving or relabeling outstanding Stage 1 criteria. The new-file natural-language skill/intent issue is on hold for Stage 2 design. Do not change the live agent skill or enable broad file writes before its permission, source, output, review, and rollback boundaries are agreed. Verify automatic 30-day expiry on Windows separately; early File Manifest deletion is already owner-reported PASS. Retain sanitized evidence. This does not establish general-purpose execution.
+- Stage 2 is the next active stage. Follow [`stage-2-implementation-plan.md`](./stage-2-implementation-plan.md), starting with the memory taxonomy/identity contract and a lossless additive SQLite migration. The ECC proposal is for audit/evaluation only; it cannot replace Ryze memory or any Stage 1/2 acceptance gate.

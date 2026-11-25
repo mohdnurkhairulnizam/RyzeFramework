@@ -2,13 +2,14 @@
 
 A simple user manual for installing, starting, using, verifying, and troubleshooting RyzeFramework. This is a living document and will be updated progressively as new features are completed.
 
-**Current revision:** `Telegram file retention and summary skill-gap status`
-**Current stage:** Stage 1 remains partial. Telegram file receipt/analysis and returning an existing file are available; the owner reports correct same-chat existing-file return on `d35b770`. The owner reports File Manifest early deletion **PASS on target Windows** (25 November; exact package/checksum not restated). The 30-day expiry policy is implemented, but automatic expiry still needs Windows verification. The latest request to create a new Markdown summary still resends the original and Ryze says it is text-only and cannot create/write files. Defer that benchmark until the Ryze skill/intent capability is solved; backend tests are not live skill acceptance. File deletion does not erase prior backups, task logs, or copies already sent to Telegram.
+**Current revision:** `Stage 1 partial-close and Stage 2 transition`
+**Current stage:** Stage 1 is **PARTIAL — closed for sequencing, not complete**; Stage 2 (Identity & Advanced Memory) is next. Existing-file same-chat return and File Manifest early deletion are owner-reported PASS; automatic 30-day expiry still needs Windows verification. A natural-language request to create a new summary file still resends the source and Ryze says it cannot create/write files. Per the owner's decision, hold changes to the agent skill/intent layer for Stage 2 planning; do not treat backend tests as live acceptance or enable broad file-writing permissions. Deletion affects active storage only, not prior backups, task logs, or Telegram copies.
 
-Use the three project documents this way:
+Use these project documents this way:
 
 - [`origin-blueprint.md`](./origin-blueprint.md): the original project direction and completion plan.
 - [`blueprint-implementation.md`](./blueprint-implementation.md): the updated technical status and implementation details.
+- [`stage-2-implementation-plan.md`](./stage-2-implementation-plan.md): the next-stage plan, memory design gates, and ECC evaluation.
 - **This playbook:** the practical manual for using the current RyzeFramework system.
 
 The playbook describes only the capabilities that are available or explicitly marked as incomplete.
@@ -27,13 +28,13 @@ RyzeFramework is currently a local Windows application with:
 - Optional OpenCode + FreeLLMAPI text chat.
 - OpenCode tools denied by default.
 - Optional Telegram worker with protected local configuration, preflight check, sender authorization, and autonomous same-chat replies.
-- Bounded private-chat file receipt (5 MiB maximum), requested analysis of small text files, and separate same-chat return of an existing file. New summary-file creation from a natural-language Telegram request is deferred pending Ryze skill/intent capability work.
+- Bounded private-chat file receipt (5 MiB maximum), requested analysis of small text files, and separate same-chat return of an existing file. New summary-file creation from a natural-language Telegram request is on hold for Stage 2 capability design; the live agent skill/intent has not been changed.
 - Automatic deletion of active uploaded/generated file storage after 30 days, plus an earlier-delete control in File Manifest.
 - Telegram replies remain restricted to an authorized sender's original chat; broadcasts, proactive messaging, sales funnels, arbitrary shell execution, and email delivery remain disabled.
 
 A successful chat response is evidence of the text-chat path only. It is not evidence that Ryze can safely plan and execute arbitrary real-world operations.
 
-**Latest evidence:** The owner reports PASS for the target-Windows baseline, Telegram sender/worker controls, backup/restore, acknowledgement-mismatch and provider-failure checks; the latter two remain owner-reported and not independently verified. The owner also reports file receipt, text-only file feedback, and return/opening of the existing file on `d35b770` (**owner-reported PASS**), plus File Manifest early deletion **PASS on target Windows** on 25 November (package revision not restated). The latest request for a new summary still resends the source and produces a text-only refusal; defer that benchmark until Ryze's skill/intent capability is solved. The backend route has sandbox tests, but those do not establish user-facing skill behavior. Automatic 30-day expiry still needs Windows verification. The retained 24 November 18:33 self-test is unchanged and shows its own Gate 1/5/8 `NOT_RUN` and Gate 7 `WARN` results.
+**Latest evidence and transition:** Stage 1 is **PARTIAL — closed for sequencing** at the owner's direction; completion criteria remain open and unchanged. The owner reports file receipt, text-only file feedback, and return/opening of the existing file on `d35b770` (**owner-reported PASS**), plus File Manifest early deletion **PASS on target Windows** on 25 November (package revision not restated). Automatic 30-day expiry still needs Windows verification. Natural-language creation of a distinct summary attachment remains failed and is held for Stage 2 design; do not change the skill/intent rules without a reviewed plan. The retained 24 November 18:33 self-test remains unchanged with its own Gate 1/5/8 `NOT_RUN` and Gate 7 `WARN` results. Stage 2 planning is in [`stage-2-implementation-plan.md`](./stage-2-implementation-plan.md).
 
 ## 2. What is available now
 
@@ -186,7 +187,7 @@ If the dashboard wizard is unavailable in an older package, use the policy-safe 
 
 There is no approved-chat or group allowlist in this design. Authorization is based only on the sender: the permanent admin identity is accepted by default, and another sender is accepted for one hour after sending the exact recovery code. All other senders are ignored.
 
-### 3.9.1 Remaining Stage 1 evidence
+### 3.9.1 Stage 1 partial-close record and parked evidence
 
 Run these checks in order on the installed Windows computer. Do not send or paste `.env`, API keys, worker tokens, login codes, recovery codes, session files, or backup archives.
 
@@ -196,7 +197,7 @@ Run these checks in order on the installed Windows computer. Do not send or past
 
 **Receipt/reply retest:** The owner reports file receipt with and without accompanying text, text-only file feedback, and correct opening of the returned existing file as PASS on package `d35b770` (owner-reported). The owner also reports File Manifest early deletion PASS on target Windows (25 November; exact package revision not restated). Automatic 30-day expiry still needs Windows testing. The new-summary attachment benchmark is deferred until the Ryze file-creation skill/intent gap is solved. If plain text or file receipt regresses, retain sanitized logs and report the exact package revision; do not treat the historical `99112b4` failure as current evidence.
 
-**New-summary Telegram benchmark — DEFERRED:** In the owner's latest test, `make a short Markdown summary of README.md and send the summary as a file` returned `[README.md]` again; when asked whether it can create a new file, Ryze said it is text-only and cannot write/save files. The owner has directed that this benchmark wait until the system's skill/intent limitation is solved. Do not treat backend integration tests as evidence that Ryze understands the request or can create/send the artifact. After the prerequisite is implemented, ask for a new Markdown summary attachment, verify it differs from and summarizes the source, then separately ask `Send me the latest file back` to confirm the original-file path still works.
+**New-summary Telegram capability — ON HOLD FOR STAGE 2:** In the owner's latest test, `make a short Markdown summary of README.md and send the summary as a file` returned `[README.md]` again; when asked whether it can create a new file, Ryze said it is text-only and cannot write/save files. Stage 1 is being closed partial so this limitation does not block sequencing. Do not make an unreviewed skill/intent change or treat backend tests as user-facing acceptance. Stage 2 must first define the bounded permission, source, output, review, and rollback contract; only after that review should a distinct-summary attachment test be planned. Existing-file resend remains a separate behavior.
 
 **Final self-test:** Open **Settings → Stage 1 acceptance self-test → Run Stage 1 self-test**, select **Copy**, and paste the complete non-secret report into the project review. The expected report should show runtime schema `v1`, an explicit model selector such as `auto`, a PASS for the structured safe-action boundary, and no secret values. A `NOT_RUN` or `WARN` for provider fault injection, physical restore, or file delivery must remain documented rather than being treated as a PASS.
 
@@ -222,7 +223,7 @@ When you request analysis, the file content is passed to the configured model pr
 
 To return the latest eligible file from that same authorized private chat, ask `Send me the latest file back`. This existing-file resend is a separate behavior and has been reported successful by the owner on package `d35b770`. Do not currently rely on a natural-language Telegram request to create a new Markdown summary: the owner reports Ryze resends the source and says it cannot create files. The summary-as-file benchmark is deferred until Ryze's file-creation skill/intent capability is addressed. No group, different-chat, or arbitrary-path delivery is allowed.
 
-**File retention and earlier deletion:** The selected policy is automatic expiry 30 days after each uploaded or generated file is created. Expired files are blocked from access at the cutoff and removed from active local storage during the startup/hourly cleanup sweep. The owner reports the earlier File Manifest delete action **PASS on target Windows** (25 November; exact package revision not restated). Automatic expiry still needs its own Windows test. This applies only to active local file bytes and metadata: it does not erase prior Ryze backups, task logs (which may retain prompts and model answers), or copies already delivered to Telegram. The 24-hour limit is an analysis lookup window, not the retention period. Private backups may include file bytes and must be protected; deleting a file does not update old backups.
+**File retention and earlier deletion:** The selected policy is automatic expiry 30 days after each uploaded or generated file is created. Expired files are blocked from access at the cutoff and removed from active local storage during the startup/hourly cleanup sweep. The owner reports the earlier File Manifest delete action **PASS on target Windows** (25 November; exact package revision not restated). Automatic expiry still needs its own Windows test and remains in the Stage 1 partial-close evidence register. This applies only to active local file bytes and metadata: it does not erase prior Ryze backups, task logs (which may retain prompts and model answers), or copies already delivered to Telegram. The 24-hour limit is an analysis lookup window, not the retention period. Private backups may include file bytes and must be protected; deleting a file does not update old backups.
 
 Gmail is planned as a separate OAuth setup panel. The Gmail account will be authorized through Google consent rather than by storing a Gmail password. Drive and Photos access will be optional scopes and will not be enabled merely because Gmail is connected.
 
@@ -366,7 +367,8 @@ The following are not available in this revision:
 - Email sending or Gmail connection.
 - Google Drive or Google Photos connection.
 - Arbitrary shell commands or unrestricted computer control.
-- New-summary Telegram attachment from a natural-language request (deferred pending Ryze skill/intent capability work) and target-Windows-verified automatic 30-day expiry (implementation exists; owner has separately verified earlier File Manifest deletion).
+- New-summary Telegram attachment from a natural-language request (held for Stage 2 capability design; no live skill change authorized yet).
+- Target-Windows-verified automatic 30-day expiry (implementation exists; owner has separately verified earlier File Manifest deletion).
 - Automatic Windows background supervision after a computer restart.
 
 When these capabilities are added, their setup and test instructions will be added here. Do not enable an unfinished capability by editing configuration files or model instructions.
