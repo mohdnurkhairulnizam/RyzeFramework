@@ -307,20 +307,22 @@ const MEMORY_SOURCE_SYSTEM_ID = "local-ryze";
 
 export async function addMemory(userId: number, input: {
   scope: "core" | "evolving"; kind: string; content: string; tags: string[]; outcome?: "SUCCESS" | "FAIL" | "NEUTRAL";
-  category?: Exclude<MemoryCategory, "system">; memoryType?: MemoryType; sourceRef?: string;
+  category?: Exclude<MemoryCategory, "system">; memoryType?: MemoryType; sourceRef?: string; derivedFrom?: string;
   createdBy?: "owner" | "ryze_candidate_approved" | "system_process";
 }) {
   const db = await requireDb();
   if ((input.category && !input.memoryType) || (!input.category && input.memoryType)) throw new Error("Memory category and type must be supplied together.");
   const classified = Boolean(input.category && input.memoryType);
+  const id = `mem_${nanoid(14)}`;
   await db.insert(ryzeMemory).values({
-    id: `mem_${nanoid(14)}`, userId, scope: input.scope, legacyScope: input.scope,
+    id, userId, scope: input.scope, legacyScope: input.scope,
     category: input.category ?? null, memoryType: input.memoryType ?? null, ownerScope: `owner:${userId}`,
-    sourceSystemId: classified ? MEMORY_SOURCE_SYSTEM_ID : null, branchId: "main", sourceRef: input.sourceRef ?? null,
+    sourceSystemId: classified ? MEMORY_SOURCE_SYSTEM_ID : null, branchId: "main", sourceRef: input.sourceRef ?? null, derivedFrom: input.derivedFrom ?? null,
     createdBy: input.createdBy ?? (classified ? "system_process" : null), version: classified ? 1 : null,
     status: classified ? "active" : "legacy_unclassified", sensitivity: "normal", syncStatus: "local",
     kind: input.kind.slice(0, 64), content: input.content.slice(0, 5000), tags: JSON.stringify(input.tags.slice(0, 12)), outcome: input.outcome ?? "NEUTRAL",
   });
+  return id;
 }
 
 export async function searchClassifiedMemory(userId: number, input: { query?: string; category?: Exclude<MemoryCategory, "system">; memoryType?: MemoryType; limit?: number }) {
@@ -331,6 +333,26 @@ export async function searchClassifiedMemory(userId: number, input: { query?: st
   if (input.memoryType) filters.push(eq(ryzeMemory.memoryType, input.memoryType));
   if (terms.length) filters.push(like(ryzeMemory.content, `%${terms.join("%")}%`));
   return db.select().from(ryzeMemory).where(and(...filters)).orderBy(desc(ryzeMemory.updatedAt), desc(ryzeMemory.createdAt)).limit(Math.min(Math.max(input.limit ?? 8, 1), 50));
+}
+
+export async function getMemoryForUser(userId: number, memoryId: string) {
+  const db = await requireDb();
+  const [memory] = await db.select().from(ryzeMemory).where(and(eq(ryzeMemory.userId, userId), eq(ryzeMemory.id, memoryId))).limit(1);
+  if (memory) return memory;
+  const [systemMemory] = await db.select().from(ryzeSystemMemory).where(and(eq(ryzeSystemMemory.userId, userId), eq(ryzeSystemMemory.id, memoryId))).limit(1);
+  return systemMemory ?? null;
+}
+
+export async function archiveMemoryForUser(userId: number, memoryId: string) {
+  const db = await requireDb();
+  await db.update(ryzeMemory).set({ status: "archived", updatedAt: new Date() }).where(and(eq(ryzeMemory.userId, userId), eq(ryzeMemory.id, memoryId)));
+  await db.update(ryzeSystemMemory).set({ status: "archived", updatedAt: new Date() }).where(and(eq(ryzeSystemMemory.userId, userId), eq(ryzeSystemMemory.id, memoryId)));
+}
+
+export async function deleteMemoryForUser(userId: number, memoryId: string) {
+  const db = await requireDb();
+  await db.delete(ryzeMemory).where(and(eq(ryzeMemory.userId, userId), eq(ryzeMemory.id, memoryId)));
+  await db.delete(ryzeSystemMemory).where(and(eq(ryzeSystemMemory.userId, userId), eq(ryzeSystemMemory.id, memoryId)));
 }
 
 export async function getRyzeIdentity(userId: number) {
