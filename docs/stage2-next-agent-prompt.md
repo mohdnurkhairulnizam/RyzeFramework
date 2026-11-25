@@ -8,7 +8,7 @@ Repository: `https://github.com/mohdnurkhairulnizam/RyzeFramework.git`
 
 Working branch: `feature/telegram-file-transfer`
 
-Latest known commit: `e43f09b` (`fix: add Stage 2 preflight and SQLite schema repair`). Fetch the latest remote branch before editing. If no working copy exists, clone the repository and check out `feature/telegram-file-transfer`. If a working copy exists, inspect `git status` first and preserve any user changes. Do not reset, clean, force-push, or overwrite work.
+Implementation commit: `e43f09b` (`fix: add Stage 2 preflight and SQLite schema repair`). This handoff prompt is also committed on the branch. Fetch the latest remote branch before editing. If no working copy exists, clone the repository and check out `feature/telegram-file-transfer`. If a working copy exists, inspect `git status` first and preserve any user changes. Do not reset, clean, force-push, or overwrite work.
 
 Read these project documents before planning: `docs/current-stage-handoff.md`, `docs/stage-2-implementation-plan.md`, `docs/memory-identity-contract.md`, `docs/stage2-one-click-test.md`, and `docs/windows-installation.md`. Also inspect the relevant code and tests before changing anything.
 
