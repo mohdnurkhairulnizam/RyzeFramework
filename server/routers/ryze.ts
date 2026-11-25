@@ -25,6 +25,7 @@ import {
   updateTask,
 } from "../db";
 import { storagePut } from "../storage";
+import { deleteUserFile } from "../fileRetention";
 import {
   determineDemoAction,
   makeGeneratedNote,
@@ -442,6 +443,18 @@ export const ryzeRouter = router({
         category: "uploads",
         source: "upload",
       });
+    }),
+  deleteFile: protectedProcedure
+    .input(z.object({ fileId: z.string().regex(/^file_[a-zA-Z0-9_-]{14}$/) }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const deleted = await deleteUserFile(ctx.user.id, input.fileId);
+        if (!deleted) throw new TRPCError({ code: "NOT_FOUND", message: "File not found." });
+        return { deleted: true };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "The file could not be deleted. It remains listed so you can retry." });
+      }
     }),
   updateSettings: protectedProcedure
     .input(

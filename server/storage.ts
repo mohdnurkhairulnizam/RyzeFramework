@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, realpath, rename, writeFile } from "node:fs/promises";
+import { lstat, mkdir, realpath, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { ENV } from "./_core/env";
 
@@ -51,8 +51,13 @@ export async function storagePut(
   await ensureWithinStorageRoot(target);
   const temp = `${target}.${randomUUID()}.tmp`;
   const bytes = typeof data === "string" ? Buffer.from(data, "utf8") : Buffer.from(data);
-  await writeFile(temp, bytes, { flag: "wx", mode: 0o600 });
-  await rename(temp, target);
+  try {
+    await writeFile(temp, bytes, { flag: "wx", mode: 0o600 });
+    await rename(temp, target);
+  } catch (error) {
+    await unlink(temp).catch(() => undefined);
+    throw error;
+  }
   // A downloadable URL is assigned only after metadata is stored under a file ID.
   return { key, url: "" };
 }
@@ -66,6 +71,19 @@ export async function getStoredFilePath(key: string): Promise<string> {
     throw new Error("Storage path escaped configured root");
   }
   return file;
+}
+
+export async function storageDelete(relKey: string): Promise<void> {
+  const target = resolveKey(relKey);
+  try {
+    await ensureWithinStorageRoot(target);
+    const stats = await lstat(target);
+    if (stats.isSymbolicLink() || !stats.isFile()) throw new Error("Storage object is not a regular file");
+    await unlink(target);
+  } catch (error) {
+    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return;
+    throw error;
+  }
 }
 
 export async function storageGet(relKey: string): Promise<{ key: string; url: string }> {

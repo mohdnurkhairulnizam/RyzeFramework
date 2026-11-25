@@ -13,6 +13,7 @@ import { serveStatic, setupVite } from "./vite";
 import { registerWorkerRoutes } from "../workerApi";
 import { ENV } from "./env";
 import { assertRuntimeConfiguration } from "../runtimeConfig";
+import { startFileRetentionSweeper } from "../fileRetention";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -69,6 +70,7 @@ async function startServer() {
     await getDb();
     await ensureLocalOwner();
   }
+  startFileRetentionSweeper();
 
   const app = express();
   const server = createServer(app);

@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
+import { FILE_RETENTION_MS } from "@shared/fileRetention";
 import {
   Activity,
   Bot,
@@ -306,6 +307,13 @@ export default function Home() {
       toast.success(
         `${file.originalName} added to the portable file manifest.`
       );
+    },
+    onError: mutationError => toast.error(mutationError.message),
+  });
+  const deleteFile = trpc.ryze.deleteFile.useMutation({
+    onSuccess: async () => {
+      await refresh();
+      toast.success("File removed from active local storage.");
     },
     onError: mutationError => toast.error(mutationError.message),
   });
@@ -615,6 +623,8 @@ export default function Home() {
           uploadInput={uploadInput}
           onSelectFile={onFileSelected}
           uploading={upload.isPending}
+          onDeleteFile={fileId => deleteFile.mutate({ fileId })}
+          deletingFile={deleteFile.isPending}
         />
       )}
       {activeView === "settings" && (
@@ -1259,18 +1269,22 @@ function FilesView({
   uploadInput,
   onSelectFile,
   uploading,
+  onDeleteFile,
+  deletingFile,
 }: {
   files: any[];
   uploadInput: React.RefObject<HTMLInputElement | null>;
   onSelectFile: (event: ChangeEvent<HTMLInputElement>) => void;
   uploading: boolean;
+  onDeleteFile: (fileId: string) => void;
+  deletingFile: boolean;
 }) {
   return (
     <div className="mx-auto max-w-6xl">
       <PageHeading
         eyebrow="Portable object storage"
         title="File manifest"
-        copy="Uploaded and generated file bytes are stored in the RyzeFramework folder under your Windows local application data. Downloads are checked against your local account."
+        copy="Uploaded and generated files are deleted automatically 30 days after creation. Delete removes a file from active local storage sooner; it does not erase prior backups, task logs, or copies already sent to Telegram."
       />
       <section className="ryze-glass rounded-[1.5rem] p-5 sm:p-6">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
@@ -1310,15 +1324,15 @@ function FilesView({
           </div>
         ) : (
           <div className="overflow-hidden rounded-2xl border border-white/[0.07]">
-            <div className="grid grid-cols-[minmax(0,1fr)_110px_100px] gap-4 border-b border-white/[0.07] bg-white/[0.03] px-4 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
+            <div className="grid grid-cols-[minmax(0,1fr)_110px_150px] gap-4 border-b border-white/[0.07] bg-white/[0.03] px-4 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
               <span>File</span>
               <span>Source</span>
-              <span>Open</span>
+              <span>Actions</span>
             </div>
             {files.map(file => (
               <div
                 key={file.id}
-                className="grid grid-cols-[minmax(0,1fr)_110px_100px] items-center gap-4 border-b border-white/[0.06] px-4 py-4 last:border-0"
+                className="grid grid-cols-[minmax(0,1fr)_110px_150px] items-center gap-4 border-b border-white/[0.06] px-4 py-4 last:border-0"
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <FileText className="size-4 shrink-0 text-cyan-300" />
@@ -1330,20 +1344,38 @@ function FilesView({
                       {file.mimeType} · {file.byteSize.toLocaleString()} bytes ·{" "}
                       {formatDate(file.createdAt)}
                     </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Auto-deletes {formatDate(new Date(new Date(file.createdAt).getTime() + FILE_RETENTION_MS))}
+                    </p>
                   </div>
                 </div>
                 <Badge className="w-fit border border-white/10 bg-white/[0.04] text-slate-300 hover:bg-white/[0.04]">
                   {file.source}
                 </Badge>
-                <a
-                  href={file.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-300 hover:text-white"
-                >
-                  <Download className="size-3.5" />
-                  Open
-                </a>
+                <div className="flex items-center gap-3">
+                  <a
+                    href={file.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-300 hover:text-white"
+                  >
+                    <Download className="size-3.5" />
+                    Open
+                  </a>
+                  <button
+                    type="button"
+                    disabled={deletingFile}
+                    aria-label={`Delete ${file.originalName}`}
+                    title="Delete this file now"
+                    onClick={() => {
+                      if (window.confirm(`Delete ${file.originalName} and its active local bytes now? This cannot be undone. Existing backups, task logs, or copies already sent to Telegram are not affected.`)) onDeleteFile(file.id);
+                    }}
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-rose-300 hover:text-rose-200 disabled:opacity-50"
+                  >
+                    <Trash2 className="size-3.5" />
+                    Delete
+                  </button>
+                </div>
               </div>
             ))}
           </div>

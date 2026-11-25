@@ -20,6 +20,7 @@ import {
   isTelegramSenderAllowed,
   listWorkerCommands,
   queueWorkerCommand,
+  saveFileMetadata,
   saveTelegramFileMetadata,
   updateTask,
   updateWorkerCommand,
@@ -27,9 +28,11 @@ import {
 } from "./db";
 import { determineDemoAction } from "./ryzeDemo";
 import { runOpenCodeChat, runSafeDemo } from "./routers/ryze";
-import { getStoredFilePath, storagePut } from "./storage";
+import { getStoredFilePath, storageDelete, storagePut } from "./storage";
 import { ENV } from "./_core/env";
-import { telegramAcknowledgementSchema, validateFileMetadata } from "./resultValidators";
+import { telegramAcknowledgementSchema, validateFileMetadata, validateGeneratedArtifact } from "./resultValidators";
+import { deleteUserFile } from "./fileRetention";
+import { FILE_RETENTION_MS } from "../shared/fileRetention";
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
 const MAX_ANALYSIS_BYTES = 64 * 1024;
@@ -147,6 +150,22 @@ function requestsFileContent(text: string) {
 function requestsLatestFile(text: string) {
   return /\b(send|return|resend|deliver)\b.{0,40}\b(?:(?:me|my|the|that|this|last|latest|please)\s+)*(?:file|document)\b/i.test(text)
     || /\b(?:file|document)\b.{0,30}\b(back|again|to me)\b/i.test(text);
+}
+
+export function requestsGeneratedSummaryFile(text: string) {
+  return /\b(summarize|summarise|summary)\b/i.test(text)
+    && /\b(markdown|\.md\b)/i.test(text)
+    && /\b(file|attachment)\b/i.test(text)
+    && /\b(new|separate|create|write|generate|save)\b/i.test(text);
+}
+
+export function formatGeneratedSummaryMarkdown(sourceName: string, summary: string) {
+  return `# Summary: ${sourceName}\n\n${summary.trim()}\n`;
+}
+
+function summaryFilename(sourceName: string, taskId: string) {
+  const stem = sourceName.replace(/\.[^.]*$/, "").replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 60) || "document";
+  return cleanFilename(`summary-${stem}-${taskId}.md`);
 }
 
 async function queueTextReply(userId: number, input: { workerId: string; chatId: string; senderId: string; messageId: string }, text: string, taskId?: string, purpose = "text") {
@@ -334,17 +353,31 @@ export function registerWorkerRoutes(app: Express) {
       return void res.status(202).json({ accepted: false, ignored: true });
     }
     const originalName = cleanFilename(decodedName);
-    let storageKey: string;
     const existing = await getTelegramFileByOrigin(userId, chatId.data, messageId.data);
-    if (existing) {
-      if (!hasCaption) await queueTextReply(userId, { workerId: workerId.data, chatId: chatId.data, senderId: senderId.data, messageId: messageId.data }, `Ryze: I received and stored ${existing.originalName} in your local file store. Ask me about it in this private chat within 24 hours. Text analysis supports TXT, Markdown, CSV, or JSON up to 64 KiB; file content is sent to your configured model provider only when you ask for analysis.`, undefined, "file-received");
+    if (existing && existing.createdAt.getTime() + FILE_RETENTION_MS > Date.now()) {
+      if (!hasCaption) await queueTextReply(userId, { workerId: workerId.data, chatId: chatId.data, senderId: senderId.data, messageId: messageId.data }, `Ryze: I received and stored ${existing.originalName} in your local file store. Ask me about it in this private chat within 24 hours. Text analysis supports TXT, Markdown, CSV, or JSON up to 64 KiB; file content is sent to your configured model provider only when you ask for analysis. Stored files are automatically deleted after 30 days; you can delete them sooner from the local File manifest.`, undefined, "file-received");
       return void res.status(202).json({ accepted: true, duplicate: true, fileId: existing.id, originalName: existing.originalName, mimeType: existing.mimeType, byteSize: existing.byteSize });
     }
-    ({ key: storageKey } = await storagePut(`ryze/${userId}/uploads/telegram-${messageId.data}-${originalName}`, bytes, mimeType.data));
-    validateFileMetadata({ originalName, mimeType: mimeType.data, byteSize: bytes.length, storageKey });
-    const file = await saveTelegramFileMetadata(userId, { storageKey, originalName, mimeType: mimeType.data, byteSize: bytes.length, chatId: chatId.data, senderId: senderId.data, messageId: messageId.data });
+    if (existing) await deleteUserFile(userId, existing.id);
+    let storageKey: string | undefined;
+    let file: Awaited<ReturnType<typeof saveTelegramFileMetadata>> | undefined;
+    try {
+      ({ key: storageKey } = await storagePut(`ryze/${userId}/uploads/telegram-${messageId.data}-${originalName}`, bytes, mimeType.data));
+      validateFileMetadata({ originalName, mimeType: mimeType.data, byteSize: bytes.length, storageKey });
+      file = await saveTelegramFileMetadata(userId, { storageKey, originalName, mimeType: mimeType.data, byteSize: bytes.length, chatId: chatId.data, senderId: senderId.data, messageId: messageId.data });
+    } catch (error) {
+      if (storageKey) {
+        const persisted = await getTelegramFileByOrigin(userId, chatId.data, messageId.data).catch(() => null);
+        if (persisted?.storageKey === storageKey) file = persisted;
+        else await storageDelete(storageKey).catch((cleanupError) => {
+          console.error("[worker] Failed to remove unreferenced Telegram upload bytes.", cleanupError instanceof Error ? cleanupError.name : "unknown error");
+        });
+      }
+      if (!file) throw error;
+    }
+    if (!file) throw new Error("Telegram file metadata could not be persisted.");
     await addTelegramLog(userId, { direction: "incoming", telegramUserId: senderId.data, chatId: chatId.data, messagePreview: `[File received; ${file.mimeType}; ${file.byteSize} bytes]`, status: "file-received" });
-    if (!hasCaption) await queueTextReply(userId, { workerId: workerId.data, chatId: chatId.data, senderId: senderId.data, messageId: messageId.data }, `Ryze: I received and stored ${file.originalName} in your local file store. Ask me about it in this private chat within 24 hours. Text analysis supports TXT, Markdown, CSV, or JSON up to 64 KiB; file content is sent to your configured model provider only when you ask for analysis.`, undefined, "file-received");
+    if (!hasCaption) await queueTextReply(userId, { workerId: workerId.data, chatId: chatId.data, senderId: senderId.data, messageId: messageId.data }, `Ryze: I received and stored ${file.originalName} in your local file store. Ask me about it in this private chat within 24 hours. Text analysis supports TXT, Markdown, CSV, or JSON up to 64 KiB; file content is sent to your configured model provider only when you ask for analysis. Stored files are automatically deleted after 30 days; you can delete them sooner from the local File manifest.`, undefined, "file-received");
     res.status(202).json({ accepted: true, fileId: file.id, originalName: file.originalName, mimeType: file.mimeType, byteSize: file.byteSize });
   }));
 
@@ -397,7 +430,8 @@ export function registerWorkerRoutes(app: Express) {
     const task = await createTask(userId, session.id, input.data.text, action);
     await addTaskLog(userId, task.id, "system", "info", "Task accepted from an authorized private Telegram chat; reply destination is bound to that chat.");
 
-    if (requestsLatestFile(input.data.text)) {
+    const wantsGeneratedSummaryFile = requestsGeneratedSummaryFile(input.data.text);
+    if (!wantsGeneratedSummaryFile && requestsLatestFile(input.data.text)) {
       const latest = await getLatestTelegramFile(userId, input.data.chatId, input.data.senderId);
       if (latest && latest.createdAt && Date.now() - latest.createdAt.getTime() <= 24 * 60 * 60 * 1000) {
         await updateTask(userId, task.id, { status: "IN_PROGRESS" });
@@ -435,6 +469,38 @@ export function registerWorkerRoutes(app: Express) {
     } else {
       const telegramOrigin = { chatId: input.data.chatId, senderId: input.data.senderId, messageId: input.data.messageId };
       result = await runSafeDemo(userId, { ...task, action, telegramOrigin });
+    }
+
+    if (wantsGeneratedSummaryFile && fileContext && result.success) {
+      let storageKey: string | undefined;
+      let metadataSaved = false;
+      try {
+        const filename = summaryFilename(fileContext.originalName, task.id);
+        const content = formatGeneratedSummaryMarkdown(fileContext.originalName, result.summary);
+        const bytes = Buffer.from(content, "utf8");
+        const stored = await storagePut(`ryze/${userId}/generated/${filename}`, bytes, "text/markdown");
+        storageKey = stored.key;
+        validateGeneratedArtifact({ originalName: filename, mimeType: "text/markdown", byteSize: bytes.length, storageKey, source: "generated", category: "documents" });
+        const file = await saveFileMetadata(userId, {
+          taskId: task.id,
+          storageKey,
+          originalName: filename,
+          mimeType: "text/markdown",
+          byteSize: bytes.length,
+          category: "documents",
+          source: "generated",
+          telegramOrigin: { chatId: input.data.chatId, senderId: input.data.senderId, messageId: input.data.messageId },
+        });
+        metadataSaved = true;
+        result = { ...result, fileId: file.id, summary: `${result.summary}\n\nCreated a new Markdown summary file: ${filename}.` };
+        await addTaskLog(userId, task.id, "system", "success", "A new Markdown summary artifact was created and bound to the originating authorized private chat.");
+      } catch (error) {
+        if (storageKey && !metadataSaved) await storageDelete(storageKey).catch(() => undefined);
+        const message = "The document was analyzed, but Ryze could not save the new Markdown summary file.";
+        result = { summary: message, success: false };
+        await updateTask(userId, task.id, { status: "FAILED", summary: message, completedAt: new Date() });
+        await addTaskLog(userId, task.id, "system", "error", `${message} (${error instanceof Error ? error.name : "unknown error"})`);
+      }
     }
 
     const replyText = `Ryze: ${result.summary}`.slice(0, 4000);

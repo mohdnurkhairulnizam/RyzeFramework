@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, like, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, like, lte, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import Database from "better-sqlite3";
 import { mkdirSync } from "node:fs";
@@ -26,6 +26,7 @@ import {
 import { ENV } from "./_core/env";
 import { buildPortableExport } from "./ryzeExport";
 import { filterOwnedRecords, requireOwnedRecord } from "./ryzeOwnership";
+import { FILE_RETENTION_MS } from "../shared/fileRetention";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 let _sqlite: Database.Database | null = null;
@@ -369,7 +370,8 @@ export async function getLatestTelegramFile(userId: number, chatId: string, send
     eq(ryzeFiles.telegramChatId, chatId),
     eq(ryzeFiles.telegramSenderId, senderId),
   )).orderBy(desc(ryzeFiles.createdAt)).limit(1);
-  return rows[0] ?? null;
+  const file = rows[0] ?? null;
+  return file && file.createdAt.getTime() + FILE_RETENTION_MS > Date.now() ? file : null;
 }
 
 export async function getTelegramFileByOrigin(userId: number, chatId: string, messageId: string) {
@@ -384,13 +386,28 @@ export async function getTelegramFileByOrigin(userId: number, chatId: string, me
 
 export async function listFiles(userId: number) {
   const db = await requireDb();
-  return db.select().from(ryzeFiles).where(eq(ryzeFiles.userId, userId)).orderBy(desc(ryzeFiles.createdAt));
+  const files = await db.select().from(ryzeFiles).where(eq(ryzeFiles.userId, userId)).orderBy(desc(ryzeFiles.createdAt));
+  const cutoff = Date.now() - FILE_RETENTION_MS;
+  return files.filter((file) => file.createdAt.getTime() > cutoff);
 }
-
 export async function getFileForUser(fileId: string, userId: number) {
   const db = await requireDb();
   const rows = await db.select().from(ryzeFiles).where(and(eq(ryzeFiles.id, fileId), eq(ryzeFiles.userId, userId))).limit(1);
-  return rows[0] ?? null;
+  const file = rows[0] ?? null;
+  return file && file.createdAt.getTime() + FILE_RETENTION_MS > Date.now() ? file : null;
+}
+export async function getFileForDeletion(fileId: string, userId: number) {
+  const db = await requireDb();
+  const [file] = await db.select().from(ryzeFiles).where(and(eq(ryzeFiles.id, fileId), eq(ryzeFiles.userId, userId))).limit(1);
+  return file ?? null;
+}
+export async function deleteFileMetadataForUser(fileId: string, userId: number) {
+  const db = await requireDb();
+  await db.delete(ryzeFiles).where(and(eq(ryzeFiles.id, fileId), eq(ryzeFiles.userId, userId)));
+}
+export async function listExpiredFiles(cutoff: Date) {
+  const db = await requireDb();
+  return db.select().from(ryzeFiles).where(lte(ryzeFiles.createdAt, cutoff));
 }
 
 export async function getDashboard(userId: number) {
