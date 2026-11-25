@@ -9,6 +9,22 @@ export type MemoryReview = {
   decision: "new" | "duplicate" | "conflict";
 };
 
+export type MemoryReviewSnapshot = {
+  decision: MemoryReview["decision"];
+  requiresOwnerReview: boolean;
+  exactIds: string[];
+  conflictIds: string[];
+};
+
+export function toMemoryReviewSnapshot(review: MemoryReview): MemoryReviewSnapshot {
+  return {
+    decision: review.decision,
+    requiresOwnerReview: review.requiresOwnerReview,
+    exactIds: review.exact.map(entry => entry.id).sort(),
+    conflictIds: review.conflicts.map(entry => entry.id).sort(),
+  };
+}
+
 export type RetrievalContextEntry = {
   id: string;
   category: MemoryCategory;
@@ -75,8 +91,13 @@ export async function reviewMemory(input: StoreMemoryInput, provider: MemoryProv
   };
 }
 
-export async function createReviewedMemory(input: StoreMemoryInput & { ownerConfirmed: boolean }, provider: MemoryProvider = sqliteMemoryProvider) {
+export async function createReviewedMemory(input: StoreMemoryInput & { ownerConfirmed: boolean; expectedReview?: MemoryReviewSnapshot }, provider: MemoryProvider = sqliteMemoryProvider) {
   const review = await reviewMemory(input, provider);
+  if (input.expectedReview && JSON.stringify(toMemoryReviewSnapshot(review)) !== JSON.stringify(input.expectedReview)) {
+    const error = new Error("Memory changed after review. Review the updated duplicate or conflict results before saving.");
+    (error as Error & { review?: MemoryReview }).review = review;
+    throw error;
+  }
   if (!input.ownerConfirmed && review.requiresOwnerReview) {
     const error = new Error("Owner confirmation is required after duplicate, conflict, or restricted-memory review.");
     (error as Error & { review?: MemoryReview }).review = review;

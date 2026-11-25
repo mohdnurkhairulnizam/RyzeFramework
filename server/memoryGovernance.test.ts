@@ -9,7 +9,7 @@ vi.stubEnv("RYZE_LOCAL_OWNER_OPEN_ID", "governance-owner");
 
 const db = await import("./db");
 const { sqliteMemoryProvider } = await import("./sqliteMemoryProvider");
-const { buildRetrievalContext, createReviewedMemory, reviewMemory } = await import("./memoryGovernance");
+const { buildRetrievalContext, createReviewedMemory, reviewMemory, toMemoryReviewSnapshot } = await import("./memoryGovernance");
 
 let ownerId: number;
 let otherId: number;
@@ -45,6 +45,14 @@ describe("Gate 3 memory governance", () => {
     expect(review.decision).toBe("conflict");
     expect(review.requiresOwnerReview).toBe(true);
     await expect(createReviewedMemory({ ...input, ownerConfirmed: false })).rejects.toThrow("Owner confirmation");
+  });
+
+  it("rejects a save when its reviewed conflict snapshot is stale", async () => {
+    const input = { ownerId, category: "system" as const, memoryType: "project" as const, content: "Use reviewed staging for the canary", tags: ["canary-review"], createdBy: "owner" as const };
+    const reviewed = await reviewMemory(input);
+    expect(reviewed.decision).toBe("new");
+    await sqliteMemoryProvider.store({ ...input, content: "Use legacy staging for the canary" });
+    await expect(createReviewedMemory({ ...input, ownerConfirmed: true, expectedReview: toMemoryReviewSnapshot(reviewed) })).rejects.toThrow("Memory changed after review");
   });
 
   it("bounds excerpts, excludes restricted entries by default, and isolates owners", async () => {

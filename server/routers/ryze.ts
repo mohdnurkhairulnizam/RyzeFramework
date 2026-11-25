@@ -518,6 +518,12 @@ export const ryzeRouter = router({
       sourceRef: z.string().trim().max(500).optional(),
       sensitivity: z.enum(["normal", "restricted"]).default("normal"),
       ownerConfirmed: z.boolean().default(false),
+      expectedReview: z.object({
+        decision: z.enum(["new", "duplicate", "conflict"]),
+        requiresOwnerReview: z.boolean(),
+        exactIds: z.array(z.string().max(100)).max(50),
+        conflictIds: z.array(z.string().max(100)).max(12),
+      }),
     }))
     .mutation(async ({ ctx, input }) => {
       try {
@@ -531,6 +537,7 @@ export const ryzeRouter = router({
           source: { sourceSystemId: "dashboard", sourceRef: input.sourceRef },
           createdBy: "owner",
           ownerConfirmed: input.ownerConfirmed,
+          expectedReview: input.expectedReview,
         }, sqliteMemoryProvider);
       } catch (error) {
         throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Owner confirmation is required." });
