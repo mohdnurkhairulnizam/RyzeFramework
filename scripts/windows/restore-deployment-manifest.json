@@ -1,0 +1,13 @@
+{
+  "format": "ryze-critical-deployment-v1",
+  "criticalFiles": [
+    {
+      "path": "scripts/windows/Apply-RyzeRestore.ps1",
+      "sha256": "099FD1C22CD3C79EED080091D0E9CD3C59B2AE3EEF0B0993400066A5D94949AF"
+    },
+    {
+      "path": "scripts/windows/validate-restore-db.mjs",
+      "sha256": "9970E340C722E8A097C4B991F3578E73DBE15A2BACD4964727266FCDA90D0155"
+    }
+  ]
+}

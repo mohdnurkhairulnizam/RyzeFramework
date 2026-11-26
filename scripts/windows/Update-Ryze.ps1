@@ -6,6 +6,20 @@ param(
 $ErrorActionPreference = 'Stop'
 $SourceDirectory = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $EnvFile = Join-Path $InstallDirectory '.env'
+function Assert-CriticalDeploymentFiles([string]$RootDirectory, [string]$Context) {
+  $manifestPath = Join-Path $RootDirectory 'scripts\windows\restore-deployment-manifest.json'
+  if (-not (Test-Path -LiteralPath $manifestPath)) { throw "$Context is missing the critical restore deployment manifest." }
+  try { $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json } catch { throw "$Context has an unreadable critical restore deployment manifest." }
+  if ($manifest.format -ne 'ryze-critical-deployment-v1' -or -not $manifest.criticalFiles) { throw "$Context has an invalid critical restore deployment manifest." }
+  foreach ($entry in @($manifest.criticalFiles)) {
+    if ([string]::IsNullOrWhiteSpace($entry.path) -or $entry.sha256 -notmatch '^[0-9A-Fa-f]{64}$') { throw "$Context has an invalid critical restore manifest entry." }
+    $filePath = Join-Path $RootDirectory ($entry.path -replace '/', '\')
+    if (-not (Test-Path -LiteralPath $filePath -PathType Leaf)) { throw "$Context is missing required file $($entry.path)." }
+    $actualHash = (Get-FileHash -LiteralPath $filePath -Algorithm SHA256).Hash.ToUpperInvariant()
+    if ($actualHash -ne $entry.sha256.ToUpperInvariant()) { throw "$Context has an unexpected SHA-256 for $($entry.path)." }
+  }
+}
+Assert-CriticalDeploymentFiles $SourceDirectory 'The extracted update package'
 if (-not $env:LOCALAPPDATA) { throw 'Windows LOCALAPPDATA is unavailable for this account.' }
 if (-not (Test-Path -LiteralPath $EnvFile)) { throw "No existing Ryze configuration was found at $InstallDirectory. Use Install-Ryze.cmd for a first-time installation." }
 if ([IO.Path]::GetFullPath($SourceDirectory) -eq [IO.Path]::GetFullPath($InstallDirectory)) { throw 'Extract the updated ZIP to a temporary folder; do not run the updater from inside the installed folder.' }
@@ -50,6 +64,7 @@ $excludeDirs = @(
 )
 & robocopy.exe $SourceDirectory $InstallDirectory /E /NFL /NDL /NJH /NJS /NC /NS /XD $excludeDirs /XF '.env' '.env.local' '.env.*.local'
 if ($LASTEXITCODE -ge 8) { throw "Copying update files failed (robocopy exit $LASTEXITCODE). Existing local data and configuration were not changed." }
+Assert-CriticalDeploymentFiles $InstallDirectory 'The installed Ryze files after update'
 
 $workerTokenLine = Get-Content -LiteralPath $EnvFile | Where-Object { $_ -match '^RYZE_WORKER_TOKEN=' } | Select-Object -First 1
 if (-not $workerTokenLine -or [string]::IsNullOrWhiteSpace(($workerTokenLine -replace '^RYZE_WORKER_TOKEN=', '').Trim().Trim('"'))) {
