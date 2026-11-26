@@ -31,7 +31,7 @@ RyzeFramework is currently a local Windows application with:
 
 A successful chat response is evidence of the text-chat path only. It is not evidence that Ryze can safely plan and execute arbitrary real-world operations.
 
-**Latest verification:** On 24 November 2026, the target Windows installation passed the one-button operational baseline, restart test, staged Telegram inbound test, autonomous same-chat checks, and the real one-hour recovery-code expiry observation. Backup creation, restore rehearsal, database/log records, uploaded-file record, Windows ACL checks, Telegram login-code flow, worker startup, authorized sender handling, unauthorized-sender ignoring, recovery-code temporary authorization, and worker pause/resume/stop controls were reported successful. Physical restore, controlled provider failure, and Telegram report/file delivery remain open.
+**Latest verification:** On 24 November 2026, the target Windows installation passed the one-button operational baseline, restart test, staged Telegram inbound test, autonomous same-chat checks, and the real one-hour recovery-code expiry observation. Backup creation, restore rehearsal, database/log records, uploaded-file record, Windows ACL checks, Telegram login-code flow, worker startup, authorized sender handling, unauthorized-sender ignoring, recovery-code temporary authorization, and worker pause/resume/stop controls were reported successful. Physical restore and Telegram session recovery are verified PASS; live provider failure behavior and Telegram report/file delivery remain open.
 
 ## 2. What is available now
 
@@ -185,7 +185,7 @@ There is no approved-chat or group allowlist in this design. Authorization is ba
 
 Run these checks in order on the installed Windows computer. Do not send or paste `.env`, API keys, worker tokens, login codes, recovery codes, session files, or backup archives.
 
-**Provider fault check:** First create a private backup. The current package has automated timeout, rate-limit, refusal, and malformed-response tests, but it does not ship a fake provider button. Do not deliberately edit the live `.env` with a real key or provider URL. For live evidence, use a separate test copy and a controlled mock OpenAI-compatible gateway that you own: point the test copy to the mock, make it return timeout, HTTP 429, a refusal/error result, and invalid JSON one at a time, then confirm the dashboard reports a sanitized failure, no Telegram reply is sent, and the task is marked failed. If no mock gateway is available, record the automated test result and leave the live-provider gate `NOT_RUN` rather than breaking the working installation.
+**Provider fault check:** First create a private backup. The dashboard now provides a provider fault self-test that simulates timeout, rate-limit, refusal, and malformed-response handling locally. Do not deliberately edit the live `.env` with a real key or provider URL. For live evidence, use a separate test copy and a controlled mock OpenAI-compatible gateway that you own: point the test copy to the mock, make it return timeout, HTTP 429, a refusal/error result, and invalid JSON one at a time, then confirm the dashboard reports a sanitized failure, no Telegram reply is sent, and the task is marked failed. If no mock gateway is available, record the automated test result and leave the live-provider gate `NOT_RUN` rather than breaking the working installation.
 
 **Physical backup and restore:** Stop Ryze, select **Create private backup**, and note only the displayed backup name. Confirm the backup manifest reports the database/configuration and, when Telegram is configured, worker configuration/session entries. Select that backup and choose **Restore selected backup**. Start Ryze once so the managed launcher applies the restore. Confirm owner login, one previous task, one file entry, Telegram account status, and worker authorization. Do not delete the pre-restore folder until these checks pass. If anything fails, stop Ryze and restore the preserved `Ryze-pre-restore-*` copy through the same controlled process.
 
@@ -410,3 +410,17 @@ If the worker is paused, select **Resume** and send a new test message. If the w
 ## Provider fault self-test
 
 In **Settings**, select **Run provider fault self-test**. Ryze locally simulates timeout, HTTP 429/rate-limit, provider refusal, and malformed-response cases. Use **Copy** to copy the report for support. This check does not contact FreeLLMAPI, read API keys, change `.env`, send Telegram messages, or prove live-provider behavior.
+
+### PowerShell 5.1 restore snapshot validation
+
+The installed package now includes `scripts\windows\validate-restore-db.mjs`. Use the validator file instead of an inline `node -e` command, because PowerShell 5.1 can strip JavaScript quotes during pasted inline commands.
+
+```powershell
+$install = Join-Path $env:LOCALAPPDATA 'Programs\RyzeFramework'
+$snapshot = Join-Path $env:USERPROFILE 'Documents\RyzeFramework-backups\Ryze-pre-restore-YYYYMMDD-HHmmss-fff'
+$db = Join-Path $snapshot 'data\ryze.sqlite'
+node (Join-Path $install 'scripts\windows\validate-restore-db.mjs') $db
+Test-Path -LiteralPath (Join-Path $install 'scripts\windows\validate-restore-db.mjs')
+```
+
+Expected output includes `Integrity check: ok` and then `True`. Replace the placeholder snapshot folder with the exact `Ryze-pre-restore-*` folder name. The validator opens SQLite read-only and does not modify the snapshot or live Ryze data.
