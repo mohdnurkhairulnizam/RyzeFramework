@@ -6,7 +6,7 @@ Run this procedure only in the **separate disposable Windows account/profile** u
 
 The `Run operational baseline` button is a non-destructive backup/copy rehearsal. Its “Restore rehearsal” means the backup folder was copied to a temporary directory. It does not, by itself, verify SQLite integrity, replace data, reject corruption, or test rollback.
 
-This runbook assumes a future package with the hardened `Apply-RyzeRestore.ps1` and `validate-restore-db.mjs` has been installed into the disposable profile. The user-visible restore code must be run on Windows before Stage 2 can claim platform acceptance.
+Use only the `RyzeFramework-Stage2-Restore-Hardening-2026-11-26.zip` acceptance-candidate source package (commit `d78dbd5`) or a later reviewed package. It has passed sandbox checks, but its PowerShell workflow has **not** been run on Windows. Extract it and install/update only within the dedicated disposable Windows account/profile; never use the ordinary Ryze profile for this procedure. The user-visible restore code must be run on Windows before Stage 2 can claim platform acceptance.
 
 ## Preflight the disposable profile
 
