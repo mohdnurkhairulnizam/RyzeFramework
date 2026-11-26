@@ -33,7 +33,7 @@ Double-click `Start-Ryze.cmd` in the **installed folder**. It starts OpenCode an
 
 Enter the owner password you set during installation. Keep the address as `127.0.0.1`; do not replace it with the computer's network IP or expose the port to other devices. Logs are under `%LOCALAPPDATA%\RyzeFramework\logs`.
 
-For the synthetic Stage 2 preflight and its separate target-Windows acceptance work, follow the [Stage 2 One-Click Preflight guide](./stage2-one-click-test.md). Use a disposable VM or separate Windows user profile; do not install a test build over your only working Ryze installation.
+For the synthetic Stage 2 preflight and its separate target-Windows acceptance work, follow the [Stage 2 One-Click Preflight guide](./stage2-one-click-test.md). Restore validation, corruption rejection, and rollback drills must use the [Disposable Windows Restore-Safety Test](./stage2-restore-safety-test.md) in a separate disposable profile; never use your only working Ryze installation for those exercises.
 
 ## Configure OpenCode + FreeLLMAPI text chat
 

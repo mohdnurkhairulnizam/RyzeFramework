@@ -1,9 +1,9 @@
 # RyzeFramework Current Stage Handoff
 
-**Status date:** 25 November 2026
+**Status date:** 26 November 2026
 **Working branch:** `feature/telegram-file-transfer`
 **Base:** verified `stable-merge` baseline `e8e7660`
-**Current baseline:** Commit `c58bdad` (`feat: add Telegram file retention and summary artifacts`) is the current committed version on `feature/telegram-file-transfer`. **Stage disposition:** At the owner's direction, Stage 1 is **PARTIAL — closed for sequencing, not complete**. Its nine origin criteria remain unwaived, and the retained self-test's historical results are unchanged. The owner reports File Manifest early deletion PASS on target Windows (exact tested package/checksum not restated); automatic 30-day expiry still needs Windows verification. Existing-file return is separately owner-reported PASS on `d35b770`. The latest summary-as-file request still resends `README.md`, and Ryze says it cannot create/write files. The owner has placed changes to the live agent skill/intent layer on hold and directed that this capability be handled in Stage 2 planning. Backend tests are not live skill acceptance. Stage 2 is now active; see [`stage-2-implementation-plan.md`](./stage-2-implementation-plan.md).
+**Current baseline:** The current reviewed source is the head of `feature/telegram-file-transfer`; the Windows restore-hardening changes are committed on this branch. **Stage disposition:** At the owner's direction, Stage 1 is **PARTIAL — closed for sequencing, not complete**. Its nine origin criteria remain unwaived, and the retained self-test's historical results are unchanged. The owner reports File Manifest early deletion PASS on target Windows (exact tested package/checksum not restated); automatic 30-day expiry still needs Windows verification. Existing-file return is separately owner-reported PASS on `d35b770`. The latest summary-as-file request still resends `README.md`, and Ryze says it cannot create/write files. The owner has placed changes to the live agent skill/intent layer on hold and directed that this capability be handled in Stage 2 planning. Backend tests are not live skill acceptance. Stage 2 is now active; see [`stage-2-implementation-plan.md`](./stage-2-implementation-plan.md).
 
 ## Stage transition — preserve residual evidence and start Stage 2
 
@@ -67,6 +67,15 @@ These are sandbox checks. They do not establish behavior on the target Windows i
 
 ### Owner-reported target-Windows evidence
 
+The owner reports that the latest package update completed, the dashboard opened, and existing memory entries remained visible and intact (**PASS, owner-reported**). The owner also reports persistence and ACL verification **PASS** from `Run operational baseline`. Its report confirms a protected backup folder, task/file creation, and `icacls` checks; its “Restore rehearsal” is explicitly a temporary copy and **does not verify integrity or perform an actual restore**. The supplied report does not establish that the Windows account was a separate disposable profile, so destructive acceptance checks remain gated on using one.
+
+### Stage 2 restore hardening checkpoint — COMMITTED; WINDOWS TEST PENDING — 26 November 2026
+
+- Added a read-only SQLite validator that checks `integrity_check` and required Stage 2 tables/columns, with four synthetic tests for valid, incomplete-schema, corrupt, and missing databases. The Stage 2 preflight now includes this test file.
+- Reworked `Apply-RyzeRestore.ps1` to stage and validate a candidate before modifying installed state, validate a pre-restore snapshot before replacement, validate the restored database, attempt automatic rollback from the snapshot after apply/post-check failures, and support explicit `-SimulatePostReplaceFailure` fault injection. ZIP entries are screened for unsafe paths before extraction.
+- Added [`stage2-restore-safety-test.md`](./stage2-restore-safety-test.md), which confines corruption, restore, and rollback drills to a dedicated disposable Windows profile and limits reported evidence to redacted statuses.
+- Sandbox checks pass: TypeScript, 73 Vitest tests across 23 files, 9 worker tests, local build, and `git diff --check`. These checks do not execute or parse the PowerShell workflow on Windows. PowerShell is unavailable in this sandbox; therefore target-Windows validation and a real rollback drill remain **NOT RUN**. Any package made for the next step is an unverified acceptance candidate and must be used only in a disposable profile; do not present restore as platform-accepted or install it over the normal profile.
+
 The owner reports PASS for the previously exercised same-chat Telegram reply, pause/resume, unauthorized sender rejection, temporary recovery-code authorization and expiry, worker stop/start replay and duplicate-event handling, controlled failure handling, physical backup/restore including Telegram session recovery, and provider-related checks. The owner specifically requested that Telegram acknowledgement-mismatch and provider-failure evidence be recorded as **PASS (owner-reported; not independently verified here)**. The deterministic dashboard provider-fault simulation is a separate local simulation PASS, not live-provider evidence.
 
 The owner reports text-only ingress and file-reading feedback as **PASS (owner-reported)** and has explicitly confirmed the successful test used commit `d35b770`. The attached excerpt records a request to explain `README.md` and a returned response. Package identity is owner-confirmed; the Windows behavior remains owner-reported rather than independently verified. See the linked Windows evidence addendum.
@@ -87,9 +96,10 @@ The owner has reported bounded README file feedback on target Windows using `d35
 
 ## Next actions
 
-1. Continue Gate 3 from [`stage-2-implementation-plan.md`](./stage-2-implementation-plan.md): complete owner-confirmation management APIs, duplicate/conflict review, protected identity/System Memory controls, and bounded contextual retrieval. Keep the existing memory rows available and do not assume current `core` scope equals protected System Memory.
-2. Keep ECC at audit/research level for now. It cannot substitute for memory design or any Stage 1/2 acceptance gate; any later experiment needs a pinned version, target-Windows compatibility check, isolated workspace, and Ryze deny-all permission boundary.
-3. Preserve the Stage 1 residual register. The summary-file skill/intent issue is held for Stage 2 design; target-Windows automatic 30-day expiry remains a separate verification item. Early File Manifest deletion and existing-file return remain owner-reported PASS.
-4. Preserve the 24 November self-test unchanged and distinguish its historical `NOT_RUN`/`WARN` statuses from later owner reports and sandbox checks. Stage 1 remains PARTIAL unless its nine criteria are later completed with evidence.
+1. Review and run the restore-safety procedure only after the hardened package is prepared, in a separate disposable Windows profile. Collect the valid restore, corruption-rejection, and injected rollback results; keep all backup/database/configuration/session contents local.
+2. Continue the remaining Stage 2 acceptance plan in [`stage-2-implementation-plan.md`](./stage-2-implementation-plan.md); target-Windows restore evidence is still outstanding and must not be inferred from a temporary copy rehearsal or sandbox tests.
+3. Keep ECC at audit/research level for now. It cannot substitute for memory design or any Stage 1/2 acceptance gate; any later experiment needs a pinned version, target-Windows compatibility check, isolated workspace, and Ryze deny-all permission boundary.
+4. Preserve the Stage 1 residual register. The summary-file skill/intent issue is held for Stage 2 design; target-Windows automatic 30-day expiry remains a separate verification item. Early File Manifest deletion and existing-file return remain owner-reported PASS.
+5. Preserve the 24 November self-test unchanged and distinguish its historical `NOT_RUN`/`WARN` statuses from later owner reports and sandbox checks. Stage 1 remains PARTIAL unless its nine criteria are later completed with evidence.
 
 Do not mark Stage 1 operational from sandbox tests or architecture statements alone. Preserve the 24 November acceptance self-test unchanged and distinguish its results from later owner reports and workspace checks. Keep credentials, API keys, worker tokens, recovery codes, Telegram session files, and backup contents out of Git and support messages.

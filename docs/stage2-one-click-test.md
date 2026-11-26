@@ -2,7 +2,7 @@
 
 ## What this button does
 
-The Settings button **Run Stage 2 preflight** runs a focused Vitest suite for memory persistence, owner scope, identity/System Memory, governance, retrieval boundaries, and portable export. Its fixtures are synthetic. The runner creates a temporary directory, passes a reduced environment to the test process, captures a bounded log, and deletes the temporary directory afterward.
+The Settings button **Run Stage 2 preflight** runs a focused Vitest suite for memory persistence, owner scope, identity/System Memory, governance, retrieval boundaries, portable export, and SQLite restore validation. Its fixtures are synthetic. The runner creates a temporary directory, passes a reduced environment to the test process, captures a bounded log, and deletes the temporary directory afterward.
 
 The report deliberately separates automated results from acceptance work that the button does not perform. A `PASS` means only that the focused synthetic tests passed. The report still marks target-Windows installation, ACL, actual backup/restore, rollback, and representative owner-approved retrieval relevance as `NOT_RUN`. It is not a Stage 2 acceptance sign-off.
 
@@ -30,8 +30,8 @@ The report includes the platform, Node version, test summary, and captured test 
 
 ## What remains outside this button
 
-The preflight is not the target-Windows round-trip test. In particular, do not use your only live installation or a real backup to test restore. The reviewed Windows backup/restore flow still needs a verified archive/database integrity check and a corruption/failure rollback rehearsal before that test can be considered acceptance evidence.
+The preflight is not the target-Windows round-trip test. In particular, do not use your only live installation or a real backup to test restore. The current Windows restore handler validates the selected SQLite file and required Stage 2 schema before changing the installation, takes and validates a rollback snapshot, and attempts automatic rollback on an apply/post-check failure. Its SQLite validator has synthetic regression coverage, but this PowerShell workflow has not yet been executed on Windows after the hardening change.
 
-After we review the copied preflight log and close the integrity-check gap, the next Windows phase should use a disposable test installation with synthetic owner data. It will verify the installed dashboard, stop/restart persistence, ordinary export exclusions, private backup/restore to a clean test copy, corruption rejection, and recovery of the pre-restore copy. The archive and any credential-bearing output must remain local to the disposable machine and must never be uploaded or pasted into chat.
+Use the separate [Stage 2 Disposable Windows Restore-Safety Test](./stage2-restore-safety-test.md) only in a dedicated disposable Windows profile. It verifies the installed restore script with a valid restore, a deliberately corrupted duplicate backup, and an explicit post-replacement failure injection that exercises automatic rollback. Keep archives and any credential-bearing output local to the disposable machine; never upload or paste them into chat.
 
 Even if all automated checks pass, Stage 2 remains open until the owner-reviewed retrieval set and the required Windows acceptance evidence are separately recorded.

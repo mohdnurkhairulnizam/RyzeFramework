@@ -13,6 +13,7 @@ export type Stage2SelfTestCheck = {
 const focusedTestFiles = [
   "server/localStorage.sqlite.test.ts",
   "server/stage2SchemaCompatibility.test.ts",
+  "server/restoreDatabaseValidation.test.ts",
   "server/memoryProvider.test.ts",
   "server/memoryGovernance.test.ts",
   "server/ryzeExport.test.ts",
