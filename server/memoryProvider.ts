@@ -45,7 +45,12 @@ export type SearchMemoryInput = {
   category?: MemoryCategory;
   memoryType?: MemoryType;
   project?: string;
+  /** Include archived lifecycle records in addition to the normal active set. */
   includeArchived?: boolean;
+  /** Include superseded versions; normal search remains active-only. */
+  includeSuperseded?: boolean;
+  /** Stable chronological order for history-oriented requests. */
+  sortOrder?: "relevance" | "createdAtAsc";
   limit?: number;
 };
 

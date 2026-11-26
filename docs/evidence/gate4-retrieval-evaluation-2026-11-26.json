@@ -1,0 +1,248 @@
+{
+  "evaluation": "Gate 4 approved synthetic SQLite retrieval query set",
+  "status": "post-remediation retest; synthetic-only; not a production-data benchmark",
+  "database": "fresh temporary SQLite database; removed after run",
+  "fixtureCount": 8,
+  "queryCount": 14,
+  "retrievalParameters": {
+    "defaultLimit": 12,
+    "Q08": "category=personal, memoryType=preference (explicit filter phrase in approved query)",
+    "Q09": "category=experience, memoryType=project (explicit filter phrase in approved query)",
+    "Q10_Q11": "category=system via bounded retrieval context; Q11 explicitly enables includeRestricted"
+  },
+  "measures": {
+    "averaging": "micro across all expected/retrieved fixture IDs in the 14 fixed queries",
+    "truePositive": 13,
+    "falsePositive": 0,
+    "falseNegative": 0,
+    "predictionCount": 13,
+    "precision": 1,
+    "recall": 1,
+    "f1": 1
+  },
+  "fixedQueries": [
+    {
+      "id": "Q01",
+      "query": "How should I format the current weekly project reports?",
+      "expected": [
+        "R2"
+      ],
+      "retrieved": [
+        "R2"
+      ],
+      "truePositive": 1,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "restrictedExcludedCount": 0
+    },
+    {
+      "id": "Q02",
+      "query": "What was my earlier style for weekly project updates?",
+      "expected": [
+        "R1"
+      ],
+      "retrieved": [
+        "R1"
+      ],
+      "truePositive": 1,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "restrictedExcludedCount": 0
+    },
+    {
+      "id": "Q03",
+      "query": "What is my current preference for weekly project reports?",
+      "expected": [
+        "R2"
+      ],
+      "retrieved": [
+        "R2"
+      ],
+      "truePositive": 1,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "restrictedExcludedCount": 0
+    },
+    {
+      "id": "Q04",
+      "query": "What persistence decision was made for the Atlas project?",
+      "expected": [
+        "R3"
+      ],
+      "retrieved": [
+        "R3"
+      ],
+      "truePositive": 1,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "restrictedExcludedCount": 0
+    },
+    {
+      "id": "Q05",
+      "query": "Which project is the Telegram onboarding work, Atlas or Atlas 2?",
+      "expected": [
+        "R4"
+      ],
+      "retrieved": [
+        "R4"
+      ],
+      "truePositive": 1,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "restrictedExcludedCount": 0
+    },
+    {
+      "id": "Q06",
+      "query": "What happened in the restore exercise on 14 November?",
+      "expected": [
+        "R5"
+      ],
+      "retrieved": [
+        "R5"
+      ],
+      "truePositive": 1,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "restrictedExcludedCount": 0
+    },
+    {
+      "id": "Q07",
+      "query": "Which fields must the migration retain from legacy records?",
+      "expected": [
+        "R6"
+      ],
+      "retrieved": [
+        "R6"
+      ],
+      "truePositive": 1,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "restrictedExcludedCount": 0
+    },
+    {
+      "id": "Q08",
+      "query": "List my Personal Preference records about weekly report format.",
+      "expected": [
+        "R1",
+        "R2"
+      ],
+      "retrieved": [
+        "R2",
+        "R1"
+      ],
+      "truePositive": 2,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "restrictedExcludedCount": 0
+    },
+    {
+      "id": "Q09",
+      "query": "Show Project memories for Atlas 2.",
+      "expected": [
+        "R4"
+      ],
+      "retrieved": [
+        "R4"
+      ],
+      "truePositive": 1,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "restrictedExcludedCount": 0
+    },
+    {
+      "id": "Q10",
+      "query": "What is the owner-only export rule?",
+      "expected": [],
+      "retrieved": [],
+      "truePositive": 0,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "restrictedExcludedCount": 1
+    },
+    {
+      "id": "Q11",
+      "query": "Include restricted System Memory for this request: what must an ordinary portable export exclude?",
+      "expected": [
+        "R7"
+      ],
+      "retrieved": [
+        "R7"
+      ],
+      "truePositive": 1,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "restrictedExcludedCount": 0
+    },
+    {
+      "id": "Q12",
+      "query": "Which measurement units do I prefer?",
+      "expected": [],
+      "retrieved": [],
+      "truePositive": 0,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "restrictedExcludedCount": 0
+    },
+    {
+      "id": "Q13",
+      "query": "What music did I listen to while cooking?",
+      "expected": [],
+      "retrieved": [],
+      "truePositive": 0,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "restrictedExcludedCount": 0
+    },
+    {
+      "id": "Q14",
+      "query": "Show both the earlier and current weekly-report preferences in date order.",
+      "expected": [
+        "R1",
+        "R2"
+      ],
+      "retrieved": [
+        "R1",
+        "R2"
+      ],
+      "truePositive": 2,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "restrictedExcludedCount": 0
+    }
+  ],
+  "chronologicalOrder": {
+    "queryId": "Q14",
+    "expected": [
+      "R1",
+      "R2"
+    ],
+    "retrieved": [
+      "R1",
+      "R2"
+    ],
+    "passed": true
+  },
+  "supplementalControls": {
+    "matchingRestrictedQuery": "Synthetic owner-only export rule ordinary portable exports",
+    "restrictedDefaultExcluded": true,
+    "restrictedExplicitIncluded": true,
+    "ownerBMatchingQuery": "Use metric units in measurements",
+    "ownerBCanRetrieveR8": true,
+    "ownerAMatchingQuery": "Use metric units in measurements",
+    "ownerAMatchingQueryDoesNotRetrieveR8": true,
+    "fixedOwnerAQueriesDoNotRetrieveR8": true
+  },
+  "historicalVersion": {
+    "R1Status": "superseded",
+    "R2Status": "active",
+    "explicitDatesApplied": true,
+    "note": "Current-preference searches remain active-only. Earlier-version intent retrieves superseded records, while inventory and both-version requests can return active and superseded entries; Q14 asserts chronological order."
+  },
+  "implementationLimitations": [
+    "The SQLite fallback uses bounded, normalized lexical token-overlap scoring and deterministic ranking; it is not an embedding or general semantic-reasoning system.",
+    "Superseded records are excluded from current/default searches and included only when history intent is detected or explicitly requested; archived records remain excluded unless explicitly requested.",
+    "Q10/Q11 run verbatim through the bounded context path. Restricted inclusion remains a separate explicit trusted option; query wording alone does not grant authorization.",
+    "Q08/Q09 use explicit category/type provider filters as recorded in the approved proposal. These filters remain authoritative and owner-scoped.",
+    "This fixed synthetic set is not evidence of production-corpus representativeness; a perfect score here does not establish broad semantic retrieval quality."
+  ]
+}

@@ -551,7 +551,7 @@ export const ryzeRouter = router({
       }
     }),
   listMemory: protectedProcedure
-    .input(z.object({ query: z.string().trim().max(500).optional(), category: z.enum(["system", "experience", "personal"]).optional(), memoryType: z.enum(["episodic", "semantic", "procedural", "preference", "project"]).optional(), project: z.string().trim().max(160).optional(), limit: z.number().int().min(1).max(50).default(20) }).optional())
+    .input(z.object({ query: z.string().trim().max(500).optional(), category: z.enum(["system", "experience", "personal"]).optional(), memoryType: z.enum(["episodic", "semantic", "procedural", "preference", "project"]).optional(), project: z.string().trim().max(160).optional(), includeArchived: z.boolean().default(false), includeSuperseded: z.boolean().optional(), sortOrder: z.enum(["relevance", "createdAtAsc"]).optional(), limit: z.number().int().min(1).max(50).default(20) }).optional())
     .query(({ ctx, input }) => sqliteMemoryProvider.search({ ownerId: ctx.user.id, ...input })),
   getMemory: protectedProcedure
     .input(z.object({ memoryId: z.string().trim().min(1).max(100) }))
@@ -566,7 +566,7 @@ export const ryzeRouter = router({
     .input(z.object({ memoryId: z.string().trim().min(1).max(100), ownerConfirmed: z.literal(true) }))
     .mutation(async ({ ctx, input }) => { await sqliteMemoryProvider.delete(ctx.user.id, input.memoryId); return { deleted: true }; }),
   retrievalContext: protectedProcedure
-    .input(z.object({ query: z.string().trim().max(500).optional(), category: z.enum(["system", "experience", "personal"]).optional(), memoryType: z.enum(["episodic", "semantic", "procedural", "preference", "project"]).optional(), project: z.string().trim().max(160).optional(), includeRestricted: z.boolean().default(false), limit: z.number().int().min(1).max(12).default(12) }).optional())
+    .input(z.object({ query: z.string().trim().max(500).optional(), category: z.enum(["system", "experience", "personal"]).optional(), memoryType: z.enum(["episodic", "semantic", "procedural", "preference", "project"]).optional(), project: z.string().trim().max(160).optional(), includeRestricted: z.boolean().default(false), includeSuperseded: z.boolean().optional(), sortOrder: z.enum(["relevance", "createdAtAsc"]).optional(), limit: z.number().int().min(1).max(12).default(12) }).optional())
     .query(({ ctx, input }) => buildRetrievalContext({ ownerId: ctx.user.id, ...input }, sqliteMemoryProvider)),
   identity: protectedProcedure.query(({ ctx }) => ensureRyzeIdentity(ctx.user.id)),
   identityRevisions: protectedProcedure.query(({ ctx }) => listIdentityRevisions(ctx.user.id)),

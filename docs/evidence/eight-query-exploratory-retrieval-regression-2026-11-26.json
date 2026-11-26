@@ -1,0 +1,115 @@
+{
+  "evaluation": "Gate 3 SQLite retrieval — isolated synthetic evaluation",
+  "fixtureCount": 7,
+  "ownerQueryCount": 8,
+  "measures": {
+    "microPrecision": 1,
+    "microRecall": 0.8333,
+    "microF1": 0.9091,
+    "truePositive": 5,
+    "falsePositive": 0,
+    "falseNegative": 1
+  },
+  "checks": {
+    "restrictedDefaultExcluded": true,
+    "restrictedExplicitlyIncluded": true,
+    "ownerIsolation": true
+  },
+  "cases": [
+    {
+      "name": "literal preference retrieval",
+      "query": "weekly project status reports",
+      "expected": [
+        "personal_concise_reports"
+      ],
+      "retrieved": [
+        "personal_concise_reports"
+      ],
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    {
+      "name": "migration recovery retrieval",
+      "query": "migration fails restore backup",
+      "expected": [
+        "migration_recovery_procedure"
+      ],
+      "retrieved": [
+        "migration_recovery_procedure"
+      ],
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    {
+      "name": "similarly named Atlas project discrimination",
+      "query": "Atlas dashboard navy styling",
+      "expected": [
+        "project_atlas_dashboard"
+      ],
+      "retrieved": [
+        "project_atlas_dashboard"
+      ],
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    {
+      "name": "Atlas 2 project discrimination",
+      "query": "Atlas 2 SQLite telemetry",
+      "expected": [
+        "project_atlas_2_ingestion"
+      ],
+      "retrieved": [
+        "project_atlas_2_ingestion"
+      ],
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    {
+      "name": "dated Windows restore retrieval",
+      "query": "Beacon Windows restore resetting ACLs",
+      "expected": [
+        "project_beacon_windows_restore"
+      ],
+      "retrieved": [
+        "project_beacon_windows_restore"
+      ],
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    {
+      "name": "semantic paraphrase recall check",
+      "query": "brief executive memo",
+      "expected": [
+        "personal_concise_reports"
+      ],
+      "retrieved": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 1
+    },
+    {
+      "name": "unrelated query returns no matches",
+      "query": "canary observability",
+      "expected": [],
+      "retrieved": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 0
+    },
+    {
+      "name": "owner isolation marker",
+      "query": "ORANGE-731",
+      "expected": [],
+      "retrieved": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 0
+    }
+  ],
+  "note": "Synthetic fixtures only; this is not a production-data evaluation or formal Gate 4 acceptance. The paraphrase case intentionally measures the current lexical SQLite fallback's semantic-recall limitation."
+}

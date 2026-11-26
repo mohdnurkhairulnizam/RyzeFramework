@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { mkdtempSync, rmSync } from "node:fs";
+import Database from "better-sqlite3";
 import os from "node:os";
 import path from "node:path";
 
@@ -41,6 +42,46 @@ describe("SQLite MemoryProvider fallback", () => {
     expect((await sqliteMemoryProvider.retrieve(ownerId, entry.id))?.content).toBe("Prefer concise technical reports");
     expect(await sqliteMemoryProvider.retrieve(otherId, entry.id)).toBeNull();
     expect((await sqliteMemoryProvider.search({ ownerId, query: "concise technical" }))[0]?.id).toBe(entry.id);
+  });
+
+  it("keeps current search active-only, resolves history intent, and distinguishes similarly named projects", async () => {
+    await db.upsertUser({ openId: "provider-history-owner", name: "History Test", role: "user" });
+    const retrievalOwnerId = (await db.getUserByOpenId("provider-history-owner"))!.id;
+    const r1 = await sqliteMemoryProvider.store({ ownerId: retrievalOwnerId, category: "personal", memoryType: "preference", content: "Prefer concise, one-paragraph weekly project updates." });
+    const r2 = await sqliteMemoryProvider.store({ ownerId: retrievalOwnerId, category: "personal", memoryType: "preference", content: "For weekly project reports, use no more than five bullets." });
+    const r3 = await sqliteMemoryProvider.store({ ownerId: retrievalOwnerId, category: "experience", memoryType: "project", content: "Atlas project decision: use local SQLite persistence for the Atlas workstream." });
+    const r4 = await sqliteMemoryProvider.store({ ownerId: retrievalOwnerId, category: "experience", memoryType: "project", content: "Atlas 2 is a separate Telegram onboarding project; do not treat it as the Atlas persistence workstream." });
+
+    await db.closeDb();
+    const raw = new Database(path.join(dataRoot, "data", "ryze.sqlite"));
+    try {
+      const update = raw.prepare("UPDATE ryze_memory SET createdAt = ?, updatedAt = ?, status = ? WHERE id = ? AND userId = ?");
+      update.run(Date.parse("2026-09-02T12:00:00.000Z"), Date.parse("2026-09-02T12:00:00.000Z"), "superseded", r1.id, retrievalOwnerId);
+      update.run(Date.parse("2026-11-01T12:00:00.000Z"), Date.parse("2026-11-01T12:00:00.000Z"), "active", r2.id, retrievalOwnerId);
+      update.run(Date.parse("2026-10-01T12:00:00.000Z"), Date.parse("2026-10-01T12:00:00.000Z"), "active", r3.id, retrievalOwnerId);
+      update.run(Date.parse("2026-10-02T12:00:00.000Z"), Date.parse("2026-10-02T12:00:00.000Z"), "active", r4.id, retrievalOwnerId);
+    } finally {
+      raw.close();
+      await db.getDb();
+    }
+
+    const current = await sqliteMemoryProvider.search({ ownerId: retrievalOwnerId, query: "How should I format the current weekly project reports?", category: "personal", memoryType: "preference" });
+    expect(current.map(entry => entry.id)).toEqual([r2.id]);
+    const earlier = await sqliteMemoryProvider.search({ ownerId: retrievalOwnerId, query: "What was my earlier style for weekly project updates?", category: "personal", memoryType: "preference" });
+    expect(earlier.map(entry => entry.id)).toEqual([r1.id]);
+    const inventory = await sqliteMemoryProvider.search({ ownerId: retrievalOwnerId, query: "List my Personal Preference records about weekly report format.", category: "personal", memoryType: "preference" });
+    expect(new Set(inventory.map(entry => entry.id))).toEqual(new Set([r1.id, r2.id]));
+    const history = await sqliteMemoryProvider.search({ ownerId: retrievalOwnerId, query: "Show both the earlier and current weekly-report preferences in date order.", limit: 12 });
+    expect(history.map(entry => entry.id)).toEqual([r1.id, r2.id]);
+
+    const atlasPersistence = await sqliteMemoryProvider.search({ ownerId: retrievalOwnerId, query: "What persistence decision was made for the Atlas project?" });
+    expect(atlasPersistence.map(entry => entry.id)).toEqual([r3.id]);
+    const atlasOnboarding = await sqliteMemoryProvider.search({ ownerId: retrievalOwnerId, query: "Which project is the Telegram onboarding work, Atlas or Atlas 2?" });
+    expect(atlasOnboarding.map(entry => entry.id)).toEqual([r4.id]);
+    const migrationRule = await sqliteMemoryProvider.store({ ownerId: retrievalOwnerId, category: "experience", memoryType: "semantic", content: "Synthetic migration rule: preserve legacy record IDs, text, tags, outcomes, timestamps, and legacy scope." });
+    const retainedFields = await sqliteMemoryProvider.search({ ownerId: retrievalOwnerId, query: "Which fields must the migration retain from legacy records?" });
+    expect(retainedFields.map(entry => entry.id)).toContain(migrationRule.id);
+    expect(await sqliteMemoryProvider.search({ ownerId: retrievalOwnerId, query: "What music did I listen to while cooking?" })).toEqual([]);
   });
 
   it("updates append-first and preserves the prior revision as archived", async () => {

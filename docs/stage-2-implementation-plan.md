@@ -1,7 +1,7 @@
 # Stage 2 — Identity and Advanced Memory: Implementation Plan
 
-**Planning status:** The v1 memory and identity contract is defined in [`memory-identity-contract.md`](./memory-identity-contract.md). Gate 2 and the provider-neutral SQLite fallback were implemented and validated on 25 November 2026. Gate 3 is now active: owner-confirmation management APIs, duplicate/conflict review, protected identity/System Memory controls, and bounded contextual retrieval.
-**Stage status:** Stage 1 is closed for sequencing as **PARTIAL**; Stage 2 is the next active stage. This does not certify Stage 1 completion or waive its outstanding criteria.
+**Planning status (26 November 2026):** The v1 memory and identity contract is defined in [`memory-identity-contract.md`](./memory-identity-contract.md). Gate 2 and the provider-neutral SQLite fallback are complete; the first Gate 3 APIs and Memory vault UX are implemented. **Gate 4's owner-approved 8-fixture/14-query synthetic evaluation passed after bounded retrieval remediation** (TP=13, FP=0, FN=0; precision/recall/F1=1.0; Q14 chronological order passed). This is not evidence of production-corpus representativeness or target-Windows acceptance; the separate eight-query exploratory baseline still has one semantic-paraphrase miss (F1=0.9091). **Gate 5 is PARTIAL / BLOCKED:** the Windows restore trial used the legacy handler, applied a corrupt duplicate, and required recovery from the pre-restore snapshot; the hardened handler has not been verified in the installed Windows directory.
+**Stage status:** Stage 1 is closed for sequencing as **PARTIAL**; Stage 2 is active. Gate 4's approved synthetic evaluation passed within its stated scope; Gate 5 remains PARTIAL / BLOCKED. This does not certify Stage 1 completion or waive its outstanding criteria.
 
 ## Next design decision
 
@@ -11,7 +11,7 @@ Keep the Telegram request to create a new Markdown file on hold as a Stage 2 cap
 
 ## Adopted workstream — external memory-provider evaluation (gated)
 
-The owner's attached Stage 2 proposal is adopted as a **Workstream**, not as a new stage and not as authorization to install a provider. It is useful for structured audit, comparison, proof-of-concept, and validation, but it must remain subordinate to this contract and the nine Stage 2 acceptance criteria.
+The owner's attached Stage 2 proposal is adopted as a **Workstream**, not as a new stage and not as authorization to install a provider. It is useful for structured audit, comparison, proof-of-concept, and validation, but it must remain subordinate to this contract and its nine acceptance evidence items. Origin blueprint §2.9 contains ten bullet statements; map these to the contract before final signoff.
 
 ### Milestones and tasks
 
@@ -83,17 +83,19 @@ Design an additive SQLite migration with a rollback/backup plan. Test migration 
 
 Completed in commits `4993cf6` and `3876c2c`: additive migration, legacy preservation, owner-scoped repository functions, identity/System Memory tables, provider-neutral `MemoryProvider`, SQLite fallback, append-first provenance, and automated validation. External providers remain uninstalled and SQLite remains authoritative.
 
-### Gate 3 — Memory management and identity — ACTIVE
+### Gate 3 — Memory management and identity — IMPLEMENTED; ACCEPTANCE CHECKS OPEN
 
-Implement inspectable create/search/read/update/archive flows through owner-authenticated APIs and the dashboard Memory vault. Add duplicate/conflict review before activation, bounded retrieval context, and stable Ryze identity/profile controls separately from user profile/preferences and protected System Memory. The first dashboard governance panel is implemented; target-Windows acceptance and export/restore evidence remain open. Enforce user ownership in the database layer, not only in prompt text. System Memory edits require explicit owner review and retain the prior version.
+Inspectable create/search/read/update/archive flows, duplicate/conflict review, bounded retrieval context, and identity/profile controls have an initial implementation through owner-authenticated APIs and the dashboard Memory vault. Remaining Gate 3 acceptance evidence and target-Windows checks stay open; do not infer them from backend tests. Enforce user ownership in the database layer, not only in prompt text. System Memory edits require explicit owner review and retain the prior version.
 
-### Gate 4 — Contextual retrieval and duplicate handling — FOLLOW-ON VALIDATION
+### Gate 4 — Contextual retrieval and duplicate handling — APPROVED SYNTHETIC EVALUATION PASSED; BROADER QUALITY UNPROVEN
 
-The first bounded retrieval and duplicate/conflict review slice is implemented in Gate 3. Gate 4 must now measure it using a fixed, owner-approved test set, record false positives/false negatives, validate stale and similarly named project behavior, and improve ranking only when measurements justify it. Preserve source/derived relationships and never silently merge records.
+The first bounded retrieval and duplicate/conflict review slice is implemented in Gate 3. The earlier exploratory baseline remains documented in [`evidence/gate3-retrieval-evaluation-2026-11-25.md`](./evidence/gate3-retrieval-evaluation-2026-11-25.md). The owner-approved fixed synthetic set in [`evidence/gate4-query-set-proposal-2026-11-26.md`](./evidence/gate4-query-set-proposal-2026-11-26.md) initially failed and was preserved separately; after bounded remediation, the unchanged 14 queries passed with TP=13, FP=0, FN=0, precision/recall/F1=1.0, and Q14 chronological order PASS. Current results and historical baseline are separately auditable in [`evidence/gate4-retrieval-evaluation-2026-11-26.md`](./evidence/gate4-retrieval-evaluation-2026-11-26.md), [`evidence/gate4-retrieval-evaluation-2026-11-26.json`](./evidence/gate4-retrieval-evaluation-2026-11-26.json), and [`evidence/gate4-retrieval-evaluation-2026-11-26-baseline.json`](./evidence/gate4-retrieval-evaluation-2026-11-26-baseline.json). Restricted default exclusion/explicit inclusion and owner-isolation controls passed. The separate eight-query exploratory baseline remains TP=5, FP=0, FN=1 (F1=0.9091), including a semantic-paraphrase miss. The fixed-set Gate 4 evaluation is passed within its approved synthetic scope; do not infer production-corpus relevance or target-Windows acceptance, change query wording/labels, or weaken authorization controls.
 
-### Gate 5 — Export, restore, and Windows acceptance
+### Gate 5 — Export, restore, and Windows acceptance — PARTIAL / BLOCKED
 
-Extend the private backup/export path to include memory in a documented, integrity-checked format while keeping credentials excluded from ordinary portable exports. On target Windows, verify export, fresh-copy restore, owner scoping, protected System Memory, and that a failed migration can be rolled back to the pre-change backup. Stage 2 is complete only when all nine Stage 2 criteria in the origin blueprint have evidence; the ECC proposal cannot substitute for those checks.
+The 26 November disposable-profile corruption-rejection test **failed against the legacy installed restore handler**: it applied a deliberately corrupted duplicate and startup then failed with “file is not a database.” A pre-restore snapshot was used for database-only recovery; SQLite integrity and required Stage 2 schema checks passed, Ryze reopened, and the owner verified synthetic memory markers A and B (**recovery PASS, owner-reported**). The installed handler hash differed from the hardened candidate and `validate-restore-db.mjs` was absent. The candidate source root was not present in the PowerShell working directory used for diagnosis, so the exact deployment cause remains unresolved. Do not repeat restore/corruption/rollback drills until the package/update source and installed files are verified. Valid restore and injected automatic rollback remain NOT RUN. Gate 5 stays open and blocked; do not count the failure as a hardening acceptance pass.
+
+Before resuming, add post-copy version/hash assertions to the updater, install only a verified package in the disposable profile, and confirm the hardened handler and validator hashes before queueing any restore. Then rerun a fresh, fully synthetic sequence. Stage 2 acceptance requires the nine evidence items in `memory-identity-contract.md`; note that origin blueprint §2.9 has ten bullet statements, so map those statements to the contract criteria before final signoff. ECC cannot substitute for any acceptance evidence.
 
 ## New-file capability work held for Stage 2
 

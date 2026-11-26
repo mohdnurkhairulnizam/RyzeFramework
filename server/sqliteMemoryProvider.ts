@@ -78,10 +78,14 @@ export class SqliteMemoryProvider implements MemoryProvider {
   async search(input: SearchMemoryInput) {
     const query = input.project ? `${input.query ?? ""} ${input.project}`.trim() : input.query;
     if (input.category === "system") {
-      return (await searchSystemMemory(input.ownerId, query)).map(record => normalize(record, input.ownerId)).filter((record): record is MemoryEntry => Boolean(record)).slice(0, input.limit ?? 20);
+      return (await searchSystemMemory(input.ownerId, {
+        query, includeArchived: input.includeArchived, includeSuperseded: input.includeSuperseded,
+        sortOrder: input.sortOrder, limit: input.limit,
+      })).map(record => normalize(record, input.ownerId)).filter((record): record is MemoryEntry => Boolean(record));
     }
     const records = await searchClassifiedMemory(input.ownerId, {
-      query, category: input.category, memoryType: input.memoryType, limit: input.limit,
+      query, category: input.category, memoryType: input.memoryType, includeArchived: input.includeArchived,
+      includeSuperseded: input.includeSuperseded, sortOrder: input.sortOrder, limit: input.limit,
     });
     return records.map(record => normalize(record, input.ownerId)).filter((record): record is MemoryEntry => Boolean(record));
   }

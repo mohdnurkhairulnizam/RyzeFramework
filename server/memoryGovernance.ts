@@ -117,6 +117,8 @@ export async function buildRetrievalContext(input: {
   memoryType?: MemoryType;
   project?: string;
   includeRestricted?: boolean;
+  includeSuperseded?: boolean;
+  sortOrder?: "relevance" | "createdAtAsc";
   limit?: number;
 }, provider: MemoryProvider = sqliteMemoryProvider): Promise<RetrievalContext> {
   const records = await provider.search({
@@ -125,6 +127,8 @@ export async function buildRetrievalContext(input: {
     category: input.category,
     memoryType: input.memoryType,
     project: input.project,
+    includeSuperseded: input.includeSuperseded,
+    sortOrder: input.sortOrder,
     limit: Math.min(Math.max(input.limit ?? MAX_CONTEXT_ENTRIES, 1), MAX_CONTEXT_ENTRIES),
   });
   const entries: RetrievalContextEntry[] = [];

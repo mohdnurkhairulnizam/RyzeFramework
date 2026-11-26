@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, like, lte, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, like, lte, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import Database from "better-sqlite3";
 import { mkdirSync } from "node:fs";
@@ -327,14 +327,101 @@ export async function addMemory(userId: number, input: {
   return id;
 }
 
-export async function searchClassifiedMemory(userId: number, input: { query?: string; category?: Exclude<MemoryCategory, "system">; memoryType?: MemoryType; limit?: number }) {
+type MemorySearchOptions = {
+  query?: string;
+  category?: MemoryCategory;
+  memoryType?: MemoryType;
+  includeArchived?: boolean;
+  includeSuperseded?: boolean;
+  sortOrder?: "relevance" | "createdAtAsc";
+  limit?: number;
+};
+
+const MEMORY_SEARCH_STOP_WORDS = new Set([
+  "a", "an", "and", "are", "as", "at", "be", "both", "by", "date", "did", "do", "for", "from", "how", "i", "in", "include", "is", "it", "list", "me", "my", "of", "on", "or", "order", "records", "show", "that", "the", "this", "to", "was", "what", "which", "while", "with", "you",
+  "current", "earlier", "previous", "prior", "historical", "history", "chronological", "chronologically", "request", "must", "should", "would",
+  "system", "personal", "experience", "episodic", "semantic", "procedural", "preference", "memories", "memory",
+]);
+
+function normalizeSearchToken(value: string) {
+  let token = value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  if (token.length > 5 && token.endsWith("ies")) token = `${token.slice(0, -3)}y`;
+  else if (token.length > 4 && token.endsWith("s") && !token.endsWith("ss")) token = token.slice(0, -1);
+  if (["retain", "retained", "retains", "retaining", "preserve", "preserves", "preserved", "preserving"].includes(token)) token = "preserve";
+  return token;
+}
+
+function memorySearchTerms(value: string) {
+  const terms = (value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().match(/[a-z0-9]+/g) ?? [])
+    .map(normalizeSearchToken)
+    .filter(token => (token.length > 2 || /^\d+$/.test(token)) && !MEMORY_SEARCH_STOP_WORDS.has(token));
+  return terms.filter((token, index) => terms.indexOf(token) === index);
+}
+
+function inferredMemorySearchOptions(input: MemorySearchOptions) {
+  const query = (input.query ?? "").toLowerCase();
+  const historyIntent = /\b(earlier|previous|prior|historical|history|both|records|versions?)\b/.test(query);
+  const chronologicalIntent = /\b(date\s+order|chronologically|chronological\s+order)\b/.test(query);
+  return {
+    includeSuperseded: input.includeSuperseded ?? historyIntent,
+    supersededOnly: input.includeSuperseded === undefined
+      && /\b(earlier|previous|prior|historical)\b/.test(query)
+      && !/\b(both|all|records|versions?)\b/.test(query),
+    sortOrder: input.sortOrder ?? (chronologicalIntent ? "createdAtAsc" : "relevance"),
+  } as const;
+}
+
+function rankMemorySearchResults<T extends { id: string; content: string; tags: string; createdAt: Date; updatedAt: Date }>(
+  rows: T[], query: string | undefined, options: MemorySearchOptions,
+) {
+  const queryTerms = memorySearchTerms(query ?? "");
+  const hasInventoryIntent = /\b(list|all|records)\b/i.test(query ?? "");
+  const { includeSuperseded, supersededOnly } = inferredMemorySearchOptions(options);
+  const minMatches = queryTerms.length === 0 ? 0 : (hasInventoryIntent || includeSuperseded || supersededOnly ? 1 : Math.min(3, queryTerms.length));
+  const ranked = rows.map(row => {
+    const searchable = new Set(memorySearchTerms(`${row.content} ${row.tags}`));
+    const score = queryTerms.reduce((sum, term) => sum + Number(searchable.has(term)), 0);
+    return { row, score };
+  }).filter(item => item.score >= minMatches);
+  const { sortOrder } = inferredMemorySearchOptions(options);
+  const returnMultiple = hasInventoryIntent || includeSuperseded || supersededOnly;
+  const bestScore = ranked.reduce((best, item) => Math.max(best, item.score), 0);
+  const relevant = returnMultiple ? ranked : ranked.filter(item => item.score === bestScore);
+  relevant.sort((left, right) => {
+    if (sortOrder === "createdAtAsc") return left.row.createdAt.getTime() - right.row.createdAt.getTime() || left.row.id.localeCompare(right.row.id);
+    return right.score - left.score || right.row.updatedAt.getTime() - left.row.updatedAt.getTime() || right.row.createdAt.getTime() - left.row.createdAt.getTime() || left.row.id.localeCompare(right.row.id);
+  });
+  return relevant.slice(0, Math.min(Math.max(options.limit ?? 8, 1), 50)).map(item => item.row);
+}
+
+type SearchableMemoryStatus = "active" | "superseded" | "archived";
+
+function statusFilters(input: MemorySearchOptions): SearchableMemoryStatus[] {
+  const { includeSuperseded, supersededOnly } = inferredMemorySearchOptions(input);
+  const statuses: SearchableMemoryStatus[] = supersededOnly ? ["superseded"] : ["active"];
+  if (includeSuperseded && !statuses.includes("superseded")) statuses.push("superseded");
+  if (input.includeArchived) statuses.push("archived");
+  return statuses;
+}
+
+function searchTextFilter<TContent, TTags>(content: TContent, tags: TTags, query: string | undefined) {
+  const terms = memorySearchTerms(query ?? "");
+  if (!terms.length) return undefined;
+  return or(...terms.flatMap(term => [like(content as never, `%${term}%`), like(tags as never, `%${term}%`)]));
+}
+
+const MAX_SEARCH_CANDIDATES = 1000;
+
+export async function searchClassifiedMemory(userId: number, input: Omit<MemorySearchOptions, "category"> & { category?: Exclude<MemoryCategory, "system"> }) {
   const db = await requireDb();
-  const terms = (input.query ?? "").trim().split(/\s+/).filter(term => term.length > 2).slice(0, 5);
-  const filters = [eq(ryzeMemory.userId, userId), eq(ryzeMemory.status, "active")];
+  const filters = [eq(ryzeMemory.userId, userId), inArray(ryzeMemory.status, statusFilters(input))];
   if (input.category) filters.push(eq(ryzeMemory.category, input.category));
   if (input.memoryType) filters.push(eq(ryzeMemory.memoryType, input.memoryType));
-  if (terms.length) filters.push(like(ryzeMemory.content, `%${terms.join("%")}%`));
-  return db.select().from(ryzeMemory).where(and(...filters)).orderBy(desc(ryzeMemory.updatedAt), desc(ryzeMemory.createdAt)).limit(Math.min(Math.max(input.limit ?? 8, 1), 50));
+  const textFilter = searchTextFilter(ryzeMemory.content, ryzeMemory.tags, input.query);
+  if (textFilter) filters.push(textFilter);
+  const rows = await db.select().from(ryzeMemory).where(and(...filters))
+    .orderBy(desc(ryzeMemory.updatedAt), desc(ryzeMemory.createdAt)).limit(MAX_SEARCH_CANDIDATES);
+  return rankMemorySearchResults(rows, input.query, input);
 }
 
 export async function getMemoryForUser(userId: number, memoryId: string) {
@@ -396,11 +483,14 @@ export async function createSystemMemory(userId: number, input: { memoryType: Me
   return created!;
 }
 
-export async function searchSystemMemory(userId: number, query?: string) {
+export async function searchSystemMemory(userId: number, input: MemorySearchOptions = {}) {
   const db = await requireDb();
-  const terms = (query ?? "").trim().split(/\s+/).filter(term => term.length > 2).slice(0, 5);
-  const where = terms.length ? and(eq(ryzeSystemMemory.userId, userId), eq(ryzeSystemMemory.status, "active"), like(ryzeSystemMemory.content, `%${terms.join("%")}%`)) : and(eq(ryzeSystemMemory.userId, userId), eq(ryzeSystemMemory.status, "active"));
-  return db.select().from(ryzeSystemMemory).where(where).orderBy(desc(ryzeSystemMemory.updatedAt)).limit(20);
+  const filters = [eq(ryzeSystemMemory.userId, userId), inArray(ryzeSystemMemory.status, statusFilters(input))];
+  const textFilter = searchTextFilter(ryzeSystemMemory.content, ryzeSystemMemory.tags, input.query);
+  if (textFilter) filters.push(textFilter);
+  const rows = await db.select().from(ryzeSystemMemory).where(and(...filters))
+    .orderBy(desc(ryzeSystemMemory.updatedAt), desc(ryzeSystemMemory.createdAt)).limit(MAX_SEARCH_CANDIDATES);
+  return rankMemorySearchResults(rows, input.query, { ...input, limit: input.limit ?? 20 });
 }
 
 export async function listSystemMemory(userId: number) {
