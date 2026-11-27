@@ -96,7 +96,9 @@ async function createOpenCodeSession(title: string) {
     body: JSON.stringify({
       title: title.slice(0, 80),
       agent: "ryze-chat",
-      ...(model ? { model: { providerID: "freellmapi", id: "selected" } } : {}),
+      ...(ENV.freeLlmApiBaseUrl && ENV.freeLlmApiKey
+        ? { model: { providerID: "freellmapi", id: "selected" } }
+        : {}),
     }),
   });
   const sessionId = response?.data?.id ?? response?.id;

@@ -33,8 +33,8 @@ const gatewayKey = readEnv("RYZE_FREELLMAPI_API_KEY");
 const gatewayModel = readEnv("RYZE_FREELLMAPI_MODEL").trim();
 const gatewayConfigured = Boolean(gatewayUrl && gatewayKey);
 const denyAll = [{ action: "*", resource: "*", effect: "deny" }];
-const selectedModel = gatewayModel
-  ? { name: `FreeLLMAPI (${gatewayModel})`, modelID: gatewayModel }
+const selectedModel = gatewayConfigured
+  ? { name: gatewayModel ? `FreeLLMAPI (${gatewayModel})` : "FreeLLMAPI (automatic model selection)", modelID: gatewayModel || "auto" }
   : null;
 const config = {
   $schema: "https://opencode.ai/config.json",
@@ -62,5 +62,5 @@ const config = {
 };
 writeFileSync(path.join(workspace, "opencode.json"), `${JSON.stringify(config, null, 2)}\n`, { mode: 0o600 });
 console.log(gatewayConfigured
-  ? "Managed OpenCode chat-only configuration is ready."
+  ? `Managed OpenCode chat-only configuration is ready${gatewayModel ? "." : " with automatic model selection."}`
   : "Managed OpenCode chat-only configuration is ready; add the FreeLLMAPI URL and key to enable AI chat. The model ID is optional and may be left blank for automatic selection.");

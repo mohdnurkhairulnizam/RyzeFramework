@@ -28,8 +28,8 @@ const allowedMimeTypes = new Set([
   "image/jpeg",
 ]);
 
-export function hasExplicitFreeLlmApiModelSelector(value: string | undefined) {
-  return Boolean(value?.trim());
+export function hasValidFreeLlmApiModelSelector(value: string | undefined) {
+  return value === undefined || typeof value === "string";
 }
 
 async function isFile(target: string) {
@@ -53,8 +53,8 @@ function runtimeConfigCheck(): Stage1SelfTestCheck {
   if (!ENV.localMode) missing.push("local mode");
   if (!ENV.freeLlmApiBaseUrl) missing.push("FreeLLMAPI base URL");
   if (!ENV.freeLlmApiKey) missing.push("FreeLLMAPI key");
-  if (!hasExplicitFreeLlmApiModelSelector(process.env.RYZE_FREELLMAPI_MODEL))
-    missing.push("FreeLLMAPI model selector (exact ID or explicit auto)");
+  if (!hasValidFreeLlmApiModelSelector(process.env.RYZE_FREELLMAPI_MODEL))
+    missing.push("FreeLLMAPI model selector value is invalid");
   if (!ENV.openCodeBaseUrl) missing.push("OpenCode base URL");
   if (!ENV.workerToken) missing.push("worker token");
   return {
@@ -63,7 +63,7 @@ function runtimeConfigCheck(): Stage1SelfTestCheck {
     status: missing.length ? "WARN" : "PASS",
     detail: missing.length
       ? `Non-secret/runtime values are not fully explicit: ${missing.join(", ")}. No provider substitution was performed; secrets are not displayed.`
-      : `Runtime schema ${RUNTIME_CONFIG_SCHEMA_VERSION}, local mode, provider URL, model selector (${process.env.RYZE_FREELLMAPI_MODEL?.trim()}), OpenCode endpoint, and worker token are present; secret values were not read into the report.`,
+      : `Runtime schema ${RUNTIME_CONFIG_SCHEMA_VERSION}, local mode, provider URL, model selection (${process.env.RYZE_FREELLMAPI_MODEL?.trim() || "automatic"}), OpenCode endpoint, and worker token are present; secret values were not read into the report.`,
   };
 }
 

@@ -1,17 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { hasExplicitFreeLlmApiModelSelector } from "./stage1SelfTest";
+import { hasValidFreeLlmApiModelSelector } from "./stage1SelfTest";
 
 describe("Stage 1 FreeLLMAPI model selector", () => {
-  it("rejects a blank or missing selector", () => {
-    expect(hasExplicitFreeLlmApiModelSelector(undefined)).toBe(false);
-    expect(hasExplicitFreeLlmApiModelSelector(" ")).toBe(false);
+  it("accepts a blank or missing selector for automatic selection", () => {
+    expect(hasValidFreeLlmApiModelSelector(undefined)).toBe(true);
+    expect(hasValidFreeLlmApiModelSelector(" ")).toBe(true);
   });
 
   it("accepts explicit auto delegation", () => {
-    expect(hasExplicitFreeLlmApiModelSelector("auto")).toBe(true);
+    expect(hasValidFreeLlmApiModelSelector("auto")).toBe(true);
   });
 
   it("accepts an explicit named model", () => {
-    expect(hasExplicitFreeLlmApiModelSelector("provider/model-id")).toBe(true);
+    expect(hasValidFreeLlmApiModelSelector("provider/model-id")).toBe(true);
   });
 });

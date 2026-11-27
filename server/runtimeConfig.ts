@@ -31,7 +31,6 @@ export function validateRuntimeConfiguration(input: unknown) {
     if (!config.openCodeBaseUrl) issues.push("local mode requires an OpenCode endpoint");
     if (config.providerApiKey && !config.providerBaseUrl) issues.push("FreeLLMAPI key is set without a provider URL");
     if (config.providerBaseUrl && !config.providerApiKey) issues.push("FreeLLMAPI URL is set without an API key");
-    if (config.providerBaseUrl && !config.providerModel) issues.push("FreeLLMAPI URL requires an explicit model selector or auto");
     if (config.workerToken && !config.workerOwnerOpenId) issues.push("worker token requires a worker owner identity");
   } else {
     if (config.providerBaseUrl || config.providerApiKey || config.providerModel || config.openCodeBaseUrl || config.workerToken) {

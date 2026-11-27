@@ -17,9 +17,9 @@ const localConfig = {
 };
 
 describe("Stage 1 hardening boundaries", () => {
-  it("accepts the v1 local contract with explicit auto and rejects contradictions", () => {
+  it("accepts the v1 local contract with explicit or automatic model selection and rejects contradictions", () => {
     expect(validateRuntimeConfiguration(localConfig)).toEqual([]);
-    expect(validateRuntimeConfiguration({ ...localConfig, providerModel: "" })).toContain("FreeLLMAPI URL requires an explicit model selector or auto");
+    expect(validateRuntimeConfiguration({ ...localConfig, providerModel: "" })).toEqual([]);
     expect(validateRuntimeConfiguration({ ...localConfig, hostedDatabaseUrl: "mysql://unexpected" })).toContain("local mode cannot define DATABASE_URL");
   });
 
