@@ -21,8 +21,8 @@ if (typeof apiKey !== "string" || apiKey.length < 8 || apiKey.length > 512 || !/
   console.error("The FreeLLMAPI key format was not accepted. Use the unified key from your provider's Keys page.");
   process.exit(2);
 }
-if (typeof model !== "string" || model.length < 1 || model.length > 256 || !/^[A-Za-z0-9._:/-]+$/.test(model)) {
-  console.error("The model identifier is invalid. Use the exact model ID provided by the gateway.");
+if (typeof model !== "string" || model.length > 256 || (model.length > 0 && !/^[A-Za-z0-9._:/-]+$/.test(model))) {
+  console.error("The model identifier is invalid. Leave it empty to let FreeLLMAPI choose automatically.");
   process.exit(2);
 }
 let parsedUrl;
@@ -53,4 +53,4 @@ for (const [name, value] of Object.entries(replacements)) {
 }
 writeFileSync(envPath, contents);
 inputBytes.fill(0);
-console.log("FreeLLMAPI URL, model ID, and key saved in the protected local configuration. The key value was not displayed.");
+console.log(`FreeLLMAPI URL, ${model ? "model ID, " : "automatic model selection, "}and key saved in the protected local configuration. The key value was not displayed.`);

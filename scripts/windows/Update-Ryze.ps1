@@ -83,11 +83,16 @@ function Invoke-Pnpm {
 Push-Location $InstallDirectory
 try {
   Write-Host 'Updating locked application dependencies. Internet access is required.'
-  Invoke-Pnpm install --frozen-lockfile
+  Invoke-Pnpm install --frozen-lockfile --force --config.node-linker=hoisted
+  Write-Host 'Rebuilding native/runtime packages and the OpenCode sidecar.'
+  Invoke-Pnpm rebuild @opencode/cli better-sqlite3 --config.node-linker=hoisted
   Write-Host 'Checking the packaged SQLite runtime; no C++ build tools are required.'
-  & node -e "const Database = require('better-sqlite3'); const db = new Database(':memory:'); db.close();"
-  if ($LASTEXITCODE -ne 0) { throw 'The bundled SQLite runtime could not be loaded; the local database was not opened or deleted.' }
+  & node -e "const path=require.resolve('better-sqlite3'); const Database=require('better-sqlite3'); const db=new Database(':memory:'); db.close(); console.log(path);"
+  if ($LASTEXITCODE -ne 0) { throw 'The installed dependency layout cannot load better-sqlite3; the local database was not opened or deleted.' }
+  $openCodeExe = Join-Path $InstallDirectory 'node_modules\@opencode\cli\bin\opencode.exe'
+  if (-not (Test-Path -LiteralPath $openCodeExe -PathType Leaf)) { throw 'The OpenCode Windows sidecar is missing after dependency installation; the update is incomplete.' }
   Invoke-Pnpm run build:local
+  if (-not (Test-Path -LiteralPath (Join-Path $InstallDirectory 'dist\index.js') -PathType Leaf)) { throw 'The production server bundle dist\index.js was not created; the update is incomplete.' }
   if (-not (Test-Path -LiteralPath $EnvFile)) { throw 'The installed .env is missing after updating; stop and preserve the data folder before taking any further action.' }
 } finally { Pop-Location }
 

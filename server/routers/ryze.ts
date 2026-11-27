@@ -56,6 +56,7 @@ import { validateFileMetadata, validateGeneratedArtifact } from "../resultValida
 import { runProviderFaultSelfTest } from "../providerFaultSelfTest";
 import { ENV } from "../_core/env";
 import { protectedProcedure, router } from "../_core/trpc";
+import { configureFreeLlmApi } from "../freeLlmApiConfig";
 import {
   configureTelegramBridge,
   getTelegramBridgeStatus,
@@ -342,6 +343,22 @@ export async function runOpenCodeChat(
 export const ryzeRouter = router({
   dashboard: protectedProcedure.query(({ ctx }) => getDashboard(ctx.user.id)),
   integrationStatus: protectedProcedure.query(() => getIntegrationStatus()),
+  configureFreeLlmApi: protectedProcedure
+    .input(z.object({
+      baseUrl: z.string().trim().min(1).max(512),
+      model: z.string().trim().max(256).optional().default(""),
+      apiKey: z.string().trim().min(8).max(512),
+    }))
+    .mutation(({ input }) => {
+      try {
+        return configureFreeLlmApi(input);
+      } catch (error) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: error instanceof Error ? error.message : "FreeLLMAPI settings could not be saved.",
+        });
+      }
+    }),
   telegramBridgeStatus: protectedProcedure.query(() => getTelegramBridgeStatus()),
   configureTelegramBridge: protectedProcedure
     .input(z.object({

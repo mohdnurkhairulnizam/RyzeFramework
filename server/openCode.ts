@@ -90,12 +90,13 @@ export async function getIntegrationStatus(): Promise<IntegrationStatus> {
 }
 
 async function createOpenCodeSession(title: string) {
+  const model = ENV.freeLlmApiModel;
   const response = await openCodeRequest("/api/session", {
     method: "POST",
     body: JSON.stringify({
       title: title.slice(0, 80),
       agent: "ryze-chat",
-      model: { providerID: "freellmapi", id: "selected" },
+      ...(model ? { model: { providerID: "freellmapi", id: "selected" } } : {}),
     }),
   });
   const sessionId = response?.data?.id ?? response?.id;

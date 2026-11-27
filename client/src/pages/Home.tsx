@@ -197,6 +197,13 @@ export default function Home() {
     enabled: localBuild && isAuthenticated,
     refetchInterval: 10000,
   });
+  const configureFreeLlmApi = trpc.ryze.configureFreeLlmApi.useMutation({
+    onSuccess: async result => {
+      await integrationStatus.refetch();
+      toast.success(result.message);
+    },
+    onError: mutationError => toast.error(mutationError.message),
+  });
   const chatConfigured = Boolean(
     integrationStatus.data &&
       integrationStatus.data.freeLlmApi !== "not_configured"
@@ -647,8 +654,8 @@ export default function Home() {
           deletingFile={deleteFile.isPending}
         />
       )}
-      {activeView === "settings" && (
-        <SettingsView
+          {activeView === "settings" && (
+            <SettingsView
           settings={settings}
           setSettings={setSettings}
           save={() => updateSettings.mutate(settings)}
@@ -656,7 +663,9 @@ export default function Home() {
           exportData={downloadExport}
           exporting={exportQuery.isFetching}
           localBuild={localBuild}
-          integrationStatus={integrationStatus.data}
+              integrationStatus={integrationStatus.data}
+              configureFreeLlmApi={input => configureFreeLlmApi.mutate(input)}
+              configuringFreeLlmApi={configureFreeLlmApi.isPending}
           telegramControl={telegramControl.data}
           telegramBridge={telegramBridge.data}
           saveTelegramAccount={input => saveTelegramAccount.mutate(input)}
@@ -758,9 +767,16 @@ function IntegrationStatusBanner({
 
 function IntegrationSettingsCard({
   status,
+  configure,
+  saving,
 }: {
   status?: { openCode: string; freeLlmApi: string; chatReady: boolean };
+  configure: (input: { baseUrl: string; model: string; apiKey: string }) => void;
+  saving: boolean;
 }) {
+  const [baseUrl, setBaseUrl] = useState("");
+  const [model, setModel] = useState("");
+  const [apiKey, setApiKey] = useState("");
   const gateway =
     status?.freeLlmApi === "connected"
       ? "Connected"
@@ -788,15 +804,24 @@ function IntegrationSettingsCard({
           FreeLLMAPI: <span className="text-slate-200">{gateway}</span>
         </p>
       </div>
+      <form
+        className="mt-4 space-y-3"
+        onSubmit={event => {
+          event.preventDefault();
+          configure({ baseUrl, model, apiKey });
+          setApiKey("");
+        }}
+      >
+        <Input value={baseUrl} onChange={event => setBaseUrl(event.target.value)} placeholder="https://gateway.example/v1" aria-label="FreeLLMAPI base URL" required />
+        <Input value={model} onChange={event => setModel(event.target.value)} placeholder="Optional model ID — leave blank for automatic selection" aria-label="FreeLLMAPI model ID (optional)" />
+        <Input value={apiKey} onChange={event => setApiKey(event.target.value)} placeholder="API key (write-only)" aria-label="FreeLLMAPI API key" type="password" minLength={8} maxLength={512} required autoComplete="new-password" />
+        <Button type="submit" disabled={saving} className="w-full rounded-xl bg-cyan-500 text-slate-950 hover:bg-cyan-400">
+          {saving ? <Loader2 className="mr-2 size-4 animate-spin" /> : <KeyRound className="mr-2 size-4" />}
+          Save FreeLLMAPI settings
+        </Button>
+      </form>
       <p className="mt-3 text-xs leading-5 text-slate-400">
-        Run Configure-FreeLLMAPI.cmd from the installed Ryze folder to enter
-        your gateway URL, model ID, and key. Use HTTPS for hosted gateways. The
-        key stays in the protected local config; chat prompts are sent to that
-        gateway. OpenCode tools remain denied.
-      </p>
-      <p className="mt-3 text-[11px] font-semibold text-slate-500">
-        Setup helper:
-        %LOCALAPPDATA%\Programs\RyzeFramework\Configure-FreeLLMAPI.cmd
+        Use HTTPS for hosted gateways. The model ID is optional: leave it blank to let FreeLLMAPI choose its available/best model. The key is write-only, saved in the protected local configuration, and never returned to this dashboard. Restart Ryze after saving so the OpenCode sidecar reloads the managed chat-only configuration.
       </p>
     </section>
   );
@@ -1547,6 +1572,8 @@ function SettingsView({
   setSelectedPrivateBackup,
   requestPrivateRestore,
   privateRestoreRunning,
+  configureFreeLlmApi,
+  configuringFreeLlmApi,
 }: {
   localBuild: boolean;
   integrationStatus?: {
@@ -1605,6 +1632,8 @@ function SettingsView({
   setSelectedPrivateBackup: (value: string) => void;
   requestPrivateRestore: () => void;
   privateRestoreRunning: boolean;
+  configureFreeLlmApi: (input: { baseUrl: string; model: string; apiKey: string }) => void;
+  configuringFreeLlmApi: boolean;
 }) {
   return (
     <div className="mx-auto max-w-6xl">
@@ -1699,7 +1728,11 @@ function SettingsView({
         </section>
         <aside className="space-y-5">
           {localBuild ? (
-            <IntegrationSettingsCard status={integrationStatus} />
+            <IntegrationSettingsCard
+              status={integrationStatus}
+              configure={configureFreeLlmApi}
+              saving={configuringFreeLlmApi}
+            />
           ) : null}
           {localBuild ? (
             <TelegramSettingsCard

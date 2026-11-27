@@ -57,11 +57,24 @@ function Invoke-Pnpm {
 Push-Location $InstallDirectory
 try {
   Write-Host 'Installing locked application dependencies. Internet access is required for this step.'
-  Invoke-Pnpm install --frozen-lockfile
+  # Hoisted links are intentional here: the production server uses native
+  # better-sqlite3 and the OpenCode Windows sidecar from direct dependencies.
+  # --force repairs a partially-created virtual store left by interrupted or
+  # security-scanned installs without copying private source node_modules.
+  Invoke-Pnpm install --frozen-lockfile --force --config.node-linker=hoisted
+  Write-Host 'Rebuilding native/runtime packages and the OpenCode sidecar.'
+  Invoke-Pnpm rebuild @opencode/cli better-sqlite3 --config.node-linker=hoisted
   Write-Host 'Checking the packaged SQLite runtime; no C++ build tools are required.'
-  & node -e "const Database = require('better-sqlite3'); const db = new Database(':memory:'); db.close();"
-  if ($LASTEXITCODE -ne 0) { throw 'The bundled SQLite runtime could not be loaded.' }
+  & node -e "const path=require.resolve('better-sqlite3'); const Database=require('better-sqlite3'); const db=new Database(':memory:'); db.close(); console.log(path);"
+  if ($LASTEXITCODE -ne 0) { throw 'The installed dependency layout cannot load better-sqlite3. Retry the installer with security software allowing the install directory.' }
+  $openCodeExe = Join-Path $InstallDirectory 'node_modules\@opencode\cli\bin\opencode.exe'
+  if (-not (Test-Path -LiteralPath $openCodeExe -PathType Leaf)) {
+    throw 'The OpenCode Windows sidecar is missing after dependency installation. The install was not accepted; retry with network access and security software allowing pnpm to finish.'
+  }
   Invoke-Pnpm run build:local
+  if (-not (Test-Path -LiteralPath (Join-Path $InstallDirectory 'dist\index.js') -PathType Leaf)) {
+    throw 'The production server bundle dist\index.js was not created; the installation is incomplete.'
+  }
 
   if (Test-Path '.env') { throw 'Refusing to replace an existing local .env file.' }
   $password = Read-Host 'Create an owner password (6+ characters; a 6-digit PIN is less secure)' -AsSecureString

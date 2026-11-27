@@ -31,30 +31,30 @@ mkdirSync(workspace, { recursive: true });
 const gatewayUrl = readEnv("RYZE_FREELLMAPI_BASE_URL").replace(/\/+$/, "");
 const gatewayKey = readEnv("RYZE_FREELLMAPI_API_KEY");
 const gatewayModel = readEnv("RYZE_FREELLMAPI_MODEL").trim();
-const gatewayConfigured = Boolean(gatewayUrl && gatewayKey && gatewayModel);
+const gatewayConfigured = Boolean(gatewayUrl && gatewayKey);
 const denyAll = [{ action: "*", resource: "*", effect: "deny" }];
-const selectedModel = gatewayConfigured
+const selectedModel = gatewayModel
   ? { name: `FreeLLMAPI (${gatewayModel})`, modelID: gatewayModel }
   : null;
 const config = {
   $schema: "https://opencode.ai/config.json",
   default_agent: "ryze-chat",
   permissions: denyAll,
-  ...(gatewayConfigured ? { model: "freellmapi/selected" } : {}),
+  ...(selectedModel ? { model: "freellmapi/selected" } : {}),
   providers: gatewayConfigured ? {
     freellmapi: {
       name: "FreeLLMAPI",
       env: ["RYZE_FREELLMAPI_API_KEY"],
       package: "@opencode/ai/providers/openai-compatible",
       settings: { baseURL: gatewayUrl },
-      models: { selected: selectedModel },
+      ...(selectedModel ? { models: { selected: selectedModel } } : {}),
     },
   } : {},
   agents: {
     "ryze-chat": {
       description: "Chat-only Ryze assistant; it cannot use tools or perform actions.",
       mode: "primary",
-      ...(gatewayConfigured ? { model: "freellmapi/selected" } : {}),
+      ...(selectedModel ? { model: "freellmapi/selected" } : {}),
       system: "You are the conversational assistant inside the PROJECT RYZE dashboard. You can only answer in text. Do not claim to have sent messages, changed files, run software, or completed real-world actions. Explain when a request needs a separate human-approved workflow.",
       permissions: denyAll,
     },
@@ -63,4 +63,4 @@ const config = {
 writeFileSync(path.join(workspace, "opencode.json"), `${JSON.stringify(config, null, 2)}\n`, { mode: 0o600 });
 console.log(gatewayConfigured
   ? "Managed OpenCode chat-only configuration is ready."
-  : "Managed OpenCode chat-only configuration is ready; add the FreeLLMAPI URL, exact model ID, and key to enable AI chat.");
+  : "Managed OpenCode chat-only configuration is ready; add the FreeLLMAPI URL and key to enable AI chat. The model ID is optional and may be left blank for automatic selection.");
