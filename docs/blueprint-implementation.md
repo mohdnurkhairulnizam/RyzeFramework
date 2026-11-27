@@ -99,7 +99,7 @@ This section is the current-status authority for this document. Earlier checkpoi
 
 ## Source control and review state
 
-The reviewed source of truth is GitHub repository `mohdnurkhairulnizam/RyzeFramework`, branch `feature/telegram-file-transfer`. The pushed implementation commit is `6f612e05b133cdd573121ce8608c5857015a4ceb`; the current documentation checkpoint is local commit `d029435602b57625d9fb29763a7cb1521310d602` and is ready to push. The branch is 67 commits ahead of `main` at `5fb29f9df1f90041b8a85fe09052798a5a030f0d`; it has no divergence behind main. PR #1 (`https://github.com/mohdnurkhairulnizam/RyzeFramework/pull/1`) remains open and unmerged. The existing untracked `RyzeFramework-PR1-source-33ced158.zip` is intentionally preserved and is not part of the source or package.
+The reviewed source of truth is GitHub repository `mohdnurkhairulnizam/RyzeFramework`, branch `feature/telegram-file-transfer`. The pushed implementation commit is `6f612e05b133cdd573121ce8608c5857015a4ceb`; the pushed documentation checkpoint is `27fb1fe`. The branch is 69 commits ahead of `main` at `5fb29f9df1f90041b8a85fe09052798a5a030f0d`; it has no divergence behind main. PR #1 (`https://github.com/mohdnurkhairulnizam/RyzeFramework/pull/1`) remains open and unmerged. The existing untracked `RyzeFramework-PR1-source-33ced158.zip` is intentionally preserved and is not part of the source or package.
 
 ## Implemented architecture and boundaries
 
