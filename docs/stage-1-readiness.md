@@ -173,7 +173,7 @@ On 24 November 2026, the installed dashboard provider fault self-test passed all
 Historical checkpoints above remain unchanged for traceability. The following is the current disposition after the corrected OpenCode/FreeLLMAPI routing, Gate 3 evidence, and disposable Windows package acceptance.
 
 - **Overall:** Stage 1 remains **PARTIAL — closed for sequencing, not complete**. None of the origin criteria is waived, and Stage 2 work does not count as Stage 1 completion.
-- **OpenCode/FreeLLMAPI:** OpenCode is installed/configured as chat-only with deny-all tools. A blank FreeLLMAPI model is valid and delegates selection through the `auto` route. The separate FreeLLMAPI desktop gateway is not installed by the Ryze installer. Direct gateway `/models` and chat checks succeeded in the owner environment, but the actual Ryze/OpenCode prompt timed out after two minutes; provider-response acceptance remains open.
+- **OpenCode/FreeLLMAPI:** OpenCode is installed/configured as chat-only with deny-all tools. A blank FreeLLMAPI model is valid and delegates selection through the `auto` route. The separate FreeLLMAPI desktop gateway is not installed by the Ryze installer. The owner’s exact Telegram gateway-path prompt returned the requested text almost immediately through Telegram → OpenCode → FreeLLMAPI, so provider-response acceptance is PASS for that tested path. The earlier two-minute timeout remains historical evidence.
 - **Windows package:** The corrected package and hardened restore files were verified on a disposable synthetic profile. Dashboard reopen, existing-data persistence, package/updater checks, and installed critical hashes passed. This is deployment evidence, not normal-profile or production-data acceptance.
 - **Restore and backup boundary:** Export metadata and secrets/session exclusion, valid restore, corruption rejection before mutation, rollback, SQLite integrity, Stage 2 schema validation, and synthetic marker persistence passed in the disposable synthetic scope. The earlier legacy-handler failure remains historical. Portable JSON export is distinct from a private backup; private backups remain sensitive and must stay local.
 - **Telegram:** The local Telethon worker, authorization boundary, bounded same-chat text/file path, existing-file return, pause/resume/stop and replay protections remain available within their documented limits. New-summary attachment creation from a natural-language request remains a user-visible failure/deferred capability.
@@ -182,9 +182,9 @@ Historical checkpoints above remain unchanged for traceability. The following is
 
 ### Residual register carried forward
 
-1. Verify automatic 30-day expiry on target Windows.
+1. Keep automatic 30-day expiry on target Windows parked for a later implementation cycle.
 2. Resolve the narrow new-summary file-creation capability under an owner-reviewed permission, provenance, output-validation, and rollback contract; do not change live skill/intent rules as a shortcut.
-3. Close remaining provider-response and bounded failure evidence without claiming an infinite wait or an unbounded retry loop.
+3. Retain the bounded provider-response PASS and historical timeout without claiming an infinite wait or an unbounded retry loop.
 4. Retain the distinction between automated sandbox checks, handler-level Windows checks, owner-reported disposable evidence, and full target-Windows dashboard acceptance.
 5. Keep Stage 1’s nine origin criteria and historical self-test record intact until each criterion has approved evidence.
 

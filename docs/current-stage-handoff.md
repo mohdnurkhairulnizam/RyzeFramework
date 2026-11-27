@@ -1,9 +1,9 @@
 # RyzeFramework Current Stage Handoff
 
-**Status date:** 27 November 2026
+**Status date:** 27 November 2026 — evening checkpoint
 **Working branch:** `feature/telegram-file-transfer`
 **Base:** verified `stable-merge` baseline `e8e7660`
-**Current baseline:** The current reviewed source is the head of `feature/telegram-file-transfer`; the Windows restore-hardening changes are committed on this branch. **Stage disposition:** At the owner's direction, Stage 1 is **PARTIAL — closed for sequencing, not complete**. Its nine origin criteria remain unwaived, and the retained self-test's historical results are unchanged. The owner reports File Manifest early deletion PASS on target Windows (exact tested package/checksum not restated); automatic 30-day expiry still needs Windows verification. Existing-file return is separately owner-reported PASS on `d35b770`. The latest summary-as-file request still resends `README.md`, and Ryze says it cannot create/write files. The owner has placed changes to the live agent skill/intent layer on hold and directed that this capability be handled in Stage 2 planning. Backend tests are not live skill acceptance. Stage 2 is now active; see [`stage-2-implementation-plan.md`](./stage-2-implementation-plan.md).
+**Current baseline:** Local documentation checkpoint `d029435602b57625d9fb29763a7cb1521310d602` is based on pushed implementation commit `6f612e05b133cdd573121ce8608c5857015a4ceb`; the documentation checkpoint is ready to push to `origin/feature/telegram-file-transfer`. **Stage disposition:** At the owner's direction, Stage 1 is **PARTIAL — closed for sequencing, not complete**. Its nine origin criteria remain unwaived, and the retained self-test's historical results are unchanged. File Manifest early deletion remains owner-reported PASS; automatic 30-day expiry is intentionally parked for later Windows verification. Existing-file return is separately owner-reported PASS on `d35b770`. The latest summary-as-file request still resends `README.md`, and Ryze says it cannot create/write files. The owner has placed changes to the live agent skill/intent layer on hold and directed that this capability be handled as a bounded Stage 2 workstream. Backend tests are not live skill acceptance. Stage 2 is active; see [`stage-2-implementation-plan.md`](./stage-2-implementation-plan.md).
 
 ## Stage transition — preserve residual evidence and start Stage 2
 
@@ -36,7 +36,7 @@ Stage 1's open evidence stays visible but does not block beginning Stage 2. Do n
 - SQLite migration `0005_special_argent` preserves legacy memory IDs, content, tags, outcomes, timestamps, and `core`/`evolving` scope; it adds nullable classification/provenance/version fields without guessing category or type. Ambiguous rows remain searchable as `legacy_unclassified`.
 - Separate owner-scoped Ryze identity/profile revisions and protected System Memory tables are implemented. Identity changes are append/versioned; System Memory has a dedicated repository boundary and is not writable through model output.
 - Explicit safe-memory flows now classify owner preferences as Personal/Preference and task summaries as Experience/Episodic. Portable exports include identity, revisions, and System Memory metadata while continuing to exclude credentials, Telegram sessions, and file bytes.
-- Focused preservation, identity-versioning, protected-memory, owner-isolation, and provider tests were added. Workspace validation passes: TypeScript check, 65 Vitest tests, 9 worker tests, local build, and `git diff --check`. The build retains the existing non-fatal large-chunk warning.
+- Focused preservation, identity-versioning, protected-memory, owner-isolation, and provider tests were added. The earlier 65-test result is historical; the latest repository validation recorded 74 Vitest tests across 23 files, 9 worker tests, local build, and `git diff --check`. The build retains the existing non-fatal large-chunk warning.
 - Gate 2 is complete, including the provider-neutral `MemoryProvider` abstraction and SQLite fallback in commit `3876c2c`. This is not Stage 2 completion. Gate 3 synthetic owner-facing acceptance and its nine-item contract mapping are complete for the tested scope; Gate 4 is passed only for its approved synthetic evaluation; Gate 5 is passed only for the tested disposable synthetic Windows scope. Provider-response acceptance and other Stage 2 residuals remain open.
 - The attached advanced-memory proposal is recorded as a gated external-provider evaluation workstream. No Hindsight, MemPalace, ECC, automatic capture, cross-agent sharing, or live skill/intent changes were enabled.
 
@@ -50,7 +50,7 @@ Stage 1's open evidence stays visible but does not block beginning Stage 2. Do n
 ### Workspace verification — independently run in this sandbox
 
 - `pnpm run check` — PASS.
-- `pnpm test` — PASS, 65 tests across 21 files, including Gate 3 governance tests for duplicate/conflict review, restricted retrieval, bounded excerpts, and owner isolation.
+- `pnpm test` — PASS, 74 tests across 23 files, including Gate 3 governance tests for duplicate/conflict review, restricted retrieval, bounded excerpts, and owner isolation. Earlier 65-test results remain historical.
 - `pnpm run worker:test` — PASS, 9 Python worker tests.
 - `pnpm run build:local` — PASS; the existing large JavaScript chunk warning remains non-fatal.
 - `git diff --check` — PASS.
@@ -78,6 +78,24 @@ The owner reports that the latest package update completed, the dashboard opened
 - Restore semantics: selecting a backup queues it for the next startup. The tested flow explicitly stopped Ryze and then ran `Start-Ryze.cmd`; no automatic application restart was tested or claimed.
 - These results are target-Windows owner-reported evidence for a disposable synthetic profile. They do not validate real-user backups, production data, or completion of every Stage 2 contract item. Keep backups, databases, configuration, logs, sessions, and secrets outside Git and reports.
 
+### Target-Windows Stage 2 Memory Vault verification — owner-reported PASS — 27 November 2026
+
+The owner performed the focused disposable Windows verification requested by the Stage 2 review:
+
+1. Memory Vault opened after restart — **PASS**.
+2. Personal, Experience, and protected System Memory records displayed correctly — **PASS**.
+3. Identity revisions remained visible — **PASS**.
+4. Exact duplicate review did not silently create a second record — **PASS**.
+5. Restricted records remained excluded by default — **PASS**.
+6. Conflict review required explicit confirmation — **PASS**.
+7. Exported and restored records retained category, type, version, provenance, and owner scope — **PASS**.
+
+This closes the focused target-Windows memory-behavior check for the tested disposable synthetic scope. It does not establish production-data acceptance, remove the Stage 1 residual register, or declare Stage 2 complete.
+
+### Provider-response acceptance — owner-reported PASS — 27 November 2026
+
+The owner sent the exact Telegram prompt `Reply with exactly: Ryze gateway path test passed`. Ryze replied `Ryze gateway path test passed` almost immediately through the Telegram → OpenCode → FreeLLMAPI route. This resolves the previously open provider-response acceptance item for the tested path. It supersedes the earlier two-minute timeout as the current provider-response result, while retaining that timeout as historical diagnostic evidence. No unbounded wait loop was added.
+
 ### Cloud Gate 3 owner-facing acceptance — synthetic dashboard PASS; contract mapping recorded — 27 November 2026
 
 - Dashboard checks passed for Personal/Preference, Experience/Project, exact duplicate review without silent duplication, protected System Memory review/add, identity revision with visible v1/v2 history, and Experience Episodic/Semantic/Procedural records.
@@ -97,7 +115,7 @@ The owner reports that the latest package update completed, the dashboard opened
 | 6. Duplicate/conflict preservation without silent overwrite | **PASS for tested paths.** Exact duplicate review returned the existing record without increasing the count; the contradictory candidate was flagged as a conflict and blocked pending explicit confirmation. | The unsaved conflict candidate was intentionally not approved; no “latest wins” behavior is claimed beyond this observed path. |
 | 7. System Memory and identity protected from direct model output | **PASS, automated governance tests + owner-facing protected review path.** System Memory uses a dedicated owner-reviewed control; identity changes require owner confirmation and preserve revisions. | No live provider/model mutation test is claimed. |
 | 8. Legacy SQLite rows survive migration and remain searchable until classified | **PASS, automated migration/preservation tests.** Legacy IDs/content/tags/outcomes/timestamps/scope are preserved and ambiguous rows remain `legacy_unclassified` and searchable. | Sandbox/database-fixture evidence, not a production database migration. |
-| 9. Windows export/restore with secrets excluded | **PASS for the disposable synthetic Windows scope.** Portable export contained memory/identity metadata and excluded secrets/session data; valid restore, corruption rejection, rollback, integrity, schema validation, and startup passed. | Keep Gate 5 limited to this disposable scope; provider-response acceptance remains open and Stage 2 remains active. |
+| 9. Windows export/restore with secrets excluded | **PASS for the disposable synthetic Windows scope.** Portable export contained memory/identity metadata and excluded secrets/session data; valid restore, corruption rejection, rollback, integrity, schema validation, and startup passed. | Keep Gate 5 limited to this disposable scope; the later provider-response and focused Memory Vault checks are also bounded owner-reported evidence, and Stage 2 remains active. |
 
 This table reconciles the contract evidence but does **not** declare Stage 2 complete. Gate 4 remains approved only for its exact synthetic evaluation, Gate 5 remains limited to the tested disposable Windows scope, Stage 1 remains **PARTIAL — closed for sequencing, not complete**, and PR #1 remains open/unmerged.
 
@@ -129,8 +147,8 @@ The owner has reported bounded README file feedback on target Windows using `d35
 
 1. Gate 4's approved fixed evaluation is passed within the synthetic fixture scope. Preserve the query proposal, historical baseline JSON, current JSON, and report as separate audit artifacts. Any future retrieval change must preserve the approved labels unless an owner-approved new proposal supersedes them, and must rerun both evaluations and the authorization controls.
 2. Treat the remaining semantic-paraphrase miss in the separate eight-query exploratory baseline as an open retrieval-quality limitation, not a failed Gate 4 fixed-set label. Do not describe lexical token-overlap as general semantic retrieval or claim performance on a representative production corpus.
-3. Keep Gate 5 limited to the tested disposable synthetic scope. The corrected package, updater/OpenCode deployment checks, dashboard persistence, and blank-model startup passed on the disposable Windows profile. The actual FreeLLMAPI prompt timed out after two minutes, so provider-response acceptance remains open. Gate 3 owner follow-ups and the Stage 2 contract mapping are complete for the tested synthetic scope; Stage 2 remains active and is not complete.
-4. Continue the remaining Stage 2 acceptance plan in [`stage-2-implementation-plan.md`](./stage-2-implementation-plan.md), especially provider-response evidence and residual boundary checks. Do not infer normal-profile restore safety or production-corpus retrieval quality from the disposable synthetic Windows evidence or sandbox tests.
+3. Keep Gate 5 limited to the tested disposable synthetic scope. The corrected package, updater/OpenCode deployment checks, dashboard persistence, blank-model startup, provider-response path, and focused target-Windows Memory Vault checks passed for the documented scope. Gate 3 owner follow-ups and the Stage 2 contract mapping are complete for the tested synthetic scope; Stage 2 remains active and is not complete.
+4. Continue the remaining Stage 2 development plan in [`stage-2-implementation-plan.md`](./stage-2-implementation-plan.md), while holding the uncompleted contract-hardening and automatic-expiry checks for a later cycle. Do not infer normal-profile restore safety or production-corpus retrieval quality from the disposable synthetic Windows evidence or sandbox tests.
 5. Keep ECC at audit/research level for now. It cannot substitute for memory design or any Stage 1/2 acceptance gate; any later experiment needs a pinned version, target-Windows compatibility check, isolated workspace, and Ryze deny-all permission boundary.
 6. Preserve the Stage 1 residual register. The summary-file skill/intent issue is held for Stage 2 design; target-Windows automatic 30-day expiry remains a separate verification item. Early File Manifest deletion and existing-file return remain owner-reported PASS.
 7. Preserve the 24 November self-test unchanged and distinguish its historical `NOT_RUN`/`WARN` statuses from later owner reports and sandbox checks. Stage 1 remains PARTIAL unless its nine criteria are later completed with evidence.

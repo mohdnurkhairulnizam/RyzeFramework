@@ -1,6 +1,6 @@
 # RyzeFramework Memory and Identity Contract — v1
 
-**Status:** Stage 2 design contract, defined 25 November 2026. This document defines the intended behavior for review and implementation; it does not claim that these structures or controls are already implemented. No SQLite schema or live Ryze skill has been changed as part of this contract.
+**Status:** Stage 2 normative contract, defined 25 November 2026, with the implementation-status addendum at the end of this document. The requirements below remain authoritative; the addendum distinguishes implemented behavior and bounded evidence from remaining work. No live Ryze skill/intent change is authorized by this contract.
 
 ## 1. Purpose and authority
 
@@ -117,3 +117,17 @@ Passing ECC configuration, agent availability, test commands, or developer workf
 ## 10. Implementation boundary
 
 This contract authorizes design and documentation only. Before schema or prompt changes, review the exact migration, legacy classification approach, owner-confirmation UX, delete/retention behavior, and backup/restore test plan. Stage 2 implementation must preserve the Stage 1 partial-close status and its residual verification register. No ECC installation or live skill/intent modification is included in this contract.
+
+## 11. Implementation-status addendum — 27 November 2026
+
+The following implementation and acceptance evidence is recorded without weakening or replacing the normative contract above:
+
+- **Gate 2:** Additive SQLite migration, legacy-row preservation, provider-neutral repository boundary, identity/profile revisions, and protected System Memory are implemented and automated-tested.
+- **Gate 3:** Owner-authenticated create/read/update/archive/retrieval, duplicate review, conflict review, restricted retrieval, owner isolation, identity revision history, and protected System Memory are implemented. Synthetic Cloud owner-facing acceptance passed, and all nine contract items are mapped in [`current-stage-handoff.md`](./current-stage-handoff.md).
+- **Gate 4:** The approved fixed 8-fixture/14-query synthetic evaluation passed with TP=13, FP=0, FN=0 and precision/recall/F1=1.0. This is not a production-corpus quality claim. The exact query wording and expected labels remain unchanged.
+- **Gate 5:** Export metadata/secrets exclusion, valid restore, corruption rejection, rollback, integrity/schema checks, and startup passed on a disposable synthetic Windows profile with the reviewed hardened files. This is not normal-profile or production-data acceptance.
+- **Target-Windows memory behavior:** The owner reports PASS for Memory Vault reopening after restart; Personal, Experience, and System records displaying; identity revisions; duplicate review; restricted default exclusion; conflict confirmation; and preservation of category, type, version, provenance, and owner scope through export/restore. This evidence is limited to the tested disposable synthetic profile.
+- **Provider response:** The owner sent `Reply with exactly: Ryze gateway path test passed` through Telegram and received `Ryze gateway path test passed` almost immediately. This closes provider-response acceptance for the tested Telegram → OpenCode → FreeLLMAPI path. The earlier two-minute timeout remains historical evidence; no infinite wait loop was added.
+- **Still parked:** Additional contract-hardening variants, automatic 30-day expiry on Windows, and the bounded new-summary file-creation capability remain deferred for later development. No automatic memory capture, external memory provider, ECC integration, cross-installation synchronization, or live skill/intent mutation is enabled.
+
+This addendum records bounded evidence; it does not declare Stage 2 complete. Stage 1 remains **PARTIAL — closed for sequencing, not complete**, and Stages 3–4 remain future work.

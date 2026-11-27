@@ -3,8 +3,8 @@
 **Record date:** 27 November 2026  
 **Repository:** `mohdnurkhairulnizam/RyzeFramework`  
 **Working branch:** `feature/telegram-file-transfer`  
-**Current commit:** `6f612e05b133cdd573121ce8608c5857015a4ceb`  
-**Remote status:** This commit has been pushed to `origin/feature/telegram-file-transfer`. PR #1 remains open and unmerged.
+**Current implementation commit:** `6f612e05b133cdd573121ce8608c5857015a4ceb`
+**Previous documentation checkpoint:** local commit `d029435602b57625d9fb29763a7cb1521310d602`; this Stage 2 review update is the next local checkpoint to commit and push to `origin/feature/telegram-file-transfer`. PR #1 remains open and unmerged.
 
 This file is the durable project-memory index for the work completed in this repository. It records decisions and evidence boundaries; it does not contain passwords, API keys, Telegram sessions, databases, backups, logs, or personal data.
 
@@ -29,7 +29,7 @@ The project maintains four staged goals:
 - Exact duplicates must not be silently duplicated; conflicts require owner confirmation; updates are append-first/versioned and preserve prior records.
 - Secrets, Telegram sessions, databases, backups, logs, runtime data, `node_modules`, and build output remain outside Git and distributable packages.
 - The natural-language Telegram request to create and send a new Markdown summary remains deferred because the current live skill/intent behavior resends the source or refuses file creation. No broad file-writing permission is authorized.
-- An unbounded “wait forever” provider loop was not implemented. The current provider timeout behavior remains bounded and cancellable by process/task control; provider-response acceptance is still open.
+- An unbounded “wait forever” provider loop was not implemented. Provider-response acceptance is now PASS for the tested Telegram → OpenCode → FreeLLMAPI path: the owner sent `Reply with exactly: Ryze gateway path test passed` and received the exact reply almost immediately. The earlier two-minute timeout remains historical diagnostic evidence.
 
 ## Implementation completed
 
@@ -46,7 +46,7 @@ The project maintains four staged goals:
 - The local gateway is expected to be loopback, such as `http://127.0.0.1:31415/v1`; the API key and provider details remain local.
 - A blank `RYZE_FREELLMAPI_MODEL` is valid and means automatic model selection. The generated OpenCode workspace uses provider model ID `auto` and name `FreeLLMAPI (automatic model selection)` when URL and key are configured.
 - Ryze now sends the managed `freellmapi/selected` model reference whenever the gateway is configured, including the blank-model case. This restores the prior OpenCode routing behavior.
-- The direct Windows gateway was independently observed to return `/models` HTTP 200 with 320 models and direct `/chat/completions` HTTP 200 in about 20 seconds. The earlier Ryze/OpenCode prompt nevertheless timed out at two minutes. Therefore gateway reachability is not equivalent to provider-response acceptance.
+- The direct Windows gateway was independently observed to return `/models` HTTP 200 with 320 models and direct `/chat/completions` HTTP 200 in about 20 seconds. A later owner Telegram test returned the exact requested response almost immediately through the full Ryze route, closing provider-response acceptance for that tested path. The earlier two-minute timeout remains retained as historical evidence.
 
 ### Telegram and file transfer
 
@@ -69,6 +69,10 @@ The isolated synthetic Cloud dashboard was exercised through the owner-facing Me
 - After the dashboard service was stopped and restarted, the original synthetic owner re-authenticated and saw the six classified records, lifecycle version/history, identity revision 2/history, and protected System Memory.
 
 These are synthetic Cloud checks only. They do not establish production-corpus retrieval quality or target-Windows dashboard behavior.
+
+## Target-Windows Stage 2 memory verification
+
+The owner reports PASS on the disposable synthetic Windows profile for Memory Vault reopening after restart; Personal, Experience, and protected System Memory display; identity revisions; duplicate review without silent duplication; restricted default exclusion; conflict confirmation; and export/restore preservation of category, type, version, provenance, and owner scope. This closes the focused target-Windows memory-behavior check for the tested synthetic scope only. It does not establish production-data acceptance or complete the remaining parked hardening work.
 
 ## Contract evidence disposition
 
@@ -102,8 +106,8 @@ The current hardened validator hash in `scripts/windows/restore-deployment-manif
 ## Current next actions
 
 1. Keep PR #1 open for review; do not describe merging as Stage 2 or system completion.
-2. Keep provider-response acceptance open until a new bounded Windows test demonstrates an actual Ryze/OpenCode response or a separately reviewed provider-handling change is made.
-3. Verify automatic 30-day file expiry on target Windows.
+2. Keep the passed provider-response record bounded to the tested Telegram → OpenCode → FreeLLMAPI path; retain the earlier timeout as historical evidence.
+3. Hold additional Stage 2 contract-hardening variants and automatic 30-day file expiry for a later implementation cycle.
 4. Resolve and review the bounded new-summary file-creation capability before changing live skill/intent behavior.
 5. Preserve Stage 1's residual evidence and retained self-test unchanged.
 6. Treat Stage 3 and Stage 4 as future design/implementation work.
