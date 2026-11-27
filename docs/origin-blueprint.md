@@ -1204,3 +1204,27 @@ Gate 5 target-Windows restore acceptance remains **PARTIAL / BLOCKED**. The memo
 The bounded SQLite retrieval remediation was evaluated against the exact same owner-approved 8-fixture/14-query synthetic set; neither query wording nor expected labels changed. The retest passed with TP=13, FP=0, FN=0 and precision/recall/F1=1.0. The explicit Q14 chronological-order assertion passed, as did supplemental restricted-memory default exclusion/explicit inclusion, owner isolation, no-result behavior, and temporary-database cleanup. See [`evidence/gate4-retrieval-evaluation-2026-11-26.md`](./evidence/gate4-retrieval-evaluation-2026-11-26.md) and its separate current/baseline JSON artifacts.
 
 This closes Gate 4's approved fixed synthetic evaluation only. Retrieval is bounded normalized lexical token-overlap, not a general semantic-reasoning system; the separate eight-query exploratory baseline still has one semantic-paraphrase miss (F1=0.9091). Do not claim representative production-corpus relevance or target-Windows acceptance from this result. Gate 5 remains **PARTIAL / BLOCKED**: do not run another restore/corruption/rollback exercise until deployment of the hardened handler and validator is verified in the disposable Windows installation. Stage 1 remains **PARTIAL — closed for sequencing**, not complete.
+
+## Current implementation reconciliation — 27 November 2026
+
+The original blueprint above remains the architectural source of intent. This dated addendum records implementation discrepancies and evidence only for blueprint items; it does not rewrite the original design, waive completion criteria, or declare a stage complete.
+
+### Stage 1 items
+
+- The local Windows foundation exists: localhost dashboard, owner authentication, SQLite persistence, local file storage, bounded safe task lifecycle, logging, validation, Windows install/update/start/stop/backup/restore helpers, and optional OpenCode/FreeLLMAPI text chat.
+- The initial Telegram interface follows the blueprint’s owner-authorized Telethon user-account design rather than a bot. Credentials and session files remain local to the worker; the dashboard receives sanitized worker telemetry.
+- The implemented permission boundary is narrower than the blueprint’s eventual L0–L4 general execution architecture. OpenCode tools remain deny-all; only safe allowlisted workflows and the bounded authorized same-chat/file paths are enabled. Arbitrary shell, credentials, broadcasts, proactive messaging, email, and unrelated external actions remain unavailable.
+- File receipt, bounded text-file analysis, source binding, acknowledgement validation, and existing-file same-chat return are implemented or owner-reported as explicitly recorded in the implementation map and playbook. The natural-language new-summary attachment request still fails in the live skill/intent path and is deferred.
+- Stage 1 therefore remains **PARTIAL — closed for sequencing, not complete**. The nine origin completion criteria in §1.6 remain the controlling acceptance list; no criterion is waived by Stage 2 work.
+
+### Stage 2 items
+
+- The blueprint’s three categories and five secondary types are implemented in additive SQLite schema and owner-authenticated governance procedures. Ryze identity is stored separately from Personal Memory; protected System Memory has a separate owner-review path.
+- The memory record implementation includes owner scope, category, type, provenance, source references, branch marker, version, status, sensitivity, synchronization status, timestamps, and legacy compatibility fields. Legacy rows remain searchable as `legacy_unclassified` until reviewed.
+- Owner review, duplicate detection, conflict confirmation, append-first updates, archive/history inspection, bounded retrieval, restricted default exclusion, explicit restricted inclusion, owner isolation, export metadata, and restore validation are implemented and covered by the mapped evidence in `docs/current-stage-handoff.md`.
+- The final memory technology is currently SQLite with a provider-neutral interface. Earlier external-memory candidates and the ECC proposal remain evaluation inputs only; none is the authoritative store or an enabled production dependency.
+- The synthetic Cloud Gate 3 owner-facing checks passed, and the approved Gate 4 synthetic evaluation passed. Target-Windows restore/export evidence passed only for the disposable synthetic scope. Stage 2 remains active because provider-response acceptance, Stage 1 residuals, and broader acceptance boundaries remain open.
+
+### Stage 3 and Stage 4 items
+
+The blueprint’s autonomous skill revision/watchdog and Master–Slave duplication/branch synchronization systems remain design or future-stage work. Current bounded retries, backups, rollback handlers, and skill XP are not a claim that the independent watchdog, autonomous skill lifecycle, complete portable duplication, memory branching, or Google Drive exchange have been implemented.

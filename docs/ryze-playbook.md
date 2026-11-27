@@ -2,8 +2,8 @@
 
 A simple user manual for installing, starting, using, verifying, and troubleshooting RyzeFramework. This is a living document and will be updated progressively as new features are completed.
 
-**Current revision:** `Stage 2 Gate 4 synthetic evaluation passed; Windows restore acceptance partial/blocked`
-**Current stage:** Stage 1 is **PARTIAL — closed for sequencing, not complete**. Stage 2 is active. The owner-approved Gate 4 8-fixture/14-query synthetic evaluation passed after remediation on 26 November: TP=13, FP=0, FN=0; precision/recall/F1=1.0; Q14 chronology and supplemental access-control checks passed. This fixed-set result is not a production-corpus benchmark or a claim of general semantic retrieval quality; the separate eight-query exploratory baseline still has one semantic-paraphrase miss. See [`gate4-retrieval-evaluation-2026-11-26.md`](./evidence/gate4-retrieval-evaluation-2026-11-26.md). Gate 5 Windows restore acceptance is **PARTIAL / BLOCKED**. A corruption-rejection attempt used the legacy installed handler, applied a deliberately corrupt backup copy, and prevented Ryze from starting. Recovery from the pre-restore snapshot passed database integrity/schema checks, and the owner confirmed the dashboard and synthetic memory markers A/B returned. Do **not** run another restore, corruption, or rollback test, or select **Restore selected backup**, until the hardened handler and validator are verified in the disposable installation. The exact updater source remains unresolved. The existing-file same-chat return and File Manifest early deletion are owner-reported PASS; automatic 30-day expiry still needs Windows verification. A natural-language request to create a new summary file still resends the source and Ryze says it cannot create/write files. Hold changes to the agent skill/intent layer; do not enable broad file-writing permissions. Deletion affects active storage only, not prior backups, task logs, or Telegram copies.
+**Current revision:** `6f612e0 — Stage 2 Gate 3 synthetic owner acceptance, Gate 4 synthetic evaluation, and disposable Windows restore package evidence reconciled`
+**Current stage:** Stage 1 is **PARTIAL — closed for sequencing, not complete**. Stage 2 is active. Gate 3 is passed for the tested synthetic owner-facing scope; its nine-item contract mapping is complete. Gate 4 is passed only for the approved synthetic 8-fixture/14-query evaluation (TP=13, FP=0, FN=0; precision/recall/F1=1.0); this is not a production-corpus benchmark. Gate 5 is passed only for the disposable synthetic Windows scope: corrected package, installed hardened files, export metadata/secrets exclusion, valid restore, corruption rejection, rollback drill, schema/integrity checks, dashboard reopen, and synthetic persistence were reported PASS. The earlier legacy-handler failure remains historical. Provider-response acceptance is still open because the actual Ryze/OpenCode prompt timed out after two minutes. Automatic 30-day expiry still needs Windows verification. A natural-language request to create a new summary file still resends the source or says it cannot write files. Hold changes to the agent skill/intent layer; do not enable broad file-writing permissions. Deletion affects active storage only, not prior backups, task logs, or Telegram copies.
 
 Use these project documents this way:
 
@@ -143,15 +143,24 @@ After the baseline check:
 
 Only perform this if a valid FreeLLMAPI gateway is available:
 
-1. Run `Configure-FreeLLMAPI.cmd` from the installed folder.
-2. Enter the exact gateway base URL, model ID, and key privately.
-3. Start Ryze again.
-4. Confirm OpenCode and FreeLLMAPI show connected.
-5. Send a harmless prompt that does not contain private data.
-6. Confirm the task is completed and the answer appears in the activity log.
-7. Confirm OpenCode tools remain denied.
+1. Install and start the separate FreeLLMAPI desktop gateway first; the Ryze installer does not install that gateway service.
+2. Run `Configure-FreeLLMAPI.cmd` from the installed folder.
+3. Enter the gateway base URL and key privately. The model field may be left blank for automatic FreeLLMAPI model selection; do not enter a model ID unless you want to pin one.
+4. Start Ryze again.
+5. Confirm OpenCode and FreeLLMAPI show connected.
+6. Send a harmless prompt that does not contain private data.
+7. Confirm the task is completed and the answer appears in the activity log.
+8. Confirm OpenCode tools remain denied.
 
 Record the model ID and gateway/provider metadata separately if available. Never record the API key.
+
+### 3.6.1 Memory Vault and identity review
+
+Open **Memory Vault** to inspect owner-scoped records. The three main categories are **System**, **Experience**, and **Personal**. Experience records can use **Episodic**, **Semantic**, **Procedural**, **Preference**, or **Project** types. Each record displays classification, owner scope, provenance, version/status, and review information.
+
+Use **Review / add** for System Memory or identity-sensitive changes. System Memory is protected and is not writable by a model prompt. Personal Memory is owner-scoped. An exact duplicate should show the existing record for review rather than silently increasing the count. A possible conflict shows a conflict review result and is not saved or merged until the owner confirms. Updates are append-first and prior versions/history remain inspectable. Restricted records are excluded from normal contextual retrieval; use the explicit owner-controlled inclusion option only when required.
+
+The identity panel keeps Ryze identity separate from the owner's profile. Identity changes and lifecycle changes create revisions/history. These controls are tested for the synthetic acceptance scope; they are not a promise of production-corpus retrieval quality.
 
 ### 3.7 Stage 1 acceptance self-test
 
@@ -193,7 +202,7 @@ Run these checks in order on the installed Windows computer. Do not send or past
 
 **Provider and acknowledgement evidence:** The owner now reports Telegram acknowledgement-mismatch and provider-failure checks as PASS. Record these as **owner-reported PASS, not independently verified in this workspace**; do not change the retained self-test report to retroactively replace its `NOT_RUN` results. The separate dashboard provider-fault self-test simulates timeout, rate limit, refusal, and malformed response locally and does not contact a provider. Do not alter the live `.env` to force a failure. If further live testing is needed, use a separate test copy and a controlled mock gateway.
 
-**Physical backup and restore — PAUSED:** Do not use **Restore selected backup** for acceptance testing until a reviewed update verifies the hardened `Apply-RyzeRestore.ps1` and `validate-restore-db.mjs` are present in the installed Windows directory and their expected hashes are confirmed. The 26 November corruption test failed against the legacy handler; acceptance is **PARTIAL / BLOCKED**. Do not attempt another restore or manual file replacement based on this playbook. Keep all database, configuration, session, and backup contents local. Resume only after deployment is corrected and a new disposable test procedure has been reviewed.
+**Physical backup and restore — disposable synthetic scope only:** The corrected package was verified with the hardened `Apply-RyzeRestore.ps1` and `validate-restore-db.mjs` installed at the manifest hashes. In a disposable synthetic profile, export metadata/secrets exclusion, valid restore, corruption rejection before mutation, rollback drill, SQLite integrity/schema checks, dashboard reopen, and marker persistence passed. The earlier legacy-handler failure remains historical. Do not run these acceptance procedures on a normal profile, with real personal data, or by manually replacing live files. A selected restore is queued for the next startup; it does not claim that Ryze automatically restarts itself.
 
 **Receipt/reply retest:** The owner reports file receipt with and without accompanying text, text-only file feedback, and correct opening of the returned existing file as PASS on package `d35b770` (owner-reported). The owner also reports File Manifest early deletion PASS on target Windows (25 November; exact package revision not restated). Automatic 30-day expiry still needs Windows testing. The new-summary attachment benchmark is deferred until the Ryze file-creation skill/intent gap is solved. If plain text or file receipt regresses, retain sanitized logs and report the exact package revision; do not treat the historical `99112b4` failure as current evidence.
 
@@ -278,16 +287,16 @@ Run `Stop-Ryze.cmd` before backup, update, restore, or moving local data.
 
 ## 5. Backup and restore policy
 
-The ordinary `Backup-Ryze.cmd` creates a private ZIP containing database data, local files, and protected configuration. Treat it as sensitive because it may include the gateway key, signing secret, password hash, and personal task/file data.
+The ordinary `Backup-Ryze.cmd` creates a private ZIP containing database data, local files, and protected configuration. Treat it as sensitive because it may include the gateway key, signing secret, password hash, Telegram worker configuration/session, and personal task/file data. A portable JSON export is different: it contains metadata/settings and excludes file bytes and credentials.
 
-The dashboard baseline button performs a restore rehearsal only. It does not replace live data. For a real restore:
+The dashboard baseline button performs a restore rehearsal only. It does not replace live data. For a supported restore:
 
-1. Stop Ryze.
-2. Make a second backup of the current state.
-3. Preserve the current `%LOCALAPPDATA%\RyzeFramework` folder by renaming it.
-4. Restore the backup data and, only when intended, `config\app.env`.
-5. Start Ryze and verify login, task history, files, and logs.
-6. Keep the preserved folder until recovery is confirmed.
+1. Create or select a private backup in **Settings**.
+2. Confirm that the backup is local and contains only the intended synthetic/test data if this is an acceptance exercise.
+3. Choose **Restore selected backup** and confirm. Ryze queues the request; it is applied during the next startup rather than while the dashboard is running.
+4. Run `Stop-Ryze.cmd`, then start Ryze again.
+5. Verify login, task history, files, memory/identity records, and logs.
+6. Keep the protected pre-restore snapshot until recovery is confirmed. Do not manually rename or overwrite the live data folder for routine use.
 
 Never delete the database to solve a startup or ACL problem before preserving it.
 
@@ -339,11 +348,12 @@ If the retry still fails, stop Ryze, run the one-button operational baseline, an
 
 ### FreeLLMAPI is unavailable
 
-1. Confirm the gateway URL and model ID.
-2. Confirm the gateway is running and reachable.
-3. Re-run `Configure-FreeLLMAPI.cmd` if the key is rejected.
-4. Inspect `opencode-error.log` and `server-error.log`.
-5. Never paste `.env` or the key into support messages.
+1. Confirm the separate FreeLLMAPI desktop gateway is installed, running, and listening on the configured loopback URL.
+2. Confirm the gateway URL and key. The model field may be blank; blank means automatic model selection through the `auto` provider route.
+3. Re-run `Configure-FreeLLMAPI.cmd` if the key or URL is rejected.
+4. Test the gateway `/models` endpoint separately if needed, then inspect `opencode-error.log` and `server-error.log`.
+5. If the direct gateway works but Ryze says the model did not finish within two minutes, record it as a provider-response timeout, retry once after checking gateway load, and do not assume the gateway is unreachable. The current task remains bounded/cancellable; it does not wait forever.
+6. Never paste `.env` or the key into support messages.
 
 ### Baseline button reports `FAIL`
 

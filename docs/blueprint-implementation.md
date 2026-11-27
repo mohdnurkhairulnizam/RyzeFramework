@@ -52,7 +52,7 @@ Stage 1 is **PARTIAL — closed for sequencing**. The repository has a safe loca
 
 ### Stage 2 — Identity and advanced memory
 
-Stage 2 is active. Gate 2's additive migration/provider-neutral SQLite layer and the initial Gate 3 owner-governance APIs and Memory vault UX are implemented. The owner-approved Gate 4 8-fixture/14-query synthetic retrieval evaluation passed after remediation on 26 November: TP=13, FP=0, FN=0, precision/recall/F1=1.0, with Q14 chronological order PASS. The fixed query wording and expected labels were unchanged. This does not establish production-corpus representativeness or broad semantic quality; the separate eight-query exploratory baseline retains one semantic-paraphrase miss (F1=0.9091). Gate 5 Windows export/restore acceptance is **PARTIAL / BLOCKED** after the 26 November corrupted-backup test failed against the legacy installed handler; the hardened handler and validator were not present in the inspected install. The exact update source remains unresolved. See [`current-stage-handoff.md`](./current-stage-handoff.md), [`stage-2-implementation-plan.md`](./stage-2-implementation-plan.md), and [`gate4-retrieval-evaluation-2026-11-26.md`](./evidence/gate4-retrieval-evaluation-2026-11-26.md). SQLite remains authoritative unless a reviewed decision changes that.
+Stage 2 is active. Gate 2's additive migration/provider-neutral SQLite layer is complete. Gate 3 synthetic owner-facing acceptance and the nine-item memory/identity contract mapping are complete for the tested scope. The owner-approved Gate 4 8-fixture/14-query synthetic retrieval evaluation passed after remediation: TP=13, FP=0, FN=0, precision/recall/F1=1.0, with Q14 chronological order PASS. The fixed query wording and expected labels were unchanged. This does not establish production-corpus representativeness or broad semantic quality; the separate eight-query exploratory baseline retains one semantic-paraphrase miss (F1=0.9091). Gate 5 is passed only for the corrected disposable synthetic Windows scope; the earlier legacy-handler failure remains historical. Provider-response acceptance remains open because the actual Ryze/OpenCode prompt timed out after two minutes. See [`current-stage-handoff.md`](./current-stage-handoff.md), [`stage-2-implementation-plan.md`](./stage-2-implementation-plan.md), and [`gate4-retrieval-evaluation-2026-11-26.md`](./evidence/gate4-retrieval-evaluation-2026-11-26.md). SQLite remains authoritative unless a reviewed decision changes that.
 
 The owner also places the new-file skill/intent capability on hold for Stage 2 planning. Do not change Ryze skill instructions or import ECC as a shortcut. Evaluate the submitted ECC proposal only as a separate compatibility/security review: it does not provide Ryze's authoritative memory and cannot replace any Stage 1 or Stage 2 gates. The repository pins `@opencode/cli` `2.3.0`; confirm the actual target-Windows runtime before any ECC experiment.
 
@@ -75,7 +75,7 @@ Portable JSON export and computer-localization guidance are present, but they ar
 
 ## Next implementation gates
 
-Continue Stage 2 using the active sequencing in [`stage-2-implementation-plan.md`](./stage-2-implementation-plan.md): the owner-approved Gate 4 synthetic evaluation is passed within its fixed scope; retain the separate exploratory paraphrase limitation and do not infer production-corpus or Windows acceptance. Gate 5 stays PARTIAL / BLOCKED until the hardened restore files are demonstrably installed and fresh Windows acceptance passes. Do not run another restore, corruption, or rollback trial before deployment is verified. The v1 memory contract has nine acceptance evidence items, while origin blueprint §2.9 has ten bullet statements; map these before final Stage 2 signoff rather than describing the origin list as nine. The file-creation skill issue is a separate Stage 2 design item and is not permission for broad write access or automatic skill mutation. ECC remains a research candidate only until compatibility, permissions, and component side effects are reviewed. Keep Stage 1 residual checks in the partial-close register; do not count ECC, Stage 2 work, or sandbox tests toward them. Stage 3 watchdog/skill lifecycle and Stage 4 copy/synchronization work remain future stages.
+Continue Stage 2 using the active sequencing in [`stage-2-implementation-plan.md`](./stage-2-implementation-plan.md): retain Gate 4's fixed synthetic scope and exploratory paraphrase limitation; do not infer production-corpus quality or normal-profile Windows acceptance. Gate 5 is limited to the tested disposable synthetic scope; provider-response acceptance remains open. The nine-item contract mapping is complete, while origin blueprint §2.9 retains ten bullet statements; preserve that distinction during final signoff. The file-creation skill issue is a separate Stage 2 design item and is not permission for broad write access or automatic skill mutation. ECC remains a research candidate only until compatibility, permissions, and component side effects are reviewed. Keep Stage 1 residual checks in the partial-close register; do not count ECC, Stage 2 work, or sandbox tests toward them. Stage 3 watchdog/skill lifecycle and Stage 4 copy/synchronization work remain future stages.
 
 Until those gates are approved and tested, the current local build remains a safe local demo with a verified text-chat integration, not the origin blueprint's operational AI agent. The original MySQL migration files are retained as history, but the Windows ZIP uses the separate SQLite migration directory.
 
@@ -90,3 +90,69 @@ Until those gates are approved and tested, the current local build remains a saf
 **Follow-up acceptance update (23 November 2026):** The owner verified metadata-only handling for `ryze-baseline-test-20261123135610940.md` (`text/markdown`, `113` bytes); file content was not executed. Worker stop/start replay behavior and duplicate/replayed inbound-event prevention were reported PASS. This advances the safe file-processing and Telegram reliability evidence, while generated report/file delivery and recovery-code expiry remain open. Recovery-code expiry is intentionally deferred to a later verification pass.
 
 **Stage 2 status update (26 November 2026):** Target-Windows corruption rejection **FAILED against the legacy installed handler** after the corrupt duplicate was applied and Ryze startup failed with “file is not a database.” The pre-restore snapshot passed SQLite integrity and required Stage 2 schema checks; owner-reported recovery restored the dashboard and synthetic memory markers A/B. The installed handler hash did not match the hardened source, and the validator was absent. Candidate package source was not located at the path used for the follow-up check, so the update cause remains unknown. Gate 5 is PARTIAL / BLOCKED; do not repeat restore/rollback trials until deployment is verified. **At the initial Gate 4 run**, the owner-approved synthetic set failed its expected-relevance labels (0 recall); the subsequent fixed-set remediation retest passed with 13/13 relevant fixture instances retrieved. See [`gate4-retrieval-evaluation-2026-11-26.md`](./evidence/gate4-retrieval-evaluation-2026-11-26.md) for both separately retained runs. Formal Stage 2 signoff must reconcile the nine-item memory contract with the ten bullet statements in origin blueprint §2.9.
+
+---
+
+# Current implementation map — 27 November 2026
+
+This section is the current-status authority for this document. Earlier checkpoint paragraphs are retained as historical evidence, including the legacy Gate 5 failure and the initial Gate 4 failed run; they must not be read as the current status after the later corrected package and remediation evidence.
+
+## Source control and review state
+
+The reviewed source of truth is GitHub repository `mohdnurkhairulnizam/RyzeFramework`, branch `feature/telegram-file-transfer`, commit `6f612e05b133cdd573121ce8608c5857015a4ceb`. The branch is 67 commits ahead of `main` at `5fb29f9df1f90041b8a85fe09052798a5a030f0d`; it has no divergence behind main. PR #1 (`https://github.com/mohdnurkhairulnizam/RyzeFramework/pull/1`) remains open and unmerged. The existing untracked `RyzeFramework-PR1-source-33ced158.zip` is intentionally preserved and is not part of the source or package.
+
+## Implemented architecture and boundaries
+
+The application is TypeScript/React/Node with Vite, Express, tRPC, SQLite through better-sqlite3, Drizzle migrations, Vitest, and an optional Python Telethon worker. The Windows deployment is localhost-only and uses PowerShell 5.1, `.cmd` launchers, robocopy, local SQLite, an OpenCode CLI sidecar, and a separately installed FreeLLMAPI desktop gateway.
+
+The dashboard owns local authentication, task lifecycle, memory/identity governance, file metadata, export and restore queues, worker control, and diagnostic evidence. The model provider does not receive permission to mutate System Memory, identity, credentials, or arbitrary files. OpenCode is configured chat-only with deny-all tools. Safe allowlisted actions, worker commands, and owner-confirmed memory operations are separate server-side routes.
+
+## OpenCode, FreeLLMAPI, and Telegram
+
+FreeLLMAPI is OpenAI-compatible at a loopback URL such as `http://127.0.0.1:31415/v1`. Its gateway is not bundled as a service by the Ryze installer; a fresh machine needs FreeLLMAPI installed/configured separately. OpenCode CLI is installed by the Ryze package and managed by the Windows startup path.
+
+The model selector is optional. A blank dashboard model field is valid and delegates selection to FreeLLMAPI. `ensure-opencode-config.mjs` writes the provider model ID `auto`; `server/openCode.ts` preserves the `freellmapi/selected` route whenever URL and key are configured, even when the configured model is blank. This fixed the startup regression that incorrectly required an explicit model.
+
+The direct gateway test returned `/models` HTTP 200 with 320 models and a direct chat HTTP 200 in approximately 20 seconds. A separate Ryze/OpenCode prompt timed out after two minutes. The timeout is therefore recorded as an unresolved provider-response acceptance limitation, not as proof that FreeLLMAPI is unreachable. The current bounded timeout and task controls remain; an infinite uninterruptible wait is not implemented.
+
+The Telegram boundary is a local Telethon user-account worker, not a bot. It handles owner login/session protection, sender authorization, pause/resume/stop, sanitized heartbeats, same-chat text/file paths, 5 MiB binary intake, type/hash/size validation, source binding, acknowledgement checks, and replay protection. Existing-file same-chat return was owner-reported PASS. Natural-language generation of a new Markdown summary remains a known deferred failure.
+
+## Stage 1 readiness
+
+Stage 1 remains **PARTIAL — closed for sequencing, not complete**. Its historical readiness register and nine origin criteria are retained. Residuals include target-Windows automatic 30-day expiry evidence, the new-summary file-creation capability, full report/file-delivery scope, and the remaining external-action/worker evidence boundaries. Diagnostic self-tests are evidence tools and do not close a stage. No Stage 2 result, sandbox result, or merge substitutes for Stage 1 acceptance.
+
+## Stage 2 implementation and gate disposition
+
+Stage 2 remains active. Gate 2 is passed for the additive provider-neutral SQLite schema/migration and the initial governance API/UI. Gate 3 is passed for the tested synthetic owner-facing Cloud scope: categories/types, duplicate review, conflict confirmation, restricted retrieval, owner isolation, identity revisions, lifecycle history, protected System Memory, restart persistence, and the nine-item contract mapping are recorded in `current-stage-handoff.md`.
+
+Gate 4 is **PASSED only for the approved synthetic 8-fixture/14-query evaluation**: TP=13, FP=0, FN=0, precision/recall/F1=1.0 and Q14 chronological ordering PASS. Query wording and expected labels were unchanged. This is bounded lexical retrieval evidence and makes no production-corpus quality claim; the separate exploratory paraphrase limitation remains recorded.
+
+Gate 5 is **PASSED only for the disposable synthetic Windows scope**. The corrected package and installed hardened files were verified; export metadata and secrets exclusion, valid restore, corruption rejection before mutation, rollback drill, SQLite integrity, required schema validation, dashboard reopening, and synthetic marker persistence were owner-reported PASS. The earlier legacy-handler corruption failure remains historical. Provider-response acceptance remains OPEN because the actual prompt timed out after two minutes.
+
+The nine-item Stage 2 contract mapping is complete, but it is not a declaration that Stage 2 is complete. Stage 3 and Stage 4 remain unimplemented architectural design.
+
+## Windows hardening evidence
+
+The reviewed restore manifest pins `validate-restore-db.mjs` to SHA-256 `9970E340C722E8A097C4B991F3578E73DBE15A2BACD4964727266FCDA90D0155`; the hardened `Apply-RyzeRestore.ps1` installed hash was `099FD1C22CD3C79EED080091D0E9CD3C59B2AE3EEF0B0993400066A5D94949AF`. The corrected disposable package checksum was `78e73c5f21987010f541a4b510b2faedb2dd0870fc49db79d7c839b2e2ab6120`. These hashes are review evidence, not permission to include live user data in a package.
+
+## Validation matrix
+
+| Check | Current result | Scope |
+|---|---|---|
+| `pnpm run check` | PASS | Repository |
+| `pnpm test` | PASS, 74 tests / 23 files | Repository |
+| `pnpm run worker:test` | PASS, 9 tests | Telethon worker unit/integration tests |
+| `pnpm run build:local` | PASS | Local production build |
+| `git diff --check` | PASS | Reviewed source |
+| Gate 3 dashboard checks | PASS | Synthetic Cloud owner scope |
+| Gate 4 retrieval | PASS | Fixed synthetic 8-fixture/14-query set only |
+| Gate 5 Windows restore | PASS | Disposable synthetic profile only |
+| Provider response | OPEN | Actual Ryze/OpenCode prompt timed out |
+
+## Evidence taxonomy
+
+All claims must identify whether they are automated sandbox checks, handler-level Windows checks, owner-reported disposable Windows evidence, synthetic Cloud dashboard evidence, or full target-Windows dashboard acceptance. Production-corpus retrieval quality, normal-profile restore safety, and Stage 3/4 completion must not be inferred from the current evidence.
+
+## Current next actions
+
+Keep PR #1 open for review. Resolve provider-response evidence with a bounded, cancellable test; verify automatic 30-day expiry on target Windows; resolve the narrow new-summary capability without changing live skill/intent rules broadly; and retain Stage 1 residuals. Do not merge or describe a merge as system or Stage 2 completion.
