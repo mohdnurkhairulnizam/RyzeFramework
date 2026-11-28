@@ -2,7 +2,9 @@
 setlocal
 
 echo Installing Ryze. Keep this window open until setup finishes.
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\windows\Install-Ryze.ps1"
+set "MEMPALACE_ARG="
+if /I "%~1"=="/InstallMemPalaceRuntime" set "MEMPALACE_ARG=-InstallMemPalaceRuntime"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\windows\Install-Ryze.ps1" %MEMPALACE_ARG%
 set "RYZE_EXIT=%ERRORLEVEL%"
 echo.
 if not "%RYZE_EXIT%"=="0" (

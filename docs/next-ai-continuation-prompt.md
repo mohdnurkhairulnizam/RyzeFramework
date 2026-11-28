@@ -62,6 +62,7 @@ Implemented and tested in the branch:
 - Opt-in stdio JSON-RPC bridge in `server/mempalaceMcpBridge.ts`.
 - Synthetic replay harness in `scripts/mempalace-replay-smoke.ts`.
 - Windows runner in `scripts/windows/Run-MemPalace-Replay-Test.ps1`.
+- Opt-in Windows dependency setup in `scripts/windows/Install-MemPalaceRuntime.ps1`; normal install/update remains SQLite-only. Use `Install-Ryze.cmd /InstallMemPalaceRuntime` or `Update-Ryze.cmd /InstallMemPalaceRuntime` to check/install Python 3.12 and create the isolated pinned runtime.
 - Pinned MemPalace target: tag `v3.12.0`, commit `4df7b830ff1398332d4118884520a24f1aab9cc1`.
 
 The Linux sandbox real MCP replay smoke test passed for synthetic data:
@@ -80,7 +81,7 @@ The real Windows run has **not passed yet**. The corrected source-only package w
 
 On the authorized disposable Windows synthetic profile:
 
-1. Install Python 3.12.x, 64-bit, with the Python launcher and `python.exe` on PATH.
+1. From the extracted package, run `Install-Ryze.cmd /InstallMemPalaceRuntime` or, for an existing installation, run `Update-Ryze.cmd /InstallMemPalaceRuntime` after stopping Ryze. The switch checks `py.exe -3.12`, uses user-scoped `winget` for `Python.Python.3.12` when available, and fails with manual-install instructions when no supported package manager is present. It never enables live MemPalace routers.
 2. Confirm:
 
    ```powershell

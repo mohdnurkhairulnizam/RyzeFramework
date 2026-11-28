@@ -5,9 +5,6 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $install = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-$pythonLauncher = Get-Command py.exe -ErrorAction SilentlyContinue
-if (-not $pythonLauncher) { throw 'Python Launcher (py.exe) was not found. Install Python 3.12 for the disposable MemPalace test.' }
-
 $venv = Join-Path $RuntimeRoot 'venv'
 $python = Join-Path $venv 'Scripts\python.exe'
 $mempalace = Join-Path $venv 'Scripts\mempalace.exe'
@@ -17,14 +14,8 @@ $palace = Join-Path $RuntimeRoot 'palace'
 New-Item -ItemType Directory -Path $RuntimeRoot -Force | Out-Null
 New-Item -ItemType Directory -Path $source -Force | Out-Null
 
-if (-not (Test-Path -LiteralPath $python)) {
-  Write-Host 'Creating disposable Python 3.12 environment.'
-  & py.exe -3.12 -m venv $venv
-  if ($LASTEXITCODE -ne 0) { throw 'Could not create the disposable Python 3.12 environment.' }
-  & $python -m pip install --upgrade pip
-  & $python -m pip install 'git+https://github.com/MemPalace/mempalace.git@v3.12.0'
-  if ($LASTEXITCODE -ne 0) { throw 'Pinned MemPalace v3.12.0 installation failed.' }
-}
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $install 'scripts\windows\Install-MemPalaceRuntime.ps1') -RuntimeRoot $RuntimeRoot
+if ($LASTEXITCODE -ne 0) { throw 'Pinned MemPalace runtime dependency setup failed.' }
 
 if (-not (Test-Path -LiteralPath $mempalace) -or -not (Test-Path -LiteralPath $mcp)) {
   throw "Pinned MemPalace executables were not found under $venv."

@@ -11,7 +11,9 @@ if not exist "%SCRIPT%" (
   exit /b 2
 )
 echo Updating Ryze application files while preserving your installed configuration and data.
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT%"
+set "MEMPALACE_ARG="
+if /I "%~1"=="/InstallMemPalaceRuntime" set "MEMPALACE_ARG=-InstallMemPalaceRuntime"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT%" %MEMPALACE_ARG%
 set "RYZE_EXIT=%ERRORLEVEL%"
 echo.
 if not "%RYZE_EXIT%"=="0" (

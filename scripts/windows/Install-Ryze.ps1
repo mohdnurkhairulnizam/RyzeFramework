@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
-  [string]$InstallDirectory = (Join-Path $env:LOCALAPPDATA 'Programs\RyzeFramework')
+  [string]$InstallDirectory = (Join-Path $env:LOCALAPPDATA 'Programs\RyzeFramework'),
+  [switch]$InstallMemPalaceRuntime
 )
 
 $ErrorActionPreference = 'Stop'
@@ -114,6 +115,14 @@ try {
   if ($LASTEXITCODE -ne 0) { throw 'Could not restrict access to the local database and files directory.' }
 } finally {
   Pop-Location
+}
+
+if ($InstallMemPalaceRuntime) {
+  Write-Host 'Preparing the optional isolated MemPalace runtime. SQLite remains the authoritative store.'
+  & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $InstallDirectory 'scripts\windows\Install-MemPalaceRuntime.ps1')
+  if ($LASTEXITCODE -ne 0) { throw 'Optional MemPalace runtime setup failed. Ryze remains SQLite-only; fix the dependency issue and rerun with /InstallMemPalaceRuntime.' }
+} else {
+  Write-Host 'Optional MemPalace/Python runtime was not requested; normal Ryze installation remains SQLite-only.'
 }
 
 Write-Host ''

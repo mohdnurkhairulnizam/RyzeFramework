@@ -8,7 +8,7 @@ The ZIP contains no owner password, FreeLLMAPI key, Telegram session, or other u
 
 ## Before installing
 
-Use 64-bit Windows 10 or newer. Install Node.js 22 or 24 LTS if needed; the installer downloads locked application dependencies from the internet. The optional Python/Telethon worker is not installed or authorized by this dashboard installer. Keep Windows updated and use a Windows account password; enable BitLocker if you want disk encryption for local data.
+Use 64-bit Windows 10 or newer. Install Node.js 22 or 24 LTS if needed; the installer downloads locked application dependencies from the internet. Normal Ryze installation is SQLite-only and does not install Python or enable MemPalace. Keep Windows updated and use a Windows account password; enable BitLocker if you want disk encryption for local data.
 
 ## Install
 
@@ -16,6 +16,22 @@ Use 64-bit Windows 10 or newer. Install Node.js 22 or 24 LTS if needed; the inst
 2. Double-click `Install-Ryze.cmd`. If Windows asks for permission, allow the script to run for your user account; it does not require administrator rights or change the machine-wide execution policy.
 3. Enter the same owner password twice. Use at least 6 characters. The password is not saved in plain text; the installer stores a salted hash and random session-signing secret in local configuration. A six-digit numeric PIN is much easier to guess; use a longer mixed passphrase if practical.
 4. The installer copies the program to `%LOCALAPPDATA%\Programs\RyzeFramework`, installs locked dependencies with a repaired direct-link layout, rebuilds the native SQLite and OpenCode packages, verifies `better-sqlite3`, verifies the Windows `opencode.exe` sidecar, builds `dist\index.js`, and restricts access to the local config/data folders to your Windows account. It may take several minutes and requires internet access. Visual Studio or C++ Build Tools should not be required. If any runtime check fails, the installer stops with a diagnostic instead of reporting a usable installation.
+
+### Optional MemPalace/Python runtime
+
+MemPalace is an optional, reversible projection target; it is not the operational memory store and is not enabled by the normal installer. To prepare the isolated runtime for the synthetic Windows provider-restart/replay test, run this command from the extracted package:
+
+```text
+Install-Ryze.cmd /InstallMemPalaceRuntime
+```
+
+For an existing installation, stop Ryze, extract the update package to a temporary folder, and run:
+
+```text
+Update-Ryze.cmd /InstallMemPalaceRuntime
+```
+
+The switch checks for Python 3.12 through `py.exe -3.12`. If it is missing and the user-scoped Windows Package Manager (`winget`) is available, it installs `Python.Python.3.12` for the current user. If `winget` is unavailable, the command stops with manual-install instructions; it does not silently download an unverified installer or require administrator access. It then creates `%LOCALAPPDATA%\RyzeFramework\mempalace-runtime\venv` and installs the pinned MemPalace source commit `4df7b830ff1398332d4118884520a24f1aab9cc1` (v3.12.0). The runtime contains only synthetic replay-test state when the replay script is run; it does not read or modify the live SQLite database, `.env`, Telegram session, or private files. Remove `%LOCALAPPDATA%\RyzeFramework\mempalace-runtime` to clean it up. Preparing this runtime alone does not start an MCP process, enable live MemPalace routers, or change SQLite authority.
 
 If Node.js is missing or unsupported, install Node.js 22 or 24 LTS from the official Node.js website and run the installer again. Do not send your owner password or any future API keys in chat.
 

@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
-  [string]$InstallDirectory = (Join-Path $env:LOCALAPPDATA 'Programs\RyzeFramework')
+  [string]$InstallDirectory = (Join-Path $env:LOCALAPPDATA 'Programs\RyzeFramework'),
+  [switch]$InstallMemPalaceRuntime
 )
 
 $ErrorActionPreference = 'Stop'
@@ -95,6 +96,14 @@ try {
   if (-not (Test-Path -LiteralPath (Join-Path $InstallDirectory 'dist\index.js') -PathType Leaf)) { throw 'The production server bundle dist\index.js was not created; the update is incomplete.' }
   if (-not (Test-Path -LiteralPath $EnvFile)) { throw 'The installed .env is missing after updating; stop and preserve the data folder before taking any further action.' }
 } finally { Pop-Location }
+
+if ($InstallMemPalaceRuntime) {
+  Write-Host 'Preparing the optional isolated MemPalace runtime. Existing SQLite data and configuration are not read or changed.'
+  & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $InstallDirectory 'scripts\windows\Install-MemPalaceRuntime.ps1')
+  if ($LASTEXITCODE -ne 0) { throw 'Optional MemPalace runtime setup failed. Ryze remains SQLite-only; fix the dependency issue and rerun with /InstallMemPalaceRuntime.' }
+} else {
+  Write-Host 'Optional MemPalace/Python runtime was not requested; update remains SQLite-only.'
+}
 
 Write-Host ''
 Write-Host 'Ryze has been updated. Your existing configuration and local data were preserved.' -ForegroundColor Green
