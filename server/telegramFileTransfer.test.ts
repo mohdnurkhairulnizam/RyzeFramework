@@ -27,7 +27,7 @@ vi.mock("./routers/ryze", async (importOriginal) => {
 });
 
 const db = await import("./db");
-const { registerWorkerRoutes, buildGeneratedSummaryArtifact } = await import("./workerApi");
+const { registerWorkerRoutes, buildGeneratedSummaryArtifact, requestsGeneratedSummaryFile } = await import("./workerApi");
 const storage = await import("./storage");
 
 let server: Server;
@@ -89,6 +89,12 @@ describe("Telegram file transfer boundary", () => {
     expect(() => buildGeneratedSummaryArtifact("brief.md", " ")).toThrow(/bounded UTF-8 and size validation/);
     expect(() => buildGeneratedSummaryArtifact("brief.md", "x".repeat(70 * 1024))).toThrow(/bounded UTF-8 and size validation/);
     expect(() => buildGeneratedSummaryArtifact("brief.md", "\0")).toThrow(/bounded UTF-8 and size validation/);
+  });
+
+  it("recognizes the bounded natural-language make-summary request", () => {
+    expect(requestsGeneratedSummaryFile("Make a short Markdown summary of README.md and send the summary as a file.")).toBe(true);
+    expect(requestsGeneratedSummaryFile("Send me the latest file back.")).toBe(false);
+    expect(requestsGeneratedSummaryFile("Make a shell script and send it as a file.")).toBe(false);
   });
 
   it("accepts stable text-only worker payloads without weakening the private-chat boundary", async () => {
@@ -235,6 +241,30 @@ describe("Telegram file transfer boundary", () => {
     const fileCommand = commands.find((command) => command.command === "send_file" && command.payload?.includes(generated!.id));
     expect(fileCommand).toBeTruthy();
     expect(fileCommand?.payload).not.toContain(source.fileId);
+  });
+
+  it("creates the bounded summary from the latest private upload when the request omits a file ID", async () => {
+    const upload = await uploadFile({ "X-Ryze-Message-Id": "9045" });
+    const source = await upload.json() as { fileId: string };
+    const response = await fetch(`${baseUrl}/api/worker/v1/inbound`, {
+      method: "POST",
+      headers: { ...auth, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        workerId: "primary", chatId: "12345", senderId: "12345", senderUsername: "owner",
+        senderName: "Owner", text: "Make a short Markdown summary of README.md and send the summary as a file.",
+        messageId: "9046", isPrivate: true,
+      }),
+    });
+    expect(response.status).toBe(202);
+    expect(await response.json()).toMatchObject({ accepted: true, replyQueued: true, fileQueued: true });
+    const generated = (await db.listFiles(ownerId)).find((file) => file.source === "generated" && file.telegramMessageId === "9046");
+    expect(generated).toMatchObject({
+      mimeType: "text/markdown",
+      sourceFileId: source.fileId,
+      sourceContentHash: crypto.createHash("sha256").update(Buffer.from("# Stage 1 file\nContent for test.\n")).digest("hex"),
+      generatorLabel: "opencode-summary-v1",
+    });
+    expect(generated?.id).not.toBe(source.fileId);
   });
 
   it("keeps an ordinary latest-file request bound to the original upload", async () => {

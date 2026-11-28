@@ -157,7 +157,7 @@ export function requestsGeneratedSummaryFile(text: string) {
   return /\b(summarize|summarise|summary)\b/i.test(text)
     && /\b(markdown|\.md\b)/i.test(text)
     && /\b(file|attachment)\b/i.test(text)
-    && /\b(new|separate|create|write|generate|save)\b/i.test(text);
+    && /\b(make|new|separate|create|write|generate|save)\b/i.test(text);
 }
 
 export function formatGeneratedSummaryMarkdown(sourceName: string, summary: string) {

@@ -12,7 +12,7 @@
   "externalOpen": {
     "generatedSummaryOwnerFacingNaturalLanguageBenchmark": {
       "status": "OPEN",
-      "reason": "Prior owner-reported live behavior resent the source/refused creation; backend tests do not establish live skill behavior."
+      "reason": "The bounded backend now recognizes the exact make-summary request and creates a source-bound Markdown artifact; target-Windows owner-facing Telegram delivery still requires the updated package and live verification."
     },
     "targetWindowsAutomatic30DayExpiry": {
       "status": "OPEN",

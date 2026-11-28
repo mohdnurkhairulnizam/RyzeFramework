@@ -654,7 +654,8 @@ export async function getLatestTelegramFile(userId: number, chatId: string, send
     eq(ryzeFiles.userId, userId),
     eq(ryzeFiles.telegramChatId, chatId),
     eq(ryzeFiles.telegramSenderId, senderId),
-  )).orderBy(desc(ryzeFiles.createdAt)).limit(1);
+    eq(ryzeFiles.source, "telegram"),
+  )).orderBy(desc(ryzeFiles.createdAt), desc(sql`CAST(${ryzeFiles.telegramMessageId} AS INTEGER)`)).limit(1);
   const file = rows[0] ?? null;
   return file && file.createdAt.getTime() + FILE_RETENTION_MS > Date.now() ? file : null;
 }

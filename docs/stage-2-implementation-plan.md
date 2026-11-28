@@ -141,7 +141,7 @@ During Stage 2, ECC may be used as a **research/reference candidate** for develo
 
 ## Stage 1 partial-close register carried alongside Stage 2
 
-Stage 1 remains PARTIAL and is closed only as a sequencing decision. The outstanding items are not marked passed or waived. Retain the owner-reported PASS for File Manifest early deletion and existing-file resend, separately retain the user-visible new-summary failure as deferred capability work, and separately verify automatic 30-day expiry on Windows. Preserve the historic acceptance self-test's own `NOT_RUN`/`WARN` results. Reopen a Stage 1 item if safety, data loss, privacy, or regression evidence requires it; otherwise proceed with Stage 2 without presenting these residuals as Stage 2 completion evidence.
+Stage 1 remains PARTIAL and is closed only as a sequencing decision. The outstanding items are not marked passed or waived. Retain the owner-reported PASS for File Manifest early deletion and existing-file resend, record the bounded generated-summary implementation separately from the still-open owner-facing benchmark, and separately verify automatic 30-day expiry on Windows. Preserve the historic acceptance self-test's own `NOT_RUN`/`WARN` results. Reopen a Stage 1 item if safety, data loss, privacy, or regression evidence requires it; otherwise proceed with Stage 2 without presenting these residuals as Stage 2 completion evidence.
 
 ## References
 
@@ -173,7 +173,7 @@ The origin blueprint's Stage 3 remains a future plan for autonomous skills and s
 The sandbox-closable portion of the remaining work is recorded:
 
 - Origin §2.9's ten completion criteria are reconciled to the nine-item contract in [`evidence/stage-2-contract-reconciliation-2026-11-29.md`](./evidence/stage-2-contract-reconciliation-2026-11-29.md).
-- The generated-summary backend/provenance path is locally covered; the live natural-language owner-facing benchmark remains open and is not replaced by backend tests.
+- The bounded generated-summary backend/provenance path now recognizes the exact `Make a short Markdown summary ... and send the summary as a file` form and is locally covered; the live natural-language owner-facing benchmark remains open and is not replaced by backend tests.
 - Derived search has a separate acceptance gate in [`mempalace-derived-search-acceptance-gate-2026-11-29.md`](./mempalace-derived-search-acceptance-gate-2026-11-29.md) and remains disabled.
 - Bounded ongoing projection is specified in [`mempalace-bounded-ongoing-operation-policy-2026-11-29.md`](./mempalace-bounded-ongoing-operation-policy-2026-11-29.md); this policy does not itself authorize activation.
 - The evidence classes and remaining blockers are consolidated in [`stage-2-signoff-matrix-2026-11-29.md`](./stage-2-signoff-matrix-2026-11-29.md).
