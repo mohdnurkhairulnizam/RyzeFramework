@@ -149,3 +149,21 @@ Stage 1 remains PARTIAL and is closed only as a sequencing decision. The outstan
 [2]: https://opencode.ai/docs/plugins/ "OpenCode Plugin Documentation"
 [3]: https://opencode.ai/docs/permissions/ "OpenCode Permissions Documentation"
 [4]: https://github.com/affaan-m/ECC/blob/main/.opencode/MIGRATION.md "ECC OpenCode Migration Guide"
+
+
+## Phase 4 closure and remaining Stage 2 work — 29 November 2026
+
+MemPalace Phase 4 ongoing-operation hardening is now **PASS, owner-reported, for the tested target-Windows exact eight-operation scope**. The sanitized operational evidence is [`evidence/mempalace-phase-4-target-windows-2026-11-29.json`](./evidence/mempalace-phase-4-target-windows-2026-11-29.json). It verifies pre-expiry lease activation, live expiry shutdown without restart, SQLite/dashboard availability, healthy reconciliation, restart with a fresh exact approval, rollback, approval removal, and unchanged SQLite integrity/fingerprint.
+
+This result does not authorize unrestricted or permanent MemPalace activation. The only technically supported activation boundary is a separately approved, expiring `projection-only` window using the unchanged exact manifest. SQLite remains authoritative, automatic capture and broad writes remain disabled, derived search remains disabled, and System Memory, restricted-memory, and cross-agent projection remain excluded. `RYZE_MEMPALACE_MODE=disabled` remains the safe default and rollback state.
+
+Before Stage 2 signoff, complete or explicitly owner-defer the following items:
+
+1. Reconcile the nine-item memory/identity contract mapping with all ten origin-blueprint §2.9 statements.
+2. Complete the owner-facing generated-summary capability benchmark and preserve its source/provenance, retention, same-chat delivery, and rollback boundaries.
+3. Decide whether derived MemPalace search merits a separate reviewed acceptance gate; do not enable it as part of routine projection.
+4. Define the bounded ongoing-projection operating policy: approval renewal, monitoring cadence, outbox/reconciliation thresholds, resource envelope, and emergency rollback.
+5. Retain the Stage 1 partial-close residuals, including target-Windows automatic 30-day expiry, as separate evidence rather than treating Phase 4 as Stage 1 or Stage 2 completion.
+6. Publish a final Stage 2 matrix that distinguishes automated repository evidence, synthetic owner-facing evidence, disposable Windows evidence, and owner-reported operational evidence.
+
+The origin blueprint's Stage 3 remains a future plan for autonomous skills and self-recovery. The project-specific MemPalace Stage 3A pilot and Phase 4 hardening are Stage 2 workstreams and do not start or complete origin Stage 3.

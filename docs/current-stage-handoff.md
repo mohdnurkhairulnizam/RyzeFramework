@@ -330,3 +330,27 @@ This closes the bounded Stage 3A pilot only. It does not declare Option C/full o
 The formal plan is [`mempalace-phase-4-ongoing-operation-plan-2026-11-29.md`](./mempalace-phase-4-ongoing-operation-plan-2026-11-29.md). Implemented controls now enforce the projection approval lease while the process remains running, stop projection/replay/derived search safely after lease expiry, cap replay work at 100 items per invocation, and expose bounded lease, manifest, approved-operation, replay-limit, and reconciliation metadata through provider health. SQLite remains authoritative; derived search, automatic capture, broad synchronization, System Memory projection, restricted-memory projection, and cross-agent sharing remain disabled.
 
 Validation passed: focused MemPalace tests 20/20, full Vitest 29 files/102 tests, TypeScript check, local production build, and `git diff --check`. Evidence is [`evidence/mempalace-phase-4-hardening-2026-11-29.json`](./evidence/mempalace-phase-4-hardening-2026-11-29.json). This is repository implementation evidence; target-Windows lease-expiry/reconciliation evidence remains a separate operator check. The workstream remains under Stage 2 and does not mean the origin blueprint's Stage 3 has started or completed.
+
+
+### MemPalace Phase 4 target-Windows verification — PASS, owner-reported — 29 November 2026
+
+The owner completed the sequential target-Windows Phase 4 operating procedure for the exact eight-operation manifest. Sanitized evidence is recorded in [`evidence/mempalace-phase-4-target-windows-2026-11-29.json`](./evidence/mempalace-phase-4-target-windows-2026-11-29.json). Pre-expiry health reported `mode=projection-only`, `enabled=true`, `searchable=false`, `leaseActive=true`, the pinned provider revision/namespace/manifest, `approvedOperationCount=8`, `maxReplayItems=1`, `canonicalSqliteAvailable=true`, healthy reconciliation, and zero failed outbox work. After lease expiry without restarting Ryze, health reported `enabled=false`, `searchable=false`, `leaseActive=false`, `canonicalSqliteAvailable=true`, healthy reconciliation, `pending=0`, `inFlight=0`, `applied=8`, and `failed=0`.
+
+The dashboard, Memory Vault, and SQLite-backed operation remained available after expiry. The target-Windows read-only SQLite checks remained `integrity=PASS`, `read_only=PASS`, with unchanged counts (`users=1`, `memories=20`, `identities=1`, `identityRevisions=2`, `systemMemory=1`), `memory_rows=20`, and memory SHA-256 `2d12d09fa65578df6e7178bdc209496ecb333de5dc0a913e9f3d45548af49257`. A fresh exact approval restart test passed. Rollback to `RYZE_MEMPALACE_MODE=disabled`, temporary approval removal, and the final SQLite check all passed.
+
+Classification: **MemPalace Phase 4 ongoing-operation hardening PASS, owner-reported**. This is not unrestricted/full MemPalace activation. SQLite remains authoritative; the accepted operating boundary remains projection-only, exact allowlist, expiring approval, derived search disabled, automatic capture disabled, broad synchronization disabled, and System Memory/restricted/cross-agent projection disabled. Stage 1 remains **PARTIAL — closed for sequencing, not complete**. Stage 2 remains **active and not complete**. The origin blueprint's Stage 3 remains an unstarted architectural stage.
+
+### Stage 2 completion roadmap after Phase 4 — 29 November 2026
+
+"Full activation" is not a permitted state in the current Stage 2 design. A bounded ongoing projection-only window is technically possible with a new explicit approval for the unchanged exact manifest, but permanent or unrestricted provider authority is not implemented and must not be enabled. Any future activation must retain SQLite authority, a rebuildable projection, an expiring lease, exact manifest/version filtering, bounded replay, rollback to `disabled`, and derived search disabled unless a separate retrieval gate is approved.
+
+Remaining Stage 2 closure work is:
+
+1. Preserve and review the nine-item memory/identity contract against all ten origin-blueprint §2.9 statements, without silently collapsing the distinction.
+2. Complete the owner-facing natural-language generated-summary capability benchmark, including distinct generated output, source binding, same-chat delivery, retention, and rollback; do not broaden file-writing or skill permissions.
+3. Decide whether to open a separate derived-search acceptance gate; until then, canonical SQLite retrieval remains the operational path.
+4. Define and review the policy for any bounded ongoing projection window, including renewal, monitoring, outbox reconciliation, resource envelope, and emergency rollback. A new approval is required; the exhausted pilot approval cannot be reused.
+5. Retain the target-Windows automatic 30-day file-expiry check and other Stage 1 residuals in their existing partial-close register.
+6. Produce a final Stage 2 signoff matrix distinguishing repository tests, synthetic dashboard evidence, disposable Windows evidence, and owner-reported operational evidence. Do not declare Stage 2 complete until each open boundary has explicit acceptance or an owner-approved deferral.
+
+Only after those items are closed or explicitly deferred should the project prepare the origin blueprint Stage 3 plan for autonomous skills and self-recovery. Stage 3 must not be inferred from the project-specific Stage 3A MemPalace pilot label.

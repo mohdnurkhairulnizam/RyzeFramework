@@ -34,12 +34,12 @@
     "gitDiffCheck": "PASS"
   },
   "targetWindows": {
-    "status": "owner-reported evidence remains separate",
-    "requiredNextEvidence": [
-      "lease expiry while process remains running",
-      "health snapshot after expiry",
-      "bounded replay/reconciliation state",
-      "restart and rollback evidence"
+    "status": "PASS-owner-reported",
+    "evidence": "docs/evidence/mempalace-phase-4-target-windows-2026-11-29.json",
+    "scope": "exact eight-operation allowlist; projection-only; derived search disabled",
+    "limitations": [
+      "The sandbox did not independently access the target-Windows process.",
+      "Evidence was supplied as sanitized owner-reported dashboard and read-only SQLite output."
     ]
   },
   "files": [
@@ -48,6 +48,7 @@
     "server/memPalaceMemoryProvider.ts",
     "server/mempalaceProjectionOutbox.ts",
     "server/memoryProviderRuntime.ts",
-    "server/memPalaceMemoryProvider.test.ts"
+    "server/memPalaceMemoryProvider.test.ts",
+    "server/mempalacePhase4Health.ts"
   ]
 }

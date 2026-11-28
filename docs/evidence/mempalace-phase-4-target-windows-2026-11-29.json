@@ -1,0 +1,83 @@
+{
+  "date": "2026-11-29",
+  "workstream": "Stage 2 external memory-provider workstream",
+  "phase": "MemPalace Phase 4 ongoing-operation hardening",
+  "status": "PASS-owner-reported",
+  "evidenceClass": "owner-reported sanitized target-Windows evidence",
+  "limitations": [
+    "The sandbox did not independently access the target-Windows process.",
+    "Health snapshots were copied as sanitized fields from the authenticated local dashboard.",
+    "No private memory content, credentials, approval JSON, database, or session data was collected."
+  ],
+  "sqliteAuthoritative": true,
+  "runtimePolicy": {
+    "providerRevision": "4df7b830ff1398332d4118884520a24f1aab9cc1",
+    "namespace": "ryze-production-main",
+    "branch": "main",
+    "manifestSha256": "fd758180453aa0d8eef073d44cbc5ec8e28e81a6e0be18e51e8f22fe49527272",
+    "approvedOperationCount": 8,
+    "maxReplayItems": 1,
+    "derivedSearch": false,
+    "automaticCapture": false,
+    "broadProjection": false
+  },
+  "preExpiry": {
+    "mode": "projection-only",
+    "enabled": true,
+    "searchable": false,
+    "leaseActive": true,
+    "canonicalSqliteAvailable": true,
+    "reconciliationStatus": "healthy",
+    "outboxFailed": 0,
+    "status": "PASS"
+  },
+  "postExpiryWithoutRestart": {
+    "mode": "projection-only",
+    "enabled": false,
+    "searchable": false,
+    "leaseActive": false,
+    "canonicalSqliteAvailable": true,
+    "reconciliationStatus": "healthy",
+    "outbox": {
+      "pending": 0,
+      "inFlight": 0,
+      "applied": 8,
+      "failed": 0
+    },
+    "status": "PASS"
+  },
+  "availabilityAfterExpiry": {
+    "dashboard": "PASS",
+    "memoryVault": "PASS",
+    "sqliteBackedOperation": "PASS"
+  },
+  "sqliteFingerprint": {
+    "integrity": "PASS",
+    "counts": {
+      "users": 1,
+      "memories": 20,
+      "identities": 1,
+      "identityRevisions": 2,
+      "systemMemory": 1
+    },
+    "memoryRows": 20,
+    "memorySha256": "2d12d09fa65578df6e7178bdc209496ecb333de5dc0a913e9f3d45548af49257",
+    "readOnly": "PASS",
+    "beforeAfterUnchanged": true
+  },
+  "restart": {
+    "freshExactApproval": "PASS",
+    "preExpiryHealthAfterRestart": "PASS",
+    "postExpiryWithoutRestart": "PASS"
+  },
+  "rollback": {
+    "mode": "disabled",
+    "enabled": false,
+    "leaseActive": false,
+    "canonicalSqliteAvailable": true,
+    "temporaryApprovalRemoved": true,
+    "finalSqliteCheck": "PASS",
+    "status": "PASS"
+  },
+  "overall": "PASS-owner-reported"
+}
