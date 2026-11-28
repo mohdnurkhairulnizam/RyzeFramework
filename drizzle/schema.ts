@@ -141,6 +141,23 @@ export const ryzeSystemMemory = sqliteTable("ryze_system_memory", {
   updatedAt: timestampMs("updatedAt"),
 });
 
+export const ryzeMemoryProjectionOutbox = sqliteTable("ryze_memory_projection_outbox", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  memoryId: text("memoryId").notNull(),
+  operation: text("operation", { enum: ["upsert", "delete"] }).notNull(),
+  projectionKey: text("projectionKey").notNull(),
+  payload: text("payload"),
+  status: text("status", { enum: ["pending", "in_flight", "applied", "failed"] }).notNull().default("pending"),
+  attempts: integer("attempts").notNull().default(0),
+  lastError: text("lastError"),
+  createdAt: timestampMs("createdAt"),
+  updatedAt: timestampMs("updatedAt"),
+  appliedAt: integer("appliedAt", { mode: "timestamp_ms" }),
+}, (table) => [
+  uniqueIndex("ryze_memory_projection_outbox_key_uq").on(table.userId, table.projectionKey),
+]);
+
 export const ryzeSkills = sqliteTable("ryze_skills", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }),

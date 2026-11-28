@@ -1,9 +1,9 @@
 # RyzeFramework Project Memory
 
-**Record date:** 27 November 2026  
-**Repository:** `mohdnurkhairulnizam/RyzeFramework`  
-**Working branch:** `feature/telegram-file-transfer`  
-**Current implementation commit:** `6f612e05b133cdd573121ce8608c5857015a4ceb`
+**Record date:** 28 November 2026
+**Repository:** `mohdnurkhairulnizam/RyzeFramework`
+**Working branch:** `feature/telegram-file-transfer`
+**Current implementation checkpoint:** Reversible MemPalace adapter/outbox/bridge and Windows replay runner; exact pushed commit is recorded by `git log` after the current checkpoint commit.
 **Pushed documentation checkpoint:** `27fb1fe` on `origin/feature/telegram-file-transfer`; it records the Stage 2 review update and acceptance evidence. PR #1 remains open and unmerged.
 
 This file is the durable project-memory index for the work completed in this repository. It records decisions and evidence boundaries; it does not contain passwords, API keys, Telegram sessions, databases, backups, logs, or personal data.
@@ -24,12 +24,15 @@ The project maintains four staged goals:
 - Stage 1 is **PARTIAL — closed for sequencing, not complete**. Its origin criteria remain open and are not waived.
 - Stage 2 is active. Gate 2 is complete, Gate 3 synthetic owner acceptance is passed, Gate 4 is passed only for the approved synthetic evaluation, and Gate 5 is passed only for the tested disposable synthetic Windows restore scope.
 - SQLite remains the authoritative Stage 2 store. No external memory provider, Hindsight, MemPalace, ECC, vector database, automatic capture, cross-agent memory sharing, or live skill/intent mutation was enabled.
+- On 28 November 2026, the owner selected MemPalace as the only next external-memory implementation target and directed that comparative evaluation of the other candidates be skipped. Gate 0 passed by architecture review and Gate 1 passed through the disposable provider-neutral synthetic contract harness; MemPalace is not installed or enabled yet and SQLite remains authoritative.
 - OpenCode remains chat-only with deny-all tool permissions. The model cannot directly write System Memory or Ryze identity.
 - Personal Memory is owner-scoped. Restricted memory is excluded from contextual retrieval by default and requires explicit owner-controlled inclusion.
 - Exact duplicates must not be silently duplicated; conflicts require owner confirmation; updates are append-first/versioned and preserve prior records.
 - Secrets, Telegram sessions, databases, backups, logs, runtime data, `node_modules`, and build output remain outside Git and distributable packages.
 - The natural-language Telegram request to create and send a new Markdown summary remains deferred because the current live skill/intent behavior resends the source or refuses file creation. No broad file-writing permission is authorized.
 - An unbounded “wait forever” provider loop was not implemented. Provider-response acceptance is now PASS for the tested Telegram → OpenCode → FreeLLMAPI path: the owner sent `Reply with exactly: Ryze gateway path test passed` and received the exact reply almost immediately. The earlier two-minute timeout remains historical diagnostic evidence.
+- The first reversible MemPalace adapter checkpoint is implemented in `server/memPalaceMemoryProvider.ts`. It is an injected bridge/projection boundary only: SQLite remains canonical, the live router remains SQLite-backed, derived search is disabled by default, and no MemPalace package or private data was installed or used.
+- Migration `0006_mempalace_projection_outbox` and `server/mempalaceProjectionOutbox.ts` now provide durable enqueue, deduplication, retry, restart recovery, deletion reconciliation, and fail-closed replay. The pinned upstream assessment target is MemPalace `v3.12.0` at commit `4df7b830ff1398332d4118884520a24f1aab9cc1`; it was not cloned or installed. The exact evidence and resource boundary are in `docs/evidence/mempalace-adapter-assessment-2026-11-28.md`.
 
 ## Implementation completed
 
@@ -94,6 +97,15 @@ The corrected package was tested by the owner on a disposable synthetic profile.
 
 The current hardened validator hash in `scripts/windows/restore-deployment-manifest.json` is `9970E340C722E8A097C4B991F3578E73DBE15A2BACD4964727266FCDA90D0155`. The corrected earlier package checksum was `78E73C5F21987010F541A4B510B2FAEDB2DD0870FC49DB79D7C839B2E2AB6120`. These values describe evidence, not a distributable package in this record.
 
+The owner later installed the corrected MemPalace checkpoint package and reported **PASS** for the complete Windows package/update acceptance matrix: Operational Baseline, Stage 2 schema validator, export and restore, restart/provider-unavailable SQLite operation, and installed hardened-file hashes. The provider-unavailable result is bounded to continued SQLite-backed operation: MemPalace is not wired into the live Windows routers, so it is not evidence of a live Windows MemPalace bridge or projection replay. The earlier `SQLite format 3` error came from Node being given the database path after `$validator` was empty, not from the validator or evidence of database corruption. Real Windows MemPalace projection restart/replay remains the only pending item in this checkpoint.
+
+## Real MemPalace MCP replay checkpoint — 28 November 2026
+
+- Linux synthetic replay against pinned MemPalace `v3.12.0` / commit `4df7b830ff1398332d4118884520a24f1aab9cc1` passed provider-unavailable handling, projection replay after MCP restart, search rehydration, and deletion reconciliation.
+- The current source-only Windows package includes `server/mempalaceMcpBridge.ts`, `scripts/mempalace-replay-smoke.ts`, and `scripts/windows/Run-MemPalace-Replay-Test.ps1`. Package SHA-256: `147263CBD1D449FD2C215B7FBA5F9A41B282FAB5D89CBDC40C7A7EBEB57B62DC`.
+- Windows execution is **BLOCKED / NOT ACCEPTED** because the selected disposable profile has no installed Python 3.12 runtime. `py.exe -3.12` reported `No installed Python found!`; no MemPalace MCP process was started. This is not evidence of provider failure. Install Python 3.12.x, verify `py -3.12 --version`, and rerun the packaged runner before recording Windows replay results.
+- SQLite remains authoritative and live Ryze routers remain SQLite-backed. No private data, secrets, live database, or automatic capture was used.
+
 ## Validation record for commit `6f612e0`
 
 - `pnpm run check` — PASS.
@@ -103,6 +115,15 @@ The current hardened validator hash in `scripts/windows/restore-deployment-manif
 - `git diff --check` — PASS.
 - Pre-existing untracked `RyzeFramework-PR1-source-33ced158.zip` was preserved and not staged.
 
+## MemPalace adapter checkpoint validation — 28 November 2026
+
+- `server/memPalaceMemoryProvider.ts` and `server/memPalaceMemoryProvider.test.ts` add the reversible SQLite-first adapter boundary and synthetic bridge tests.
+- `pnpm run check` — PASS.
+- `pnpm test` — 83 tests across 25 files PASS.
+- `git diff --check` — PASS.
+- MemPalace was not installed, enabled, or connected to private/production data. The live routers remain SQLite-backed.
+- Final checkpoint validation: `pnpm run check` PASS; `pnpm test` PASS, 87 tests across 26 files; `pnpm run build:local` PASS with the existing non-fatal large-chunk warning; SQLite migration journal audit PASS with 7 entries including migration `0006`; `git diff --check` PASS. Linux pinned MemPalace CLI/MCP and replay evidence passed; Windows MemPalace replay remains blocked before provider startup by the missing Python 3.12 prerequisite.
+
 ## Current next actions
 
 1. Keep PR #1 open for review; do not describe merging as Stage 2 or system completion.
@@ -111,3 +132,5 @@ The current hardened validator hash in `scripts/windows/restore-deployment-manif
 4. Resolve and review the bounded new-summary file-creation capability before changing live skill/intent behavior.
 5. Preserve Stage 1's residual evidence and retained self-test unchanged.
 6. Treat Stage 3 and Stage 4 as future design/implementation work.
+7. The durable projection/outbox, pinned bridge, and Linux synthetic replay assessment are complete. Finish the Windows replay prerequisite by installing Python 3.12.x on the disposable profile, then rerun restart/rebuild, search rehydration, deletion, provider-failure, resource, export/restore, and target-Windows checks. Keep automatic capture/hooks, broad MCP/skill writes, production data, and replacement of SQLite disabled until all required evidence is accepted.
+8. Use `docs/next-ai-continuation-prompt.md` as the handoff for the next AI; it contains the clone command, branch rules, first-read documents, exact Windows command, and evidence boundaries.

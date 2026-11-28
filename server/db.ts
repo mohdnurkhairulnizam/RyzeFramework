@@ -23,6 +23,7 @@ import {
   ryzeIdentityProfiles,
   ryzeIdentityRevisions,
   ryzeSystemMemory,
+  ryzeMemoryProjectionOutbox,
   type User,
   users,
 } from "../drizzle/schema";
@@ -442,6 +443,80 @@ export async function deleteMemoryForUser(userId: number, memoryId: string) {
   const db = await requireDb();
   await db.delete(ryzeMemory).where(and(eq(ryzeMemory.userId, userId), eq(ryzeMemory.id, memoryId)));
   await db.delete(ryzeSystemMemory).where(and(eq(ryzeSystemMemory.userId, userId), eq(ryzeSystemMemory.id, memoryId)));
+}
+
+export type MemoryProjectionOutboxOperation = "upsert" | "delete";
+export type MemoryProjectionOutboxStatus = "pending" | "in_flight" | "applied" | "failed";
+
+export async function enqueueMemoryProjection(input: {
+  userId: number;
+  memoryId: string;
+  operation: MemoryProjectionOutboxOperation;
+  projectionKey: string;
+  payload?: string;
+}) {
+  const db = await requireDb();
+  await db.insert(ryzeMemoryProjectionOutbox).values({
+    userId: input.userId,
+    memoryId: input.memoryId,
+    operation: input.operation,
+    projectionKey: input.projectionKey,
+    payload: input.payload ?? null,
+    status: "pending",
+    attempts: 0,
+    lastError: null,
+    appliedAt: null,
+  }).onConflictDoUpdate({
+    target: [ryzeMemoryProjectionOutbox.userId, ryzeMemoryProjectionOutbox.projectionKey],
+    set: {
+      operation: input.operation,
+      payload: input.payload ?? null,
+      status: "pending",
+      lastError: null,
+      appliedAt: null,
+      updatedAt: new Date(),
+    },
+  });
+}
+
+export async function resetInFlightMemoryProjections() {
+  const db = await requireDb();
+  await db.update(ryzeMemoryProjectionOutbox)
+    .set({ status: "pending", updatedAt: new Date() })
+    .where(eq(ryzeMemoryProjectionOutbox.status, "in_flight"));
+}
+
+export async function claimNextMemoryProjection() {
+  const db = await requireDb();
+  const [candidate] = await db.select().from(ryzeMemoryProjectionOutbox)
+    .where(inArray(ryzeMemoryProjectionOutbox.status, ["pending", "failed"]))
+    .orderBy(ryzeMemoryProjectionOutbox.updatedAt, ryzeMemoryProjectionOutbox.id)
+    .limit(1);
+  if (!candidate) return null;
+  await db.update(ryzeMemoryProjectionOutbox).set({
+    status: "in_flight",
+    attempts: candidate.attempts + 1,
+    updatedAt: new Date(),
+  }).where(and(eq(ryzeMemoryProjectionOutbox.id, candidate.id), inArray(ryzeMemoryProjectionOutbox.status, ["pending", "failed"])));
+  const [claimed] = await db.select().from(ryzeMemoryProjectionOutbox).where(eq(ryzeMemoryProjectionOutbox.id, candidate.id)).limit(1);
+  return claimed?.status === "in_flight" ? claimed : null;
+}
+
+export async function markMemoryProjectionApplied(id: number) {
+  const db = await requireDb();
+  await db.update(ryzeMemoryProjectionOutbox).set({ status: "applied", lastError: null, appliedAt: new Date(), updatedAt: new Date() }).where(eq(ryzeMemoryProjectionOutbox.id, id));
+}
+
+export async function markMemoryProjectionFailed(id: number, error: string) {
+  const db = await requireDb();
+  await db.update(ryzeMemoryProjectionOutbox).set({ status: "failed", lastError: error.slice(0, 1000), updatedAt: new Date() }).where(eq(ryzeMemoryProjectionOutbox.id, id));
+}
+
+export async function listMemoryProjections(status?: MemoryProjectionOutboxStatus) {
+  const db = await requireDb();
+  return db.select().from(ryzeMemoryProjectionOutbox)
+    .where(status ? eq(ryzeMemoryProjectionOutbox.status, status) : undefined)
+    .orderBy(ryzeMemoryProjectionOutbox.id);
 }
 
 export async function getRyzeIdentity(userId: number) {

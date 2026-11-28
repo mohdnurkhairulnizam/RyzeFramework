@@ -10,7 +10,7 @@ import {
 } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { execFile } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
 import { ENV } from "./_core/env";
 import {
@@ -23,6 +23,20 @@ import {
 import { storagePut } from "./storage";
 
 const execFileAsync = promisify(execFile);
+
+function runQuietProcess(command: string, args: string[]) {
+  return new Promise<void>((resolve, reject) => {
+    const child = spawn(command, args, {
+      windowsHide: true,
+      stdio: "ignore",
+    });
+    child.once("error", reject);
+    child.once("exit", code => {
+      if (code === 0) resolve();
+      else reject(new Error(`${command} exited with code ${code ?? "unknown"}.`));
+    });
+  });
+}
 
 type CheckStatus = "PASS" | "WARN" | "FAIL";
 export type BaselineCheck = {
@@ -70,6 +84,12 @@ async function sizeOf(target: string): Promise<number> {
   return total;
 }
 
+function boundDiagnosticText(value: string, limit = 8_192) {
+  const text = value.trim();
+  if (text.length <= limit) return text;
+  return `${text.slice(0, limit)}\n...[diagnostic output truncated]`;
+}
+
 async function aclReport(targets: string[]) {
   if (process.platform !== "win32")
     return "ACL check skipped: this workflow is intended for Windows; filesystem paths were still verified.";
@@ -82,18 +102,18 @@ async function aclReport(targets: string[]) {
     try {
       const result = await execFileAsync("icacls.exe", [target], {
         windowsHide: true,
-        maxBuffer: 64 * 1024,
+        maxBuffer: 256 * 1024,
       });
-      lines.push(`[ACL] ${target}\n${result.stdout.trim()}`);
+      lines.push(`[ACL] ${target}\n${boundDiagnosticText(result.stdout)}`);
     } catch (error) {
       const detail =
         error && typeof error === "object" && "stdout" in error
           ? String(error.stdout)
           : String(error);
-      lines.push(`[FAIL] icacls failed for ${target}\n${detail.trim()}`);
+      lines.push(`[FAIL] icacls failed for ${target}\n${boundDiagnosticText(detail)}`);
     }
   }
-  return lines.join("\n");
+  return boundDiagnosticText(lines.join("\n"), 32_768);
 }
 
 async function protectBackupDirectory(target: string) {
@@ -105,11 +125,14 @@ async function protectBackupDirectory(target: string) {
     throw new Error(
       "Windows account identity was not available to protect the backup."
     );
-  await execFileAsync(
-    "icacls.exe",
-    [target, "/inheritance:r", "/grant:r", `${identity}:(OI)(CI)F`, "/T", "/C"],
-    { windowsHide: true, maxBuffer: 64 * 1024 }
-  );
+  await runQuietProcess("icacls.exe", [
+    target,
+    "/inheritance:r",
+    "/grant:r",
+    `${identity}:(OI)(CI)F`,
+    "/T",
+    "/C",
+  ]);
 }
 
 export async function createPrivateBackup() {

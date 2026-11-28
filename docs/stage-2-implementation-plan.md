@@ -18,7 +18,7 @@ The owner's attached Stage 2 proposal is adopted as a **Workstream**, not as a n
 1. **Architecture audit:** map the current SQLite memory, task/log, ownership, export, OpenCode, and worker boundaries. Retain SQLite as the operational and authoritative store until a measured alternative is approved.
 2. **Candidate research:** inspect Hindsight, MemPalace, and only then other candidates as justified, including source retention, owner/project isolation, local deployment, model/API compatibility, licensing, maintenance, resource use, failure behavior, and integration surface. Published claims are not evidence.
 3. **Isolated proof of concept:** use sanitized representative records and a provider-neutral adapter. Measure persistence, retrieval relevance, source attribution, project isolation, contradiction handling, failure recovery, CPU/RAM, and FreeLLMAPI compatibility. Do not send private production data or replace SQLite.
-4. **Architecture decision:** select retain, defer, or reject for each candidate. A provider may be adopted only if it materially improves retrieval while preserving source records, owner scoping, rollback, and operation when unavailable.
+4. **Architecture decision:** the owner selected **MemPalace** as the sole next implementation target and directed that comparative evaluation of the other candidates be skipped. This is a selection to implement behind the provider-neutral adapter, not permission to replace SQLite or send production data. MemPalace may be enabled only after the SQLite-first fusion, owner scoping, rollback, and unavailable-provider behavior are implemented and accepted.
 5. **Validation:** run the existing regression suite plus provider-failure, restart, export/restore, and target-Windows checks. Record actual results and limitations; do not mark Stage 2 complete from a benchmark or provider installation alone.
 
 ### Contract corrections to the proposal
@@ -27,6 +27,25 @@ The owner's attached Stage 2 proposal is adopted as a **Workstream**, not as a n
 - “Share relevant knowledge between authorised agents” is deferred until ownership, project boundaries, and later multi-agent/branch semantics are defined; it is not a Stage 2 permission to expose Personal Memory.
 - ECC remains a research/reference boundary. No hooks, agents, skills, tools, auto-approval, or production instruction changes are installed as part of this workstream.
 - The unified memory interface is desirable, but it must first wrap the approved Ryze repository and remain provider-neutral; it must not become a second authoritative store.
+
+### Owner decision — MemPalace implementation track — 28 November 2026
+
+- **Gate 0 — PASS by architecture review:** SQLite remains the operational and authoritative store; external memory is a rebuildable projection behind `MemoryProvider`; owner approval, provenance, restricted retrieval, rollback, export/restore, and fail-closed behavior remain Ryze responsibilities.
+- **Gate 1 — PASS in sandbox:** `server/memoryProviderContract.test.ts` ran three synthetic provider-neutral tests covering owner isolation, restricted retrieval, duplicate/conflict/restricted-write approval, and append-first lineage. `pnpm run check` passed. This is not MemPalace integration or target-Windows acceptance.
+- **Selection:** MemPalace is the only candidate approved for the next implementation track. Hindsight, Mem0, Letta, Graphiti, Zep, and Memori are deferred; their comparative evaluation is skipped unless the owner reopens the decision.
+- **Not yet authorized:** installing MemPalace, enabling automatic hooks/skills, sending private or production data, changing live OpenCode/Telegram behavior, or making MemPalace authoritative.
+
+### Adapter implementation checkpoint — 28 November 2026
+
+`server/memPalaceMemoryProvider.ts` now provides a reversible SQLite-first fusion boundary. Its MemPalace transport is an injected `MemPalaceBridge`, so no MemPalace package or Python/ChromaDB dependency is installed. The adapter delegates canonical operations to SQLite, projects only after successful canonical writes, preserves Ryze IDs/provenance/version/branch metadata, and rehydrates optional derived-search hits through owner/version/lifecycle checks against SQLite. Derived search is disabled by default, the live routers still select `sqliteMemoryProvider`, and bridge failures fall back to canonical SQLite reads without deleting or mutating canonical records. Focused tests cover disabled-by-default behavior, projection identity, owner/version filtering, and unavailable-provider fallback. Sandbox validation is `pnpm run check` PASS, `pnpm test` PASS (83 tests across 25 files), and `git diff --check` PASS.
+
+This checkpoint is not MemPalace installation or compatibility evidence. Before any runtime enablement, add and review a durable projection/outbox replay path, implement an isolated bridge against a pinned MemPalace revision, test restart/rebuild/deletion reconciliation, resource use, export/restore, target-Windows behavior, and failure recovery. Automatic capture, broad MCP/skill writes, cross-agent sharing, and production/private data remain disabled.
+
+### Durable outbox and pinned isolated-assessment checkpoint — 28 November 2026
+
+The durable SQLite outbox is now implemented in migration `0006_mempalace_projection_outbox` with deterministic deduplication, retry state, restart recovery, deletion operations, and fail-closed replay behavior. The adapter can queue canonical projections while the bridge is unavailable and can replay them later; it still does not wire the live router to MemPalace. The selected upstream revision is `v3.12.0` at commit `4df7b830ff1398332d4118884520a24f1aab9cc1`; its source-backed assessment and exact limitations are recorded in [`evidence/mempalace-adapter-assessment-2026-11-28.md`](./evidence/mempalace-adapter-assessment-2026-11-28.md).
+
+Focused synthetic tests and the real Linux pinned MCP replay passed for restart, rebuild/replay, deletion reconciliation, provider failure/recovery, owner/version filtering, and SQLite fallback. Resource measurements cover both the Ryze TypeScript/SQLite path and the Linux MemPalace process; they are not Windows capacity claims. A current source-only Windows package was built with SHA-256 `147263CBD1D449FD2C215B7FBA5F9A41B282FAB5D89CBDC40C7A7EBEB57B62DC`. The Windows replay runner reached execution but was blocked before provider startup because Python 3.12 is not installed on the selected profile. Existing Windows export/restore evidence remains limited to the disposable SQLite application scope. The next gate is to install Python 3.12 on that disposable profile and rerun the pinned MemPalace MCP bridge assessment; no Windows MemPalace PASS is claimed yet.
 
 ## Current baseline
 
