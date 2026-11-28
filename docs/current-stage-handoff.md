@@ -228,3 +228,7 @@ The fail-closed dry-run generator `scripts/mempalace-production-gate-dry-run.ts`
 ### Approved disposable MemPalace canary — 28 November 2026
 
 The owner approved the exact dry-run manifest (`7bbf637a41614f943ea8d1d9b1284b1429ccce3d335eaa5930e94d068f710893`) for two synthetic records: `fixture-1` and `fixture-2`, owner `991122`, version `1`, namespace `ryze-dry-run-sanitized`, branch `sanitized-test`. A fresh disposable palace and disposable SQLite copy were created; the canary reported `sanitized_input=PASS`, `disposable_sqlite_integrity=PASS`, and `mempalace_projection=PASS`. The canary directory was removed after the run. No live database, live router, production namespace, or private record was used. This is a disposable canary pass only; production projection remains gated.
+
+### Approved disposable MemPalace canary restart/rehydration — 28 November 2026
+
+Within a fresh disposable palace and the same exact two-record synthetic scope, two upserts completed, the MemPalace MCP process was closed, and a new bridge process was started against the same palace. Both records were found through owner-scoped searches (`owner-991122`) in their expected rooms. Drawer identity, content, owner, category, memory type, version, branch, and sanitized source reference rehydrated correctly. Evidence: `initial_upserts=2`, `mcp_restart=PASS`, `owner_scoped_search=PASS`, `metadata_rehydration=PASS`, `records_verified=2`. The temporary palace was removed afterward. No deletion operation, live database, or production namespace was used.
