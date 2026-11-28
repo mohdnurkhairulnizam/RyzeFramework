@@ -19,7 +19,7 @@ function entry(id: string, index: number): MemoryEntry {
   return {
     id, ownerId: 1, category: index === 5 ? "experience" : "personal", memoryType: "preference",
     content: `synthetic-safe-content-${index}`, tags: [], version: 1, status: "active", sensitivity: "normal",
-    source: { sourceSystemId: "local-ryze", branchId: branch, sourceRef: `redacted://fixture/${index}` },
+    source: { sourceSystemId: "local-ryze", branchId: branch },
     createdBy: "owner", createdAt: new Date("2026-01-01T00:00:00Z"), updatedAt: new Date("2026-01-01T00:00:00Z"),
   };
 }

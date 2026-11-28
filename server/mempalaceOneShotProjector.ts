@@ -95,11 +95,13 @@ async function validateCanonicalRecords(manifest: ProjectionManifest, canonical:
     if (entry.status !== "active") reasons.push("record is not active");
     if (entry.sensitivity !== "normal") reasons.push("record is not normal sensitivity");
     if (entry.category === "system") reasons.push("System Memory is excluded");
-    if (!entry.source.sourceRef) reasons.push("provenance source reference is absent");
+    if ((entry.source.sourceSystemId ?? "unknown") === "unknown") reasons.push("provenance source system is absent");
+    if ((entry.source.branchId ?? "") !== manifest.branch) reasons.push("branch mismatch");
     if (sha256(JSON.stringify(tags)) !== operation.tagsHash) reasons.push("tags hash mismatch");
     if (sha256(entry.content) !== operation.sanitizedContentHash) reasons.push("content hash mismatch");
     const sourceRefClass = entry.source.sourceRef?.startsWith("sanitized://") ? "sanitized" : "redacted-reference";
     if (sourceRefClass !== operation.sourceRefClass) reasons.push("source reference class mismatch");
+    if (operation.sourceRefClass === "sanitized" && !entry.source.sourceRef) reasons.push("sanitized provenance source reference is absent");
     if (reasons.length) throw new Error(`approved memory ${operation.ryzeMemoryId} failed canonical validation: ${reasons.join(", ")}`);
     validated.push({ operation, entry });
   }
