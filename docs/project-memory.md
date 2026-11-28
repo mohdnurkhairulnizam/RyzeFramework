@@ -156,3 +156,5 @@ Owner-reported target-Windows live SQLite check passed: the `counts=` and `memor
 The sanitized-copy harness now accepts the UTF-8 BOM emitted by Windows PowerShell 5.1 while retaining strict secret/content validation. A BOM-prefixed synthetic input passed the disposable SQLite integrity check.
 
 Owner-reported target-Windows sanitized disposable-copy test passed after the UTF-8 BOM compatibility fix. The result is limited to explicitly sanitized synthetic records in a disposable SQLite database; live MemPalace projection remains unauthorized.
+
+The first production-gate dry run completed against two synthetic sanitized records. It performed no writes, did not open the live database, and did not contact MemPalace. The exact manifest is `docs/evidence/mempalace-production-dry-run-manifest-2026-11-28.json`; generated manifest SHA-256 is `7bbf637a41614f943ea8d1d9b1284b1429ccce3d335eaa5930e94d068f710893`. It covers fixture-1 and fixture-2, owner 991122, version 1, namespace `ryze-dry-run-sanitized`, branch `sanitized-test`, and two upsert operations. Explicit owner approval is required before any disposable canary write.

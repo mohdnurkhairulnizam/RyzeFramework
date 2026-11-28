@@ -220,3 +220,7 @@ Owner-reported target-Windows live SQLite operational check: **PASS**. The befor
 The sanitized-copy harness initially rejected the JSON because PowerShell 5.1 writes UTF-8 with a BOM. The parser now removes only a leading UTF-8 BOM before strict JSON parsing. A BOM-prefixed synthetic input smoke test passed with `sanitized_input=PASS` and `disposable_sqlite_integrity=PASS`.
 
 Owner-reported target-Windows sanitized disposable-copy test: **PASS** after the PowerShell 5.1 UTF-8 BOM compatibility fix. The test used explicitly sanitized synthetic records and a disposable SQLite database; it does not establish live-database projection acceptance.
+
+### MemPalace production-gate dry run — synthetic only — 28 November 2026
+
+The fail-closed dry-run generator `scripts/mempalace-production-gate-dry-run.ts` was executed against two explicitly synthetic sanitized records. It reported `writes_performed=FALSE`, `live_database_opened=FALSE`, `provider_contacted=FALSE`, `owner_approval_required=TRUE`, and `record_count=2`. The exact owner-review manifest is [`evidence/mempalace-production-dry-run-manifest-2026-11-28.json`](./evidence/mempalace-production-dry-run-manifest-2026-11-28.json), with generated manifest SHA-256 `7bbf637a41614f943ea8d1d9b1284b1429ccce3d335eaa5930e94d068f710893`. It covers only `fixture-1` and `fixture-2`, both owner `991122`, version `1`, namespace `ryze-dry-run-sanitized`, branch `sanitized-test`, and two `upsert_projection` operations. No canary write is authorized until the owner approves these exact values.
