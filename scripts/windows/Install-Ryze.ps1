@@ -117,13 +117,9 @@ try {
   Pop-Location
 }
 
-if ($InstallMemPalaceRuntime) {
-  Write-Host 'Preparing the optional isolated MemPalace runtime. SQLite remains the authoritative store.'
-  & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $InstallDirectory 'scripts\windows\Install-MemPalaceRuntime.ps1')
-  if ($LASTEXITCODE -ne 0) { throw 'Optional MemPalace runtime setup failed. Ryze remains SQLite-only; fix the dependency issue and rerun with /InstallMemPalaceRuntime.' }
-} else {
-  Write-Host 'Optional MemPalace/Python runtime was not requested; normal Ryze installation remains SQLite-only.'
-}
+Write-Host 'Checking and preparing the Python/MemPalace dependency runtime. SQLite remains the authoritative store.'
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $InstallDirectory 'scripts\windows\Install-MemPalaceRuntime.ps1')
+if ($LASTEXITCODE -ne 0) { throw 'Python/MemPalace dependency setup failed. Resolve the dependency issue and rerun the installer.' }
 
 Write-Host ''
 Write-Host 'Ryze local installation is prepared.' -ForegroundColor Green

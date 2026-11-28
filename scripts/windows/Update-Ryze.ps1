@@ -97,13 +97,9 @@ try {
   if (-not (Test-Path -LiteralPath $EnvFile)) { throw 'The installed .env is missing after updating; stop and preserve the data folder before taking any further action.' }
 } finally { Pop-Location }
 
-if ($InstallMemPalaceRuntime) {
-  Write-Host 'Preparing the optional isolated MemPalace runtime. Existing SQLite data and configuration are not read or changed.'
-  & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $InstallDirectory 'scripts\windows\Install-MemPalaceRuntime.ps1')
-  if ($LASTEXITCODE -ne 0) { throw 'Optional MemPalace runtime setup failed. Ryze remains SQLite-only; fix the dependency issue and rerun with /InstallMemPalaceRuntime.' }
-} else {
-  Write-Host 'Optional MemPalace/Python runtime was not requested; update remains SQLite-only.'
-}
+Write-Host 'Checking and preparing the Python/MemPalace dependency runtime. Existing SQLite data and configuration are not read or changed.'
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $InstallDirectory 'scripts\windows\Install-MemPalaceRuntime.ps1')
+if ($LASTEXITCODE -ne 0) { throw 'Python/MemPalace dependency setup failed. Resolve the dependency issue and rerun the updater.' }
 
 Write-Host ''
 Write-Host 'Ryze has been updated. Your existing configuration and local data were preserved.' -ForegroundColor Green

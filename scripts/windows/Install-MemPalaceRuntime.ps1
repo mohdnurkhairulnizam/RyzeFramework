@@ -21,7 +21,7 @@ $pythonCommand = Get-Python312
 if (-not $pythonCommand) {
   $winget = Get-Command winget.exe -ErrorAction SilentlyContinue
   if (-not $winget) {
-    throw 'MemPalace runtime requires Python 3.12.x. Python 3.12 and winget were not found; install Python 3.12 (64-bit) with the Python Launcher, then rerun with /InstallMemPalaceRuntime.'
+    throw 'MemPalace runtime requires Python 3.12.x. Python 3.12 and winget were not found; install Python 3.12 (64-bit) with the Python Launcher, then rerun the Ryze installer or updater.'
   }
   Write-Host 'Python 3.12 was not found. Installing the user-scoped Python 3.12 package through winget.'
   & winget.exe install --id Python.Python.3.12 --exact --scope user --accept-package-agreements --accept-source-agreements --disable-interactivity
@@ -55,4 +55,4 @@ if (-not (Test-Path -LiteralPath $mempalace) -or -not (Test-Path -LiteralPath $m
 Write-Host 'MemPalace runtime dependency check: PASS' -ForegroundColor Green
 Write-Host "Python environment: $venv"
 Write-Host "MCP executable: $mcp"
-Write-Host 'MemPalace remains disabled in normal Ryze routers; this runtime is only prepared for the opt-in projection/replay checks.'
+Write-Host 'MemPalace remains disabled in normal Ryze routers; this runtime is only prepared for the projection/replay checks.'
