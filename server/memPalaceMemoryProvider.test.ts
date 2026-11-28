@@ -61,6 +61,41 @@ describe("MemPalace SQLite-first projection adapter", () => {
     expect(bridge.search).toHaveBeenCalledWith({ query: "preference", wing: "owner-101", room: undefined, limit: 12 });
   });
 
+  it("rejects stale, archived, owner-mismatched, and version-mismatched provider hits", async () => {
+    const canonical = new InMemoryContractProvider();
+    const current = await canonical.store({ ownerId: 101, category: "experience", memoryType: "project", content: "Current canonical project" });
+    const archived = await canonical.store({ ownerId: 101, category: "experience", memoryType: "episodic", content: "Archived canonical event" });
+    await canonical.archive(101, archived.id);
+    const otherOwner = await canonical.store({ ownerId: 202, category: "experience", memoryType: "project", content: "Other owner canonical project" });
+    const drawers: MemPalaceDrawer[] = [
+      {
+        drawerId: `ryze:${current.id}:v1`,
+        content: current.content,
+        metadata: { ryzeMemoryId: current.id, ownerId: 101, category: current.category, memoryType: current.memoryType, version: 1, branchId: "main", sensitivity: "normal", sourceSystemId: "synthetic", sourceRef: "synthetic://current" },
+      },
+      {
+        drawerId: `ryze:${current.id}:v2`,
+        content: "Stale provider revision",
+        metadata: { ryzeMemoryId: current.id, ownerId: 101, category: current.category, memoryType: current.memoryType, version: 2, branchId: "main", sensitivity: "normal", sourceSystemId: "synthetic", sourceRef: "synthetic://stale" },
+      },
+      {
+        drawerId: `ryze:${archived.id}:v1`,
+        content: archived.content,
+        metadata: { ryzeMemoryId: archived.id, ownerId: 101, category: archived.category, memoryType: archived.memoryType, version: 1, branchId: "main", sensitivity: "normal", sourceSystemId: "synthetic", sourceRef: "synthetic://archived" },
+      },
+      {
+        drawerId: `ryze:${otherOwner.id}:v1`,
+        content: otherOwner.content,
+        metadata: { ryzeMemoryId: otherOwner.id, ownerId: 202, category: otherOwner.category, memoryType: otherOwner.memoryType, version: 1, branchId: "main", sensitivity: "normal", sourceSystemId: "synthetic", sourceRef: "synthetic://other-owner" },
+      },
+    ];
+    const provider = new MemPalaceMemoryProvider({ canonical, bridge: bridgeFor(drawers), searchDerivedCandidates: true });
+
+    const found = await provider.search({ ownerId: 101, query: "project", limit: 12 });
+
+    expect(found.map(item => item.id)).toEqual([current.id]);
+  });
+
   it("falls back to canonical SQLite reads when the bridge is unavailable", async () => {
     const canonical = new InMemoryContractProvider();
     const bridge: MemPalaceBridge = {

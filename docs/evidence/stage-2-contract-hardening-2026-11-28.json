@@ -1,0 +1,44 @@
+{
+  "date": "2026-11-28",
+  "scope": "synthetic/provider-isolated adapter coverage",
+  "branch": "feature/mempalace-production-gate",
+  "testFiles": [
+    "server/memPalaceMemoryProvider.test.ts",
+    "server/mempalaceProjectionOutbox.test.ts"
+  ],
+  "focusedCommand": "pnpm vitest run server/memPalaceMemoryProvider.test.ts server/mempalaceProjectionOutbox.test.ts",
+  "focusedResult": {
+    "status": "PASS",
+    "testFiles": 2,
+    "tests": 11
+  },
+  "newCoverage": {
+    "derivedSearchRehydratesOnlyCurrentCanonicalRecords": [
+      "owner mismatch rejected",
+      "stale provider version rejected",
+      "archived canonical record rejected",
+      "current owner-scoped record retained"
+    ]
+  },
+  "existingFocusedCoverage": [
+    "SQLite fallback when provider is unavailable",
+    "durable outbox deduplication",
+    "interrupted in_flight recovery",
+    "provider failure and retry recovery",
+    "deletion reconciliation"
+  ],
+  "safetyBoundary": {
+    "sqliteAuthoritative": true,
+    "liveRoutersTouched": false,
+    "liveDatabaseOpened": false,
+    "productionProjectionPerformed": false,
+    "privateDataUsed": false,
+    "providerDataUsed": false,
+    "automaticCaptureEnabled": false
+  },
+  "limitations": [
+    "This is provider-isolated synthetic test evidence, not target-Windows acceptance.",
+    "It does not establish production-corpus retrieval quality or authorize live projection.",
+    "Optional-provider health/status and approval-manifest enforcement remain later bounded work."
+  ]
+}
