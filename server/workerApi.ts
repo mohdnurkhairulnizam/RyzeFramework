@@ -480,7 +480,13 @@ export function registerWorkerRoutes(app: Express) {
         result = { summary: "File content was not sent for analysis because OpenCode and the configured model gateway are unavailable.", success: false };
         await updateTask(userId, task.id, { status: "FAILED", summary: result.summary, completedAt: new Date() });
       } else {
-        result = await runOpenCodeChat(userId, session.id, task, fileContext);
+        const summaryTask = wantsGeneratedSummaryFile
+          ? {
+              ...task,
+              prompt: "Return only a concise Markdown summary of the supplied document. Do not discuss file creation, attachment tools, chat capabilities, or how to save the result. Do not include a code fence or preamble; provide only the summary content.",
+            }
+          : task;
+        result = await runOpenCodeChat(userId, session.id, summaryTask, fileContext);
       }
     } else if (ENV.localMode && Boolean(ENV.freeLlmApiKey) && action === "safe_analysis") {
       result = await runOpenCodeChat(userId, session.id, task);
@@ -512,7 +518,9 @@ export function registerWorkerRoutes(app: Express) {
           generatorLabel: "opencode-summary-v1",
         });
         metadataSaved = true;
-        result = { ...result, fileId: file.id, summary: `${result.summary}\n\nCreated a new Markdown summary file: ${filename}.` };
+        const deliverySummary = `The Markdown summary file ${filename} was created and queued for delivery to this private chat.`;
+        result = { ...result, fileId: file.id, summary: deliverySummary };
+        await updateTask(userId, task.id, { status: "COMPLETED", summary: deliverySummary, completedAt: new Date() });
         await addTaskLog(userId, task.id, "system", "success", "A new Markdown summary artifact was created and bound to the originating authorized private chat.");
       } catch (error) {
         if (storageKey && !metadataSaved) await storageDelete(storageKey).catch(() => undefined);
