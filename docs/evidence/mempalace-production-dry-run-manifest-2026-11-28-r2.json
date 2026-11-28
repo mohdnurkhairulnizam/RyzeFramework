@@ -1,0 +1,38 @@
+{
+  "format": "ryze-mempalace-projection-dry-run-v1",
+  "mode": "dry-run",
+  "writesPerformed": false,
+  "provider": {
+    "name": "mempalace",
+    "commit": "4df7b830ff1398332d4118884520a24f1aab9cc1"
+  },
+  "namespace": "ryze-dry-run-sanitized-r2",
+  "branch": "sanitized-test-r2",
+  "recordCount": 2,
+  "operations": [
+    {
+      "operation": "upsert_projection",
+      "ryzeMemoryId": "fixture-3",
+      "ownerId": 991122,
+      "category": "personal",
+      "memoryType": "preference",
+      "version": 1,
+      "sensitivity": "normal",
+      "tagsHash": "7eea21367855abae2983db62885c270cac53f39c07d67caa1fdcb7ac68e22972",
+      "sanitizedContentHash": "e5bb7d23bd888342bb48b723ec41db555b3509746c1b345d7615e1631e860af0",
+      "sourceRefClass": "sanitized"
+    },
+    {
+      "operation": "upsert_projection",
+      "ryzeMemoryId": "fixture-4",
+      "ownerId": 991122,
+      "category": "experience",
+      "memoryType": "procedural",
+      "version": 1,
+      "sensitivity": "normal",
+      "tagsHash": "1a402e922c72e2cb46c81b5a18a36a5d78fc2a9ec3187eae63730b97c2d12ce0",
+      "sanitizedContentHash": "a6b5f130bc2ceb027374e9dade1e324d593b668b76256212e53b09e1a29c4a2c",
+      "sourceRefClass": "sanitized"
+    }
+  ]
+}
