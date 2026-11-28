@@ -106,4 +106,4 @@ Stage 3A is recorded as **PASS, owner-reported**, after the owner confirmed comp
 6. unchanged SQLite integrity, counts, and fingerprint after rollback;
 7. approval payload removal and safe disabled runtime state.
 
-Stage 3A does not authorize full Option C. Continuous broad synchronization, provider-derived search, automatic capture, or any expansion beyond the exact allowlist requires a separate Stage 3B review and approval.
+Stage 3A does not authorize full Option C. Continuous broad synchronization, provider-derived search, automatic capture, or any expansion beyond the exact allowlist requires a separate MemPalace Phase 4 operating-policy review and explicit approval under Stage 2.

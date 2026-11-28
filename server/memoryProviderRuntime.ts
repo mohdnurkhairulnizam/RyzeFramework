@@ -23,6 +23,9 @@ const mode = ENV.memPalaceMode;
 let provider: MemoryProvider = sqliteMemoryProvider;
 let projectionProvider: MemPalaceMemoryProvider | undefined;
 let configurationError: string | undefined;
+let approvedManifestSha256: string | undefined;
+let approvedOperationCount: number | undefined;
+let approvalExpiresAt: string | undefined;
 
 if (mode === "projection-only") {
   try {
@@ -36,12 +39,16 @@ if (mode === "projection-only") {
     const approval = JSON.parse(readFileSync(ENV.memPalaceApprovalPath, "utf8")) as Parameters<typeof validateProjectionApproval>[1];
     const approvalResult = validateProjectionApproval(manifestJson, approval);
     if (!approvalResult.approved) throw new Error(`Projection approval rejected: ${approvalResult.reasons.join("; ")}`);
+    if (!approval) throw new Error("Projection approval is absent.");
     if (approvalResult.manifest.provider.commit !== ENV.memPalaceProviderRevision
       || approvalResult.manifest.namespace !== ENV.memPalaceNamespace
       || approvalResult.manifest.branch !== ENV.memPalaceBranch) {
       throw new Error("Projection manifest does not match the configured provider revision, namespace, or branch.");
     }
     const approvedVersions = new Set(approvalResult.manifest.operations.map(operation => `${operation.ryzeMemoryId}:v${operation.version}`));
+    approvedManifestSha256 = approval.manifestSha256;
+    approvedOperationCount = approval.operationCount;
+    approvalExpiresAt = approval.expiresAt;
     const bridge = new McpMemPalaceBridge({
       command: ENV.memPalaceCommand,
       args: parseArgs(ENV.memPalaceArgs),
@@ -54,6 +61,8 @@ if (mode === "projection-only") {
       outbox: sqliteMemPalaceProjectionOutbox,
       providerRevision: ENV.memPalaceProviderRevision,
       namespace: ENV.memPalaceNamespace,
+      projectionLeaseExpiresAt: approval.expiresAt,
+      maxReplayItems: ENV.memPalaceMaxReplayItems,
       searchDerivedCandidates: ENV.memPalaceSearchDerived,
       shouldProject: entry => entry.category !== "system"
         && entry.sensitivity === "normal"
@@ -77,6 +86,12 @@ export async function getMemoryProviderRuntimeHealth() {
       searchable: false,
       failClosed: Boolean(configurationError),
       configurationError,
+      manifestSha256: approvedManifestSha256,
+      approvedOperationCount,
+      leaseActive: false,
+      leaseExpiresAt: approvalExpiresAt,
+      maxReplayItems: ENV.memPalaceMaxReplayItems,
+      reconciliationStatus: "healthy",
       canonicalSqliteAvailable: true,
     };
   }
@@ -85,5 +100,7 @@ export async function getMemoryProviderRuntimeHealth() {
     ...(await projectionProvider.getProjectionHealth()),
     failClosed: false,
     configurationError,
+    manifestSha256: approvedManifestSha256,
+    approvedOperationCount,
   };
 }

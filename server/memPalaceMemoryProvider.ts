@@ -58,6 +58,10 @@ export type MemPalaceProjectionStatus = {
 export type MemPalaceProjectionHealth = MemPalaceProjectionStatus & {
   providerRevision?: string;
   namespace?: string;
+  leaseActive: boolean;
+  leaseExpiresAt?: string;
+  maxReplayItems: number;
+  reconciliationStatus: "healthy" | "pending" | "degraded";
   canonicalSqliteAvailable: boolean;
   outbox?: ProjectionOutboxHealth;
 };
@@ -98,6 +102,8 @@ export class MemPalaceMemoryProvider implements MemoryProvider {
   private readonly searchDerivedCandidates: boolean;
   private readonly providerRevision?: string;
   private readonly namespace?: string;
+  private readonly projectionLeaseExpiresAt?: string;
+  private readonly maxReplayItems: number;
   private readonly shouldProject: (entry: MemoryEntry) => boolean;
   private projected = 0;
   private failed = 0;
@@ -110,6 +116,8 @@ export class MemPalaceMemoryProvider implements MemoryProvider {
     searchDerivedCandidates?: boolean;
     providerRevision?: string;
     namespace?: string;
+    projectionLeaseExpiresAt?: string;
+    maxReplayItems?: number;
     shouldProject?: (entry: MemoryEntry) => boolean;
   } = {}) {
     this.canonical = options.canonical ?? sqliteMemoryProvider;
@@ -118,13 +126,21 @@ export class MemPalaceMemoryProvider implements MemoryProvider {
     this.searchDerivedCandidates = options.searchDerivedCandidates === true && Boolean(options.bridge);
     this.providerRevision = options.providerRevision;
     this.namespace = options.namespace;
+    this.projectionLeaseExpiresAt = options.projectionLeaseExpiresAt;
+    this.maxReplayItems = Math.min(Math.max(Math.trunc(options.maxReplayItems ?? 100), 1), 100);
     this.shouldProject = options.shouldProject ?? (() => true);
+  }
+
+  private isLeaseActive() {
+    if (!this.projectionLeaseExpiresAt) return true;
+    const expiry = Date.parse(this.projectionLeaseExpiresAt);
+    return Number.isFinite(expiry) && expiry > Date.now();
   }
 
   get projectionStatus(): MemPalaceProjectionStatus {
     return {
-      enabled: Boolean(this.bridge || this.outbox),
-      searchable: this.searchDerivedCandidates,
+      enabled: Boolean(this.bridge || this.outbox) && this.isLeaseActive(),
+      searchable: this.searchDerivedCandidates && this.isLeaseActive(),
       projected: this.projected,
       failed: this.failed,
       lastError: this.lastError,
@@ -138,16 +154,22 @@ export class MemPalaceMemoryProvider implements MemoryProvider {
     } catch {
       canonicalSqliteAvailable = false;
     }
+    const outbox = this.outbox?.getHealth ? await this.outbox.getHealth() : undefined;
     return {
       ...this.projectionStatus,
       providerRevision: this.providerRevision,
       namespace: this.namespace,
+      leaseActive: this.isLeaseActive(),
+      leaseExpiresAt: this.projectionLeaseExpiresAt,
+      maxReplayItems: this.maxReplayItems,
+      reconciliationStatus: outbox?.failed ? "degraded" : outbox?.pending || outbox?.inFlight ? "pending" : "healthy",
       canonicalSqliteAvailable,
-      outbox: this.outbox?.getHealth ? await this.outbox.getHealth() : undefined,
+      outbox,
     };
   }
 
   private async project(entry: MemoryEntry) {
+    if (!this.isLeaseActive()) return;
     if (!this.shouldProject(entry)) return;
     const drawer = toDrawer(entry);
     if (this.outbox) {
@@ -179,6 +201,7 @@ export class MemPalaceMemoryProvider implements MemoryProvider {
   }
 
   private async projectDelete(entry: MemoryEntry) {
+    if (!this.isLeaseActive()) return;
     if (!this.shouldProject(entry)) return;
     const drawer = toDrawer(entry);
     if (this.outbox) {
@@ -206,8 +229,8 @@ export class MemPalaceMemoryProvider implements MemoryProvider {
   }
 
   async replayProjectionQueue(maxItems = 100) {
-    if (!this.outbox || !this.bridge) return { attempted: 0, applied: 0, failed: 0 };
-    const report = await this.outbox.replay(this.bridge, maxItems);
+    if (!this.outbox || !this.bridge || !this.isLeaseActive()) return { attempted: 0, applied: 0, failed: 0 };
+    const report = await this.outbox.replay(this.bridge, Math.min(Math.max(Math.trunc(maxItems), 1), this.maxReplayItems));
     this.projected += report.applied;
     this.failed += report.failed;
     return report;
@@ -224,7 +247,7 @@ export class MemPalaceMemoryProvider implements MemoryProvider {
   }
 
   async search(input: SearchMemoryInput) {
-    if (!this.searchDerivedCandidates || !this.bridge) {
+    if (!this.searchDerivedCandidates || !this.bridge || !this.isLeaseActive()) {
       return this.canonical.search(input);
     }
 

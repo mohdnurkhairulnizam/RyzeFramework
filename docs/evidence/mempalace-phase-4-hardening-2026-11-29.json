@@ -1,0 +1,53 @@
+{
+  "date": "2026-11-29",
+  "workstream": "Stage 2 external memory-provider workstream",
+  "phase": "MemPalace Phase 4 ongoing-operation hardening",
+  "status": "repository-implemented",
+  "originBlueprintStage3Status": "unimplemented architectural design",
+  "sqliteAuthoritative": true,
+  "derivedSearchEnabled": false,
+  "automaticCaptureEnabled": false,
+  "broadProjectionEnabled": false,
+  "controls": {
+    "liveLeaseEnforcement": true,
+    "boundedReplayLimit": true,
+    "runtimeHealthLeaseMetadata": true,
+    "runtimeHealthReconciliationStatus": true,
+    "runtimeHealthManifestMetadata": true,
+    "failClosedApproval": true,
+    "systemAndRestrictedProjectionExcluded": true
+  },
+  "hardReplayCeiling": 100,
+  "validation": {
+    "focusedTests": {
+      "testFiles": 4,
+      "tests": 20,
+      "status": "PASS"
+    },
+    "fullVitest": {
+      "testFiles": 29,
+      "tests": 102,
+      "status": "PASS"
+    },
+    "typescriptCheck": "PASS",
+    "localBuild": "PASS",
+    "gitDiffCheck": "PASS"
+  },
+  "targetWindows": {
+    "status": "owner-reported evidence remains separate",
+    "requiredNextEvidence": [
+      "lease expiry while process remains running",
+      "health snapshot after expiry",
+      "bounded replay/reconciliation state",
+      "restart and rollback evidence"
+    ]
+  },
+  "files": [
+    "docs/mempalace-phase-4-ongoing-operation-plan-2026-11-29.md",
+    "server/_core/env.ts",
+    "server/memPalaceMemoryProvider.ts",
+    "server/mempalaceProjectionOutbox.ts",
+    "server/memoryProviderRuntime.ts",
+    "server/memPalaceMemoryProvider.test.ts"
+  ]
+}

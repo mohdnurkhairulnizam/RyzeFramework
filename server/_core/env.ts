@@ -11,6 +11,11 @@ const rawMemPalaceMode = process.env.RYZE_MEMPALACE_MODE?.trim() || "disabled";
 if (rawMemPalaceMode !== "disabled" && rawMemPalaceMode !== "projection-only") {
   throw new Error("RYZE_MEMPALACE_MODE must be 'disabled' or 'projection-only'.");
 }
+const rawMemPalaceReplayLimit = process.env.RYZE_MEMPALACE_MAX_REPLAY_ITEMS?.trim();
+const memPalaceReplayLimit = rawMemPalaceReplayLimit ? Number(rawMemPalaceReplayLimit) : 1;
+if (!Number.isInteger(memPalaceReplayLimit) || memPalaceReplayLimit < 1 || memPalaceReplayLimit > 100) {
+  throw new Error("RYZE_MEMPALACE_MAX_REPLAY_ITEMS must be an integer from 1 to 100.");
+}
 
 function getFreeLlmApiBaseUrl() {
   if (!localMode) return "";
@@ -63,4 +68,5 @@ export const ENV = {
   memPalaceSearchDerived: process.env.RYZE_MEMPALACE_SEARCH_DERIVED === "true",
   memPalaceManifestPath: process.env.RYZE_MEMPALACE_MANIFEST_PATH?.trim() ?? "",
   memPalaceApprovalPath: process.env.RYZE_MEMPALACE_APPROVAL_PATH?.trim() ?? "",
+  memPalaceMaxReplayItems: memPalaceReplayLimit,
 };

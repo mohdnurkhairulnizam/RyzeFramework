@@ -32,6 +32,8 @@ export type ProjectionOutboxHealth = {
   lastSuccessfulReplayAt?: string;
 };
 
+const MAX_REPLAY_ITEMS = 100;
+
 export interface MemPalaceProjectionOutbox {
   enqueue(item: ProjectionOutboxItem): Promise<void>;
   replay(bridge: MemPalaceBridge, maxItems?: number): Promise<ProjectionReplayReport>;
@@ -64,7 +66,8 @@ export class SqliteMemPalaceProjectionOutbox implements MemPalaceProjectionOutbo
 
   async replay(bridge: MemPalaceBridge, maxItems = 100): Promise<ProjectionReplayReport> {
     const report: ProjectionReplayReport = { attempted: 0, applied: 0, failed: 0 };
-    for (let index = 0; index < maxItems; index += 1) {
+    const boundedMaxItems = Math.min(Math.max(Math.trunc(maxItems), 0), MAX_REPLAY_ITEMS);
+    for (let index = 0; index < boundedMaxItems; index += 1) {
       const item = await claimNextMemoryProjection();
       if (!item) break;
       report.attempted += 1;

@@ -161,4 +161,44 @@ describe("MemPalace SQLite-first projection adapter", () => {
       outbox: { pending: 1, inFlight: 0, applied: 0, failed: 0 },
     });
   });
+
+  it("enforces an expired approval lease during the running process", async () => {
+    const canonical = new InMemoryContractProvider();
+    const bridge = bridgeFor();
+    const provider = new MemPalaceMemoryProvider({
+      canonical,
+      bridge,
+      searchDerivedCandidates: true,
+      projectionLeaseExpiresAt: "2020-01-01T00:00:00.000Z",
+    });
+
+    const entry = await provider.store({ ownerId: 101, category: "experience", memoryType: "project", content: "Lease expiry keeps SQLite canonical" });
+
+    expect(await canonical.retrieve(101, entry.id)).toMatchObject({ content: entry.content });
+    expect(bridge.addDrawer).not.toHaveBeenCalled();
+    expect(await provider.search({ ownerId: 101, query: "Lease expiry" })).toMatchObject([{ id: entry.id }]);
+    await expect(provider.getProjectionHealth()).resolves.toMatchObject({
+      enabled: false,
+      searchable: false,
+      leaseActive: false,
+      reconciliationStatus: "healthy",
+    });
+  });
+
+  it("reports pending reconciliation and clamps the configured replay limit", async () => {
+    const canonical = new InMemoryContractProvider();
+    const queued = memoryOutbox();
+    const provider = new MemPalaceMemoryProvider({
+      canonical,
+      outbox: queued.outbox,
+      maxReplayItems: 500,
+    });
+    await provider.store({ ownerId: 101, category: "experience", memoryType: "project", content: "Pending reconciliation fixture" });
+
+    await expect(provider.getProjectionHealth()).resolves.toMatchObject({
+      maxReplayItems: 100,
+      reconciliationStatus: "pending",
+      outbox: { pending: 1 },
+    });
+  });
 });
