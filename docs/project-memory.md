@@ -3,8 +3,8 @@
 **Record date:** 28 November 2026
 **Repository:** `mohdnurkhairulnizam/RyzeFramework`
 **Working branch:** `feature/mempalace-production-gate`
-**Current implementation commit:** `df8fdc06518faab6b965078a9a6c814a83980b00`
-**Pushed checkpoint:** `df8fdc0` on `origin/feature/mempalace-production-gate`; it contains the reversible MemPalace adapter/outbox/bridge, Windows runner, evidence, and refreshed next-AI continuation prompt. PR #1 remains open and unmerged.
+**Current implementation commit:** `1ef9d778741c5a77f5bd882c3dee5e0aaf17ddba`
+**Pushed checkpoint:** `1ef9d77` on `origin/feature/mempalace-production-gate`; it contains the reversible MemPalace adapter/outbox/bridge, Windows runner, evidence, and refreshed next-AI continuation prompt. PR #1 remains open and unmerged.
 
 This file is the durable project-memory index for the work completed in this repository. It records decisions and evidence boundaries; it does not contain passwords, API keys, Telegram sessions, databases, backups, logs, or personal data.
 
@@ -174,3 +174,5 @@ The approved synthetic gate sequence is complete in disposable scope: dry-run, t
 Target-Windows MemPalace replay is PASS only for the disposable synthetic scope previously executed by the owner. It is not live or production acceptance. The final repository validation passed: `pnpm run check`, 26 test files/87 tests, `pnpm run build:local`, and `git diff --check`. The continuation prompt at `docs/next-ai-continuation-prompt.md` has been refreshed with the clone command, branch rules, current gate status, exact evidence boundaries, and copy-paste instructions for the next AI.
 
 Stage 1 remains PARTIAL and Stage 2 remains active/not complete. Live or production MemPalace projection is not approved and was not performed. A future production projection requires a fresh exact dry-run manifest and new explicit owner approval; the disposable canary approval cannot be reused.
+
+The active branch was renamed from `feature/telegram-file-transfer` to `feature/mempalace-production-gate` because the current work is MemPalace production-gate hardening rather than Telegram file transfer. The new remote branch is authoritative; the obsolete remote branch was deleted and `main` was unchanged.
