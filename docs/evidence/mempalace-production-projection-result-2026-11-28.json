@@ -1,0 +1,60 @@
+{
+  "evidenceType": "owner-reported-target-windows-bounded-production-projection",
+  "date": "2026-11-28",
+  "status": "PASS",
+  "boundary": "SQLite remains authoritative; MemPalace is an optional rebuildable projection; derived search remained disabled.",
+  "projector": {
+    "status": "completed",
+    "provider": "mempalace",
+    "providerRevision": "4df7b830ff1398332d4118884520a24f1aab9cc1",
+    "namespace": "ryze-production-main",
+    "branch": "main",
+    "manifestSha256": "fd758180453aa0d8eef073d44cbc5ec8e28e81a6e0be18e51e8f22fe49527272",
+    "operationCount": 8,
+    "validated": 8,
+    "attempted": 8,
+    "applied": 8,
+    "failed": 0,
+    "outbox": {
+      "pending": 0,
+      "inFlight": 0,
+      "applied": 8,
+      "failed": 0
+    }
+  },
+  "mempalaceStatus": {
+    "status": "PASS",
+    "drawers": 8,
+    "ownerWing": "owner_1",
+    "rooms": {
+      "personal-preference": 7,
+      "experience-preference": 1
+    }
+  },
+  "sqliteAfterProjection": {
+    "integrity": "PASS",
+    "counts": {
+      "users": 1,
+      "memories": 20,
+      "identities": 1,
+      "identityRevisions": 2,
+      "systemMemory": 1
+    },
+    "memoryRows": 20,
+    "memorySha256": "2d12d09fa65578df6e7178bdc209496ecb333de5dc0a913e9f3d45548af49257",
+    "readOnly": "PASS"
+  },
+  "rollbackAndRestart": {
+    "mode": "disabled",
+    "searchDerived": false,
+    "sqliteCheckAfterRollback": "PENDING_OWNER_REPORT",
+    "dashboardAfterRestart": "PASS_OWNER_REPORTED",
+    "memoryVaultAfterRestart": "PASS_OWNER_REPORTED"
+  },
+  "limitations": [
+    "Execution and dashboard verification were reported by the owner on target Windows; they were not executed from this sandbox.",
+    "This evidence covers the exact eight-record allowlist only.",
+    "This does not complete Stage 1 and does not declare Stage 2 complete.",
+    "No automatic capture, broad provider writes, System Memory projection, restricted projection, or provider authority over SQLite was enabled."
+  ]
+}
