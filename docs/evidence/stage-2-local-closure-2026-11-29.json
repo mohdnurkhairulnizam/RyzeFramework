@@ -1,0 +1,42 @@
+{
+  "date": "2026-11-29",
+  "stage": "Stage 2 — Identity and Advanced Memory",
+  "status": "active-not-complete",
+  "localClosure": {
+    "contractReconciliation": "PASS",
+    "generatedSummaryBackendAndProvenance": "PASS",
+    "derivedSearchGateDefinition": "PASS-not-enabled",
+    "boundedOngoingProjectionPolicy": "PASS-not-authorized",
+    "signoffMatrix": "PASS"
+  },
+  "externalOpen": {
+    "generatedSummaryOwnerFacingNaturalLanguageBenchmark": {
+      "status": "OPEN",
+      "reason": "Prior owner-reported live behavior resent the source/refused creation; backend tests do not establish live skill behavior."
+    },
+    "targetWindowsAutomatic30DayExpiry": {
+      "status": "OPEN",
+      "reason": "Requires target-Windows execution and cannot be proven from the Linux sandbox."
+    }
+  },
+  "policy": {
+    "sqliteAuthoritative": true,
+    "mempalacePermanentAuthority": false,
+    "derivedSearchEnabled": false,
+    "automaticCaptureEnabled": false,
+    "broadProjectionEnabled": false,
+    "originBlueprintStage3Started": false
+  },
+  "validationRequiredForThisCheckpoint": {
+    "typescript": "PASS",
+    "focusedTests": "PASS",
+    "fullVitest": "PASS",
+    "gitDiffCheck": "PASS"
+  },
+  "artifacts": [
+    "docs/evidence/stage-2-contract-reconciliation-2026-11-29.md",
+    "docs/mempalace-derived-search-acceptance-gate-2026-11-29.md",
+    "docs/mempalace-bounded-ongoing-operation-policy-2026-11-29.md",
+    "docs/stage-2-signoff-matrix-2026-11-29.md"
+  ]
+}
