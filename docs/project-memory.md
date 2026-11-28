@@ -154,3 +154,5 @@ The safe operational tools are now defined. `scripts/windows/check-live-sqlite.m
 Owner-reported target-Windows live SQLite check passed: the `counts=` and `memory_sha256=` values remained unchanged across a normal stop/start cycle. This is read-only persistence evidence only and does not authorize live MemPalace projection.
 
 The sanitized-copy harness now accepts the UTF-8 BOM emitted by Windows PowerShell 5.1 while retaining strict secret/content validation. A BOM-prefixed synthetic input passed the disposable SQLite integrity check.
+
+Owner-reported target-Windows sanitized disposable-copy test passed after the UTF-8 BOM compatibility fix. The result is limited to explicitly sanitized synthetic records in a disposable SQLite database; live MemPalace projection remains unauthorized.

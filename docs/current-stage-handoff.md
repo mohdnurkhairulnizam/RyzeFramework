@@ -218,3 +218,5 @@ The production integration design is documented in `docs/mempalace-production-in
 Owner-reported target-Windows live SQLite operational check: **PASS**. The before/after normal restart `counts=` and `memory_sha256=` values remained unchanged. This confirms read-only integrity/fingerprint persistence for the tested live database interval; it does not authorize MemPalace projection.
 
 The sanitized-copy harness initially rejected the JSON because PowerShell 5.1 writes UTF-8 with a BOM. The parser now removes only a leading UTF-8 BOM before strict JSON parsing. A BOM-prefixed synthetic input smoke test passed with `sanitized_input=PASS` and `disposable_sqlite_integrity=PASS`.
+
+Owner-reported target-Windows sanitized disposable-copy test: **PASS** after the PowerShell 5.1 UTF-8 BOM compatibility fix. The test used explicitly sanitized synthetic records and a disposable SQLite database; it does not establish live-database projection acceptance.
