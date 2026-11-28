@@ -393,7 +393,7 @@ The generated-summary fixes were bounded intent recognition, same-chat source re
 
 ### Stage 3 transition and WP-1
 
-The Stage 3 transition procedure and separate design checkpoint are prepared. WP-1 Protected Skill Registry has been reviewed at design level, but implementation has **not started**. The detailed design is `docs/stage-3-wp1-protected-skill-registry-spec-2026-11-29.md`.
+The Stage 3 transition procedure and separate design checkpoint are prepared. WP-1 Protected Skill Registry has been reviewed at design level, but implementation has **not started**. The detailed design is `docs/stage-3-wp1-protected-skill-registry-spec-2026-11-29.md`; the initial implementation plan and task breakdown is `docs/stage-3-wp1-implementation-plan-2026-11-29.md`.
 
 The safe future implementation slice is an owner-scoped, SQLite-authoritative registry schema/migration, fail-closed lifecycle and permission validation, read-only inspection, and fixture-only tests. It must not load arbitrary code, mutate its own record, promote a revision, install a watchdog, or change live MemPalace behavior. The existing `ryze_skills` XP/domain table remains separate and is not repurposed.
 

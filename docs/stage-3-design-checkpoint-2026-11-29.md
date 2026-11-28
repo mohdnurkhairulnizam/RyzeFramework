@@ -73,4 +73,6 @@ The owner-directed WP-1 review is complete at the design level. The protected re
 
 The safe future implementation slice is read-only registry inspection, schema/migration, fail-closed transition validation, and fixture-only tests. Autonomous mutation, dynamic code loading, automatic promotion, watchdog installation, unrestricted file creation, production deployment, and MemPalace authority remain disabled. Separate implementation authorization is required after Stage 2 closure.
 
+The initial sequencing and task breakdown is [`stage-3-wp1-implementation-plan-2026-11-29.md`](./stage-3-wp1-implementation-plan-2026-11-29.md). It is a planning artifact only and does not authorize implementation.
+
 Stage 2 remains active/not complete because target-Windows automatic retention evidence is still open. The generated Markdown summary capability is recorded as owner-reported PASS for the exact bounded request and does not change that stage disposition.

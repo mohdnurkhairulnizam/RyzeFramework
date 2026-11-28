@@ -36,7 +36,9 @@ Read these documents before planning or editing:
 8. `docs/mempalace-production-integration-gate.md`
 9. `docs/evidence/mempalace-production-dry-run-manifest-2026-11-28.json`
 10. `docs/evidence/mempalace-adapter-assessment-2026-11-28.md`
-11. This file
+11. `docs/stage-3-wp1-protected-skill-registry-spec-2026-11-29.md`
+12. `docs/stage-3-wp1-implementation-plan-2026-11-29.md`
+13. This file
 
 Preserve the distinction between independently run sandbox evidence, owner-reported disposable Windows evidence, and unrun work.
 
