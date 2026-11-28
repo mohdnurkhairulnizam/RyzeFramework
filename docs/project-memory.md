@@ -2,9 +2,9 @@
 
 **Record date:** 28 November 2026
 **Repository:** `mohdnurkhairulnizam/RyzeFramework`
-**Working branch:** `feature/telegram-file-transfer`
+**Working branch:** `feature/mempalace-production-gate`
 **Current implementation commit:** `df8fdc06518faab6b965078a9a6c814a83980b00`
-**Pushed checkpoint:** `df8fdc0` on `origin/feature/telegram-file-transfer`; it contains the reversible MemPalace adapter/outbox/bridge, Windows runner, evidence, and refreshed next-AI continuation prompt. PR #1 remains open and unmerged.
+**Pushed checkpoint:** `df8fdc0` on `origin/feature/mempalace-production-gate`; it contains the reversible MemPalace adapter/outbox/bridge, Windows runner, evidence, and refreshed next-AI continuation prompt. PR #1 remains open and unmerged.
 
 This file is the durable project-memory index for the work completed in this repository. It records decisions and evidence boundaries; it does not contain passwords, API keys, Telegram sessions, databases, backups, logs, or personal data.
 

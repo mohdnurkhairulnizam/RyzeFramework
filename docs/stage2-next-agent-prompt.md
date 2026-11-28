@@ -6,7 +6,7 @@ Continue Mohd Nur's existing RyzeFramework project from its GitHub repository. D
 
 Repository: `https://github.com/mohdnurkhairulnizam/RyzeFramework.git`
 
-Branch: `feature/telegram-file-transfer`
+Branch: `feature/mempalace-production-gate`
 
 Fetch the latest branch before editing. If there is no working copy, clone the repository and check out the branch. If a working copy exists, inspect `git status` first and preserve user changes. Do not reset, clean, force-push, or overwrite uncommitted work. Keep work on the existing branch unless the user explicitly directs otherwise.
 

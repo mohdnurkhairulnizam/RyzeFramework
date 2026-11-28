@@ -1,7 +1,7 @@
 # MemPalace Adapter and Revision Assessment
 
 **Date:** 28 November 2026
-**Ryze branch:** `feature/telegram-file-transfer`
+**Ryze branch:** `feature/mempalace-production-gate`
 **Status:** adapter/outbox implemented; pinned MemPalace runtime assessed in disposable Linux environment; not installed or enabled in Ryze
 
 ## Pinned revision

@@ -1,7 +1,7 @@
 # Stage 1 Windows Acceptance Addendum — Text Ingress and File Feedback
 
-**Date:** 25 November 2026  
-**Branch:** `feature/telegram-file-transfer`  
+**Date:** 25 November 2026
+**Branch:** `feature/mempalace-production-gate`
 **Fix commit/package made available:** `d35b770b357c3d81660951be2ff533976d591e06`
 
 ## Owner-reported result

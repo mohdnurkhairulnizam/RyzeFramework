@@ -4,7 +4,7 @@
 
 **Approval and query integrity:** The owner approved the exact fixture/query proposal on 26 November 2026. The exact 14 query strings and expected labels were preserved without alteration. See the [approved query set](./gate4-query-set-proposal-2026-11-26.md).
 
-**Implementation under test:** the final post-remediation worktree state on `feature/telegram-file-transfer`, recorded with this report in the continuity commit. The run used the Linux project sandbox, not target Windows. The [current raw results](./gate4-retrieval-evaluation-2026-11-26.json) are separate from the [preserved pre-remediation raw baseline](./gate4-retrieval-evaluation-2026-11-26-baseline.json). The [reproduction harness](../../scripts/evaluate-gate4-retrieval.ts) asserts the fixed labels and Q14 order.
+**Implementation under test:** the final post-remediation worktree state on `feature/mempalace-production-gate`, recorded with this report in the continuity commit. The run used the Linux project sandbox, not target Windows. The [current raw results](./gate4-retrieval-evaluation-2026-11-26.json) are separate from the [preserved pre-remediation raw baseline](./gate4-retrieval-evaluation-2026-11-26-baseline.json). The [reproduction harness](../../scripts/evaluate-gate4-retrieval.ts) asserts the fixed labels and Q14 order.
 
 ## Method and safety
 

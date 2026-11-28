@@ -23,7 +23,7 @@ This checklist turns the origin blueprint and current repository status into an 
 - [x] Confirm the execution target and local data architecture: the owner selected the target Windows computer; this package uses local SQLite and a local files directory, so it does not require hosted database/object storage endpoints.
 - [x] Document supported installer runtimes: 64-bit Windows 10+, Node.js 22 or 24 LTS, pnpm 10.18.0. The optional Python/Telethon worker is not installed by this ZIP.
 - [x] Owner reports target-Windows operational baseline, repeat start/stop, backup/restore, and ACL checks as PASS. Confirm any remaining runtime-version or newly-created-file ACL checks from retained evidence before closing deployment validation.
-- [x] A reviewed rollback baseline exists at `stable-merge` commit `e8e7660`; `feature/telegram-file-transfer` is the authorized delivery branch. Track the final corrective commit and tested-package revision in the delivery record.
+- [x] A reviewed rollback baseline exists at `stable-merge` commit `e8e7660`; `feature/mempalace-production-gate` is the authorized delivery branch. Track the final corrective commit and tested-package revision in the delivery record.
 - [x] Inventory local installer settings without reading secret values; keep the generated `.env`, database, file bytes, and Telegram session data out of Git.
 - [x] Document local config/data paths, Windows account ACLs, stop-before-backup steps, and a database/files/config backup helper in `docs/windows-installation.md`.
 - [x] Add a dashboard **Create private backup** action that creates a protected recovery copy without running diagnostic test records.

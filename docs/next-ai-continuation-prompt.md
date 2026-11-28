@@ -10,10 +10,10 @@ Repository:
 https://github.com/mohdnurkhairulnizam/RyzeFramework.git
 ```
 
-The active implementation branch is `feature/telegram-file-transfer`. Clone it directly:
+The active implementation branch is `feature/mempalace-production-gate`. Clone it directly:
 
 ```bash
-git clone --branch feature/telegram-file-transfer --single-branch https://github.com/mohdnurkhairulnizam/RyzeFramework.git
+git clone --branch feature/mempalace-production-gate --single-branch https://github.com/mohdnurkhairulnizam/RyzeFramework.git
 cd RyzeFramework
 git fetch origin --prune
 git status --short --branch
@@ -87,8 +87,8 @@ pnpm run build:local
 git diff --check
 ```
 
-Inspect the complete staged diff and confirm that `.env*`, databases, backups, logs, Telegram sessions, `node_modules`, `dist`, ZIP artifacts, and private data are not staged. Work on `feature/telegram-file-transfer`; never force-push. Do not merge into `main` without explicit review and approval. Push through the authorized GitHub connector/authenticated Git route and report the full commit hash, validation results, skipped checks, and remaining risks.
+Inspect the complete staged diff and confirm that `.env*`, databases, backups, logs, Telegram sessions, `node_modules`, `dist`, ZIP artifacts, and private data are not staged. Work on `feature/mempalace-production-gate`; never force-push. Do not merge into `main` without explicit review and approval. Push through the authorized GitHub connector/authenticated Git route and report the full commit hash, validation results, skipped checks, and remaining risks.
 
 ## Copy-paste instruction for the next AI
 
-> Clone `https://github.com/mohdnurkhairulnizam/RyzeFramework.git` on branch `feature/telegram-file-transfer` using the authorized GitHub connector available in this conversation. Fetch the latest remote state, inspect `git status` before editing, and read `docs/current-stage-handoff.md`, `docs/project-memory.md`, `docs/stage-2-implementation-plan.md`, `docs/memory-identity-contract.md`, `docs/mempalace-production-integration-gate.md`, and this continuation prompt. Continue the project rather than creating a replacement. Keep SQLite authoritative and live routers SQLite-only. Treat MemPalace as an optional rebuildable projection. The disposable Linux and Windows synthetic MemPalace gates now pass, but live/production projection is not approved. Do not use private data, live databases, secrets, backups, Telegram sessions, automatic capture, broad MCP/skill writes, or cross-agent sharing. Propose the next exact gate and request fresh owner approval before any live projection. Preserve Stage 1 as PARTIAL and Stage 2 as active/not complete. Run the repository validation suite for code changes, commit only intentional changes on `feature/telegram-file-transfer`, and push without force-pushing or merging `main`.
+> Clone `https://github.com/mohdnurkhairulnizam/RyzeFramework.git` on branch `feature/mempalace-production-gate` using the authorized GitHub connector available in this conversation. Fetch the latest remote state, inspect `git status` before editing, and read `docs/current-stage-handoff.md`, `docs/project-memory.md`, `docs/stage-2-implementation-plan.md`, `docs/memory-identity-contract.md`, `docs/mempalace-production-integration-gate.md`, and this continuation prompt. Continue the project rather than creating a replacement. Keep SQLite authoritative and live routers SQLite-only. Treat MemPalace as an optional rebuildable projection. The disposable Linux and Windows synthetic MemPalace gates now pass, but live/production projection is not approved. Do not use private data, live databases, secrets, backups, Telegram sessions, automatic capture, broad MCP/skill writes, or cross-agent sharing. Propose the next exact gate and request fresh owner approval before any live projection. Preserve Stage 1 as PARTIAL and Stage 2 as active/not complete. Run the repository validation suite for code changes, commit only intentional changes on `feature/mempalace-production-gate`, and push without force-pushing or merging `main`.

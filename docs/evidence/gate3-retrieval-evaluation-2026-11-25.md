@@ -2,7 +2,7 @@
 
 **Status:** Exploratory measured evaluation completed; formal Gate 4 acceptance remains open.
 
-**Implementation under test:** SQLite fallback on `feature/telegram-file-transfer`, dashboard commit `884b8d8` plus local evaluation harness.
+**Implementation under test:** SQLite fallback on `feature/mempalace-production-gate`, dashboard commit `884b8d8` plus local evaluation harness.
 
 ## Method
 
