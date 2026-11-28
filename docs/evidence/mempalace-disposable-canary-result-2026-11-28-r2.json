@@ -1,0 +1,31 @@
+{
+  "mode": "disposable-canary",
+  "manifest": {
+    "path": "docs/evidence/mempalace-production-dry-run-manifest-2026-11-28-r2.json",
+    "sha256": "411bae7649f1cc1508373dd099c64a9f84689565b6b43b5d262dce29a90d6c56",
+    "namespace": "ryze-dry-run-sanitized-r2",
+    "branch": "sanitized-test-r2"
+  },
+  "provider": {
+    "name": "mempalace",
+    "commit": "4df7b830ff1398332d4118884520a24f1aab9cc1",
+    "version": "3.12.0"
+  },
+  "records": [
+    { "id": "fixture-3", "ownerId": 991122, "version": 1 },
+    { "id": "fixture-4", "ownerId": 991122, "version": 1 }
+  ],
+  "initialUpserts": 2,
+  "mcpRestart": "PASS",
+  "ownerScopedSearch": "PASS",
+  "metadataRehydration": "PASS",
+  "liveDatabaseOpened": false,
+  "liveRoutersTouched": false,
+  "privateDataUsed": false,
+  "secretsUsed": false,
+  "providerNamespaceDiscarded": true,
+  "deletionReconciliation": "NOT_RUN",
+  "productionProjection": "NOT_AUTHORIZED",
+  "stage1": "PARTIAL",
+  "stage2": "ACTIVE_NOT_COMPLETE"
+}
