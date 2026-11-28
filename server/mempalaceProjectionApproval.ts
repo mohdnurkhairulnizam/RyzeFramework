@@ -8,6 +8,9 @@ export type ProjectionManifestOperation = {
   memoryType: string;
   version: number;
   sensitivity: "normal" | "restricted";
+  tagsHash: string;
+  sanitizedContentHash: string;
+  sourceRefClass: "sanitized" | "redacted-reference";
 };
 
 export type ProjectionManifest = {
@@ -38,6 +41,10 @@ function sha256(value: string) {
   return createHash("sha256").update(value).digest("hex");
 }
 
+function isSha256(value: unknown): value is string {
+  return typeof value === "string" && /^[a-f0-9]{64}$/.test(value);
+}
+
 function isManifest(value: unknown): value is ProjectionManifest {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<ProjectionManifest>;
@@ -63,7 +70,13 @@ export function validateProjectionApproval(manifestJson: string, approval: Proje
   if (!isManifest(parsed)) return { approved: false, reasons: ["manifest shape is not an approved dry-run format"] };
   const manifest = parsed;
   if (manifest.recordCount !== manifest.operations.length) reasons.push("record count does not match operations");
-  if (manifest.operations.some(operation => operation.operation !== "upsert_projection" || operation.ownerId < 1 || operation.version < 1 || operation.sensitivity !== "normal" || operation.category === "system")) {
+  const operationKeys = new Set<string>();
+  for (const operation of manifest.operations) {
+    const operationKey = `${operation.ryzeMemoryId}:v${operation.version}`;
+    if (operationKeys.has(operationKey)) reasons.push("manifest contains duplicate record versions");
+    operationKeys.add(operationKey);
+  }
+  if (manifest.operations.some(operation => operation.operation !== "upsert_projection" || operation.ownerId < 1 || operation.version < 1 || operation.sensitivity !== "normal" || operation.category === "system" || !isSha256(operation.tagsHash) || !isSha256(operation.sanitizedContentHash) || !["sanitized", "redacted-reference"].includes(operation.sourceRefClass))) {
     reasons.push("manifest contains an operation outside the default approved scope");
   }
   if (!approval) reasons.push("owner approval is absent");

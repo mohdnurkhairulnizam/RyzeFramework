@@ -18,6 +18,9 @@ function manifestJson(overrides: Partial<ProjectionManifest> = {}) {
       memoryType: "project",
       version: 1,
       sensitivity: "normal",
+      tagsHash: "a".repeat(64),
+      sanitizedContentHash: "b".repeat(64),
+      sourceRefClass: "sanitized",
     }],
     ...overrides,
   };
@@ -69,6 +72,9 @@ describe("MemPalace projection approval boundary", () => {
       memoryType: "preference",
       version: 1,
       sensitivity: "restricted",
+      tagsHash: "a".repeat(64),
+      sanitizedContentHash: "b".repeat(64),
+      sourceRefClass: "sanitized",
     }] });
     const result = validateProjectionApproval(json, {
       manifestSha256: manifestSha256(json),
@@ -83,6 +89,49 @@ describe("MemPalace projection approval boundary", () => {
     expect((result as { reasons: string[] }).reasons).toEqual(expect.arrayContaining([
       "manifest contains an operation outside the default approved scope",
       "approval is expired or invalid",
+    ]));
+  });
+
+  it("rejects missing provenance hashes and duplicate record versions", () => {
+    const json = manifestJson({ operations: [
+      {
+        operation: "upsert_projection",
+        ryzeMemoryId: "fixture-approval-1",
+        ownerId: 991122,
+        category: "experience",
+        memoryType: "project",
+        version: 1,
+        sensitivity: "normal",
+        tagsHash: "invalid",
+        sanitizedContentHash: "invalid",
+        sourceRefClass: "redacted-reference",
+      },
+      {
+        operation: "upsert_projection",
+        ryzeMemoryId: "fixture-approval-1",
+        ownerId: 991122,
+        category: "experience",
+        memoryType: "project",
+        version: 1,
+        sensitivity: "normal",
+        tagsHash: "a".repeat(64),
+        sanitizedContentHash: "b".repeat(64),
+        sourceRefClass: "sanitized",
+      },
+    ], recordCount: 2 });
+    const result = validateProjectionApproval(json, {
+      manifestSha256: manifestSha256(json),
+      providerCommit: "provider-synthetic-commit",
+      namespace: "ryze-dry-run-synthetic",
+      branch: "synthetic-test",
+      operationCount: 2,
+      expiresAt: "2026-11-28T18:00:00.000Z",
+    }, new Date("2026-11-28T17:30:00.000Z"));
+
+    expect(result).toMatchObject({ approved: false });
+    expect((result as { reasons: string[] }).reasons).toEqual(expect.arrayContaining([
+      "manifest contains duplicate record versions",
+      "manifest contains an operation outside the default approved scope",
     ]));
   });
 });

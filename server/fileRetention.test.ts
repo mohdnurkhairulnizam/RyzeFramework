@@ -68,4 +68,33 @@ describe("30-day uploaded and generated file retention", () => {
     await expect(storage.getStoredFilePath(key)).rejects.toThrow();
     expect(await retention.deleteUserFile(ownerId, file.id)).toBe(false);
   });
+
+  it("makes expiry cleanup idempotent and preserves a non-expired file", async () => {
+    const { key: activeKey } = await storage.storagePut("ryze/retention/active.md", "active payload", "text/markdown");
+    const active = await db.saveFileMetadata(ownerId, {
+      storageKey: activeKey,
+      originalName: "active.md",
+      mimeType: "text/markdown",
+      byteSize: Buffer.byteLength("active payload"),
+      category: "uploads",
+      source: "upload",
+    });
+    const { key: expiredKey } = await storage.storagePut("ryze/retention/expired-again.md", "expired again", "text/markdown");
+    const expired = await db.saveFileMetadata(ownerId, {
+      storageKey: expiredKey,
+      originalName: "expired-again.md",
+      mimeType: "text/markdown",
+      byteSize: Buffer.byteLength("expired again"),
+      category: "uploads",
+      source: "upload",
+    });
+    const database = await db.getDb();
+    await database!.update(ryzeFiles).set({ createdAt: new Date(Date.now() - FILE_RETENTION_MS - 1000) }).where(eq(ryzeFiles.id, expired.id));
+
+    expect(await retention.purgeExpiredFiles()).toBe(1);
+    expect(await retention.purgeExpiredFiles()).toBe(0);
+    expect(await db.getFileForUser(active.id, ownerId)).toMatchObject({ id: active.id });
+    expect(await storage.getStoredFilePath(activeKey)).toBeTruthy();
+    await expect(storage.getStoredFilePath(expiredKey)).rejects.toThrow();
+  });
 });
