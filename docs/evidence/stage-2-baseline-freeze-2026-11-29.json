@@ -1,0 +1,41 @@
+{
+  "date": "2026-11-29",
+  "status": "prepared-pending-final-retention-evidence",
+  "stage2Closure": "OPEN",
+  "retentionEvidence": {
+    "status": "OPEN",
+    "required": [
+      "24-hour wait with RYZE_FILE_RETENTION_DAYS=1",
+      "restart sweep verification",
+      "expired synthetic file inaccessible or absent",
+      "current unrelated file retained",
+      "dashboard and Memory Vault available",
+      "RYZE_FILE_RETENTION_DAYS restored to 30",
+      "final read-only SQLite integrity/count/fingerprint check"
+    ]
+  },
+  "testedWindowsBaseline": {
+    "applicationCommit": "6e41b0b994ff7e024b953a6a46ded58183571b29",
+    "package": "RyzeFramework-Windows-Stage2-BoundedFile-DeliveryFix-20261129.zip",
+    "packageSha256": "edd28472204250b405761ee253290a7fea714630b2ee00d584e5668d79b1e1ca",
+    "memorySha256": "2d12d09fa65578df6e7178bdc209496ecb333de5dc0a913e9f3d45548af49257",
+    "counts": {
+      "users": 1,
+      "memories": 20,
+      "identities": 1,
+      "identityRevisions": 2,
+      "systemMemory": 1
+    }
+  },
+  "safetyBoundaries": {
+    "sqliteAuthoritative": true,
+    "mempalacePermanentAuthority": false,
+    "mempalaceDefaultMode": "disabled",
+    "derivedSearchEnabled": false,
+    "automaticCaptureEnabled": false,
+    "broadProjectionEnabled": false,
+    "generatedFiles": "bounded Markdown summary only",
+    "originBlueprintStage3Started": false
+  },
+  "freezeDecision": "Record the baseline now as provisional; finalize the freeze only after retention evidence closes Stage 2."
+}
