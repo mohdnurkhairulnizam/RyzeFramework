@@ -506,7 +506,7 @@ export function registerWorkerRoutes(app: Express) {
           byteSize: bytes.length,
           category: "documents",
           source: "generated",
-          telegramOrigin: { chatId: input.data.chatId, senderId: input.data.senderId, messageId: input.data.messageId },
+          telegramOrigin: { chatId: input.data.chatId, senderId: input.data.senderId, messageId: `generated:${input.data.messageId}:${task.id}` },
           sourceFileId: fileContext.fileId,
           sourceContentHash: fileContext.contentHash,
           generatorLabel: "opencode-summary-v1",

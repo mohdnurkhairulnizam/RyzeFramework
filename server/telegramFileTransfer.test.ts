@@ -225,7 +225,7 @@ describe("Telegram file transfer boundary", () => {
     expect(await response.json()).toMatchObject({ accepted: true, replyQueued: true, fileQueued: true });
 
     const files = await db.listFiles(ownerId);
-    const generated = files.find((file) => file.source === "generated" && file.telegramMessageId === "9041");
+    const generated = files.find((file) => file.source === "generated" && file.telegramMessageId?.startsWith("generated:9041:"));
     const sourceBytes = Buffer.from("# Stage 1 file\nContent for test.\n");
     expect(generated).toMatchObject({
       mimeType: "text/markdown", category: "documents", telegramChatId: "12345", telegramSenderId: "12345",
@@ -252,12 +252,12 @@ describe("Telegram file transfer boundary", () => {
       body: JSON.stringify({
         workerId: "primary", chatId: "12345", senderId: "12345", senderUsername: "owner",
         senderName: "Owner", text: "Make a short Markdown summary of README.md and send the summary as a file.",
-        messageId: "9046", isPrivate: true,
+        messageId: "9045", isPrivate: true,
       }),
     });
     expect(response.status).toBe(202);
     expect(await response.json()).toMatchObject({ accepted: true, replyQueued: true, fileQueued: true });
-    const generated = (await db.listFiles(ownerId)).find((file) => file.source === "generated" && file.telegramMessageId === "9046");
+    const generated = (await db.listFiles(ownerId)).find((file) => file.source === "generated" && file.telegramMessageId?.startsWith("generated:9045:"));
     expect(generated).toMatchObject({
       mimeType: "text/markdown",
       sourceFileId: source.fileId,
