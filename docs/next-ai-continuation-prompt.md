@@ -54,7 +54,7 @@ Preserve the distinction between independently run sandbox evidence, owner-repor
 ## Current gate status at this checkpoint
 
 - Stage 1: **PARTIAL — closed for sequencing, not complete**. Preserve its original criteria and historical self-test.
-- Stage 2: **active and not complete**. Gate 2 implementation is complete; Gate 3 owner-facing synthetic acceptance is complete for its tested scope; Gate 4 is passed only for the approved synthetic evaluation; Gate 5 is passed only for the documented disposable synthetic Windows scope.
+- Stage 2: **active and not complete**. Gate 2 implementation is complete; Gate 3 owner-facing synthetic acceptance is complete for its tested scope; Gate 4 is passed only for the approved synthetic evaluation; Gate 5 is passed only for the documented disposable synthetic Windows scope. Generated Markdown summary delivery is **PASS — owner-reported** for the exact bounded request; target-Windows automatic retention remains open.
 - MemPalace Gate 0 architecture review: **PASS**.
 - MemPalace Gate 1 provider-neutral contract harness: **PASS**.
 - Linux pinned MemPalace MCP replay: **PASS**.
@@ -66,6 +66,7 @@ Preserve the distinction between independently run sandbox evidence, owner-repor
 - Disposable deletion reconciliation: **PASS** after explicit approval; deleted `fixture-1`, retained `fixture-2`.
 - Final repository validation on the pushed head: `pnpm run check` PASS, 26 test files/87 tests PASS, `pnpm run build:local` PASS, `git diff --check` PASS.
 - Live or production projection: **NOT APPROVED and NOT PERFORMED**.
+- Stage 3 WP-1 Protected Skill Registry: **design reviewed/prepared; implementation not started**. The bounded specification is `docs/stage-3-wp1-protected-skill-registry-spec-2026-11-29.md`. Do not activate autonomous mutation, dynamic code loading, automatic promotion, watchdogs, or unrestricted file creation.
 
 ## Immediate next work
 
@@ -73,8 +74,8 @@ Preserve the distinction between independently run sandbox evidence, owner-repor
 2. Keep the live routers SQLite-only until a new explicit owner approval authorizes a specific production manifest, namespace, provider revision, batch size, and lease.
 3. If proposing controlled production projection, first produce a new exact dry-run manifest and request owner approval. Do not reuse the disposable canary approval.
 4. Before any live projection, add/verify health/status reporting, canonical SQLite fingerprint capture, export/restore evidence, resource limits, rollback/discard procedure, and fail-closed approval/hash checks required by the production gate.
-5. Preserve the remaining Stage 1 residuals and Stage 2 open items, including the natural-language new-summary file-creation capability gap and target-Windows automatic 30-day expiry verification.
-6. Treat Stage 3 and Stage 4 as future work unless separately authorized.
+5. Preserve the remaining Stage 1 residuals and Stage 2 open items, including target-Windows automatic 30-day expiry verification. The narrow generated-summary capability is owner-reported PASS, but it is not general file creation.
+6. Treat Stage 3 runtime implementation and Stage 4 as future work unless separately authorized. WP-1 design preparation is not implementation authorization.
 
 ## Validation and Git rules
 

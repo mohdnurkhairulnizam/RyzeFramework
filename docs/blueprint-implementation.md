@@ -156,3 +156,37 @@ All claims must identify whether they are automated sandbox checks, handler-leve
 ## Current next actions
 
 Keep PR #1 open for review. Resolve provider-response evidence with a bounded, cancellable test; verify automatic 30-day expiry on target Windows; resolve the narrow new-summary capability without changing live skill/intent rules broadly; and retain Stage 1 residuals. Do not merge or describe a merge as system or Stage 2 completion.
+
+
+---
+
+# Current implementation authority — WP-1 design checkpoint, 29 November 2026
+
+This section supersedes stale current-status wording above where it conflicts with later evidence. Historical checkpoint paragraphs remain unchanged for chronology.
+
+## Current source and stage status
+
+- Branch: `feature/mempalace-production-gate`.
+- Stage 1: **PARTIAL — closed for sequencing, not complete**.
+- Stage 2: **ACTIVE / NOT COMPLETE**. Generated Markdown summary delivery is **PASS — owner-reported**. The target-Windows disposable automatic-retention test remains **OPEN**.
+- Stage 3: **prepared at design level; implementation not started**.
+- SQLite remains authoritative. MemPalace is optional, rebuildable, and not a source of truth.
+- `RYZE_MEMPALACE_MODE=disabled` and `RYZE_MEMPALACE_SEARCH_DERIVED=false` remain the safe defaults.
+
+## Generated-summary capability reconciliation
+
+The bounded generated-summary path now creates a distinct Markdown artifact and delivers it to the originating authorized private chat. It resolves only the latest same-chat inbound upload for implicit source selection, excludes generated artifacts from source lookup, records source ID/content hash/generator provenance, and uses a generated internal origin key so a request and upload sharing a Telegram message ID cannot collide in SQLite. The model prompt requests summary-only Markdown content, and Telegram sends a concise confirmation rather than duplicating the entire model response.
+
+This is a narrow, owner-reported capability acceptance. It is not general-purpose file creation, arbitrary tool access, broad skill mutation, or permission to write to external providers.
+
+## Stage 3 WP-1 — Protected Skill Registry
+
+The detailed specification is [`stage-3-wp1-protected-skill-registry-spec-2026-11-29.md`](./stage-3-wp1-protected-skill-registry-spec-2026-11-29.md). WP-1 maps the origin blueprint's skill fields (`skill_id`, name, tier, version, status, dependencies, permissions, validation status, and previous version) into an immutable, owner-scoped SQLite registry design with explicit contracts, content hash, approval metadata, and rollback pointer.
+
+The safe first implementation slice is registry schema/migration, fail-closed invariant validation, owner-scoped read-only inspection, and fixture-only lifecycle tests. It must not load arbitrary code, mutate its own record, promote a revision, install a watchdog, or change live MemPalace behavior. The existing `ryze_skills` XP/domain table remains separate and must not be repurposed as the protected registry.
+
+Design review: **PASS for planning**. Implementation approval: **PENDING Stage 2 closure and separate exact owner authorization**. No Stage 3 runtime claim is made.
+
+## Current validation/evidence boundary
+
+Repository tests and builds can validate the bounded implementation, but they do not substitute for target-Windows or live Telegram acceptance. No private data, live database, credentials, Telegram session, backup, or `.env` content is included in this checkpoint. Stage 2 retention evidence remains the immediate external blocker.

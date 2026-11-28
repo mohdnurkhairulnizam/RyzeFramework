@@ -176,3 +176,14 @@ Target-Windows MemPalace replay is PASS only for the disposable synthetic scope 
 Stage 1 remains PARTIAL and Stage 2 remains active/not complete. Live or production MemPalace projection is not approved and was not performed. A future production projection requires a fresh exact dry-run manifest and new explicit owner approval; the disposable canary approval cannot be reused.
 
 The active branch was renamed from `feature/telegram-file-transfer` to `feature/mempalace-production-gate` because the current work is MemPalace production-gate hardening rather than Telegram file transfer. The new remote branch is authoritative; the obsolete remote branch was deleted and `main` was unchanged.
+
+
+## Current checkpoint — WP-1 Protected Skill Registry, 29 November 2026
+
+The owner requested examination and progression of the origin blueprint's WP-1 Protected Skill Registry design. The detailed specification is `docs/stage-3-wp1-protected-skill-registry-spec-2026-11-29.md`. It maps the origin fields and revision lifecycle into a bounded SQLite-authoritative registry design with owner scope, explicit tier/status/permissions, dependencies and contracts, content hash, validation evidence, approval metadata, and rollback pointer. The existing `ryze_skills` XP/domain table remains separate.
+
+WP-1 is **design-reviewed/prepared, implementation not started**. Any later implementation must begin with read-only registry plumbing and fail-closed validation; it must not enable autonomous skill mutation, dynamic code loading, promotion, watchdogs, unrestricted file creation, or MemPalace authority. Separate implementation authorization remains required after Stage 2 closure.
+
+The generated Markdown summary capability is now **PASS — owner-reported** for the exact bounded request. Fixes included bounded intent recognition, same-chat source resolution, generated-artifact exclusion from implicit lookup, generated origin keys, source/hash/generator provenance, summary-only prompting, and concise Telegram delivery confirmation. The historical failures remain preserved in `docs/bug-fix-record-2026-11-29.md`.
+
+Stage 1 remains **PARTIAL**. Stage 2 remains **ACTIVE / NOT COMPLETE** because target-Windows automatic retention evidence is still open. SQLite remains authoritative; `RYZE_MEMPALACE_MODE=disabled` and `RYZE_MEMPALACE_SEARCH_DERIVED=false` remain the safe defaults. This documentation checkpoint does not claim Stage 3 runtime start or Stage 2 closure.

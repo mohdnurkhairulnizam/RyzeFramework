@@ -1228,3 +1228,14 @@ The original blueprint above remains the architectural source of intent. This da
 ### Stage 3 and Stage 4 items
 
 The blueprint’s autonomous skill revision/watchdog and Master–Slave duplication/branch synchronization systems remain design or future-stage work. Current bounded retries, backups, rollback handlers, and skill XP are not a claim that the independent watchdog, autonomous skill lifecycle, complete portable duplication, memory branching, or Google Drive exchange have been implemented.
+
+
+---
+
+## Implementation traceability addendum — 29 November 2026
+
+The origin blueprint remains the architectural source and its requirements are preserved. The current repository review has prepared WP-1 Protected Skill Registry design in [`stage-3-wp1-protected-skill-registry-spec-2026-11-29.md`](./stage-3-wp1-protected-skill-registry-spec-2026-11-29.md). This addendum does not mark Stage 3 complete or authorize autonomous skill mutation.
+
+The proposed first implementation is SQLite-authoritative, owner-scoped, immutable revision metadata plus fail-closed validation and read-only inspection. The existing XP/domain `ryze_skills` table is not the protected registry. Promotion, dynamic execution, watchdog integration, and rollback automation remain separate future gates requiring explicit approval and disposable Windows evidence.
+
+Stage 1 remains PARTIAL. Stage 2 remains active/not complete because target-Windows automatic retention evidence is open. MemPalace remains an optional rebuildable projection and is not an authority for the registry, memory, deployment, or recovery.

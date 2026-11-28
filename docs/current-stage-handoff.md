@@ -378,3 +378,31 @@ This closes the owner-facing generated-summary benchmark as **PASS, owner-report
 The transition-readiness plan is [`stage-3-transition-readiness-2026-11-29.md`](./stage-3-transition-readiness-2026-11-29.md). It maps the origin blueprint's Autonomous Skills & Self-Recovery requirements to proposed work packages for a protected skill registry, configuration/backup separation, controlled deployment and rollback, and an independent watchdog. It is preparation only: origin Stage 3 has not started, and no watchdog, autonomous skill mutation, automatic rollback, or unrestricted file-writing behavior is enabled. Stage 2 remains active/not complete until the target-Windows retention gate is closed or explicitly owner-deferred.
 
 The owner has now directed proceeding with the transition procedure. The separate design checkpoint is [`stage-3-design-checkpoint-2026-11-29.md`](./stage-3-design-checkpoint-2026-11-29.md); it records planning approval, reviews the origin blueprint criteria, and leaves WP-1 through WP-5 implementation approval pending individual review after Stage 2 closure. A provisional baseline record is [`evidence/stage-2-baseline-freeze-2026-11-29.json`](./evidence/stage-2-baseline-freeze-2026-11-29.json), containing the tested Windows package identity, SQLite fingerprint, counts, and active safety boundaries. It is not a final Stage 2 freeze until retention evidence is supplied.
+
+---
+
+## Current status addendum — 29 November 2026
+
+This addendum is the current-status authority; earlier sections remain historical evidence and are not rewritten.
+
+### Stage 2 disposition
+
+Stage 1 remains **PARTIAL — closed for sequencing, not complete**. Stage 2 remains **ACTIVE / NOT COMPLETE**. The exact generated-summary request, `Make a short Markdown summary of README.md and send the summary as a file.`, is now **PASS — owner-reported**: a distinct Markdown artifact was created and delivered to the originating authorized private chat. The target-Windows automatic-retention test remains open; no Stage 2 closure is claimed.
+
+The generated-summary fixes were bounded intent recognition, same-chat source resolution, exclusion of generated files from implicit source lookup, deterministic message-ID tie-breaking, source/content-hash/generator provenance, a generated internal origin key to avoid SQLite uniqueness collision, summary-only prompting, and concise delivery confirmation. Full details are in `docs/bug-fix-record-2026-11-29.md`.
+
+### Stage 3 transition and WP-1
+
+The Stage 3 transition procedure and separate design checkpoint are prepared. WP-1 Protected Skill Registry has been reviewed at design level, but implementation has **not started**. The detailed design is `docs/stage-3-wp1-protected-skill-registry-spec-2026-11-29.md`.
+
+The safe future implementation slice is an owner-scoped, SQLite-authoritative registry schema/migration, fail-closed lifecycle and permission validation, read-only inspection, and fixture-only tests. It must not load arbitrary code, mutate its own record, promote a revision, install a watchdog, or change live MemPalace behavior. The existing `ryze_skills` XP/domain table remains separate and is not repurposed.
+
+Implementation approval remains pending Stage 2 closure and separate exact owner authorization. Stage 3 runtime work is not started.
+
+### Safety boundaries
+
+SQLite remains authoritative. MemPalace is optional, rebuildable, disabled by default, and not an authority for memory, skills, deployment, or recovery. Keep `RYZE_MEMPALACE_MODE=disabled` and `RYZE_MEMPALACE_SEARCH_DERIVED=false`. Do not use private data, live databases, credentials, Telegram sessions, backups, or `.env` files. Do not enable automatic capture, broad provider writes, System Memory projection, restricted-memory projection, cross-agent sharing, derived search, autonomous skill mutation, watchdog installation, or unrestricted file creation.
+
+### Exact next gate
+
+Close or explicitly disposition the target-Windows retention evidence. Only after that should the owner provide separate exact implementation authorization for the bounded WP-1 registry slice. This documentation checkpoint does not start Stage 3 runtime execution and does not authorize production MemPalace projection.

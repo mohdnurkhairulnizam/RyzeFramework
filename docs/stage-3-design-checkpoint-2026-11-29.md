@@ -63,3 +63,14 @@ Define sanitized incident fields, diagnostic preservation limits, owner notifica
 - Stage 2 closure prerequisite: **target-Windows retention evidence OPEN**.
 
 The disposable synthetic-profile procedure is [`stage-3-disposable-synthetic-profile-guide-2026-11-29.md`](./stage-3-disposable-synthetic-profile-guide-2026-11-29.md). It requires a disposable VM or separate Windows profile, uses `RYZE_MEMPALACE_MODE=disabled`, forbids real credentials and production data, and starts with a read-only SQLite baseline.
+
+
+## WP-1 detailed design checkpoint — 29 November 2026
+
+The owner-directed WP-1 review is complete at the design level. The protected registry specification is [`stage-3-wp1-protected-skill-registry-spec-2026-11-29.md`](./stage-3-wp1-protected-skill-registry-spec-2026-11-29.md).
+
+**Disposition:** bounded design prepared; implementation not started. The design maps the origin blueprint registry fields and Stable Revision → Backup → New Revision → Isolated Testing → Validation → Approval → Promotion → Monitoring → Rollback lifecycle into a SQLite-authoritative, owner-scoped registry concept. It preserves the existing `ryze_skills` XP/domain table and does not repurpose it.
+
+The safe future implementation slice is read-only registry inspection, schema/migration, fail-closed transition validation, and fixture-only tests. Autonomous mutation, dynamic code loading, automatic promotion, watchdog installation, unrestricted file creation, production deployment, and MemPalace authority remain disabled. Separate implementation authorization is required after Stage 2 closure.
+
+Stage 2 remains active/not complete because target-Windows automatic retention evidence is still open. The generated Markdown summary capability is recorded as owner-reported PASS for the exact bounded request and does not change that stage disposition.
