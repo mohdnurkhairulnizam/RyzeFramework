@@ -4,6 +4,7 @@ import {
   markMemoryProjectionApplied,
   markMemoryProjectionFailed,
   resetInFlightMemoryProjections,
+  getMemoryProjectionHealth,
 } from "./db";
 import type { MemPalaceBridge, MemPalaceDrawer } from "./memPalaceMemoryProvider";
 
@@ -23,10 +24,19 @@ export type ProjectionReplayReport = {
   failed: number;
 };
 
+export type ProjectionOutboxHealth = {
+  pending: number;
+  inFlight: number;
+  applied: number;
+  failed: number;
+  lastSuccessfulReplayAt?: string;
+};
+
 export interface MemPalaceProjectionOutbox {
   enqueue(item: ProjectionOutboxItem): Promise<void>;
   replay(bridge: MemPalaceBridge, maxItems?: number): Promise<ProjectionReplayReport>;
   recoverAfterRestart(): Promise<void>;
+  getHealth?(): Promise<ProjectionOutboxHealth>;
 }
 
 function serialize(item: ProjectionOutboxItem) {
@@ -46,6 +56,10 @@ export class SqliteMemPalaceProjectionOutbox implements MemPalaceProjectionOutbo
 
   async recoverAfterRestart() {
     await resetInFlightMemoryProjections();
+  }
+
+  async getHealth() {
+    return getMemoryProjectionHealth();
   }
 
   async replay(bridge: MemPalaceBridge, maxItems = 100): Promise<ProjectionReplayReport> {

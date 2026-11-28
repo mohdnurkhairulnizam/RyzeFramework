@@ -23,6 +23,7 @@ function memoryOutbox() {
     enqueue: async item => { items.push(item); },
     replay: async (): Promise<ProjectionReplayReport> => ({ attempted: 0, applied: 0, failed: 0 }),
     recoverAfterRestart: async () => undefined,
+    getHealth: async () => ({ pending: items.length, inFlight: 0, applied: 0, failed: 0 }),
   };
   return { outbox, items };
 }
@@ -120,5 +121,26 @@ describe("MemPalace SQLite-first projection adapter", () => {
     expect(queued.items).toHaveLength(1);
     expect(queued.items[0]).toMatchObject({ operation: "upsert", memoryId: entry.id, projectionKey: `ryze:${entry.id}:v1` });
     expect(provider.projectionStatus).toMatchObject({ enabled: true, projected: 0, failed: 0 });
+  });
+
+  it("reports a bounded read-only health snapshot without making the provider authoritative", async () => {
+    const canonical = new InMemoryContractProvider();
+    const queued = memoryOutbox();
+    const provider = new MemPalaceMemoryProvider({
+      canonical,
+      outbox: queued.outbox,
+      providerRevision: "provider-synthetic-commit",
+      namespace: "ryze-dry-run-synthetic",
+    });
+    await provider.store({ ownerId: 101, category: "experience", memoryType: "project", content: "Health fixture" });
+
+    await expect(provider.getProjectionHealth()).resolves.toMatchObject({
+      enabled: true,
+      searchable: false,
+      providerRevision: "provider-synthetic-commit",
+      namespace: "ryze-dry-run-synthetic",
+      canonicalSqliteAvailable: true,
+      outbox: { pending: 1, inFlight: 0, applied: 0, failed: 0 },
+    });
   });
 });

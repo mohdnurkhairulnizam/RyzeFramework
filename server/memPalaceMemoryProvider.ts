@@ -6,7 +6,7 @@ import type {
   SearchMemoryInput,
   StoreMemoryInput,
 } from "./memoryProvider";
-import type { MemPalaceProjectionOutbox } from "./mempalaceProjectionOutbox";
+import type { MemPalaceProjectionOutbox, ProjectionOutboxHealth } from "./mempalaceProjectionOutbox";
 
 /**
  * Minimal bridge contract for a future MemPalace CLI/MCP integration.
@@ -55,6 +55,13 @@ export type MemPalaceProjectionStatus = {
   lastError?: string;
 };
 
+export type MemPalaceProjectionHealth = MemPalaceProjectionStatus & {
+  providerRevision?: string;
+  namespace?: string;
+  canonicalSqliteAvailable: boolean;
+  outbox?: ProjectionOutboxHealth;
+};
+
 function toDrawer(entry: MemoryEntry): MemPalaceDrawer {
   return {
     drawerId: `ryze:${entry.id}:v${entry.version}`,
@@ -89,6 +96,8 @@ export class MemPalaceMemoryProvider implements MemoryProvider {
   private readonly bridge?: MemPalaceBridge;
   private readonly outbox?: MemPalaceProjectionOutbox;
   private readonly searchDerivedCandidates: boolean;
+  private readonly providerRevision?: string;
+  private readonly namespace?: string;
   private projected = 0;
   private failed = 0;
   private lastError?: string;
@@ -98,11 +107,15 @@ export class MemPalaceMemoryProvider implements MemoryProvider {
     bridge?: MemPalaceBridge;
     outbox?: MemPalaceProjectionOutbox;
     searchDerivedCandidates?: boolean;
+    providerRevision?: string;
+    namespace?: string;
   } = {}) {
     this.canonical = options.canonical ?? sqliteMemoryProvider;
     this.bridge = options.bridge;
     this.outbox = options.outbox;
     this.searchDerivedCandidates = options.searchDerivedCandidates === true && Boolean(options.bridge);
+    this.providerRevision = options.providerRevision;
+    this.namespace = options.namespace;
   }
 
   get projectionStatus(): MemPalaceProjectionStatus {
@@ -112,6 +125,22 @@ export class MemPalaceMemoryProvider implements MemoryProvider {
       projected: this.projected,
       failed: this.failed,
       lastError: this.lastError,
+    };
+  }
+
+  async getProjectionHealth(): Promise<MemPalaceProjectionHealth> {
+    let canonicalSqliteAvailable = true;
+    try {
+      await this.canonical.retrieve(0, "__ryze_projection_health__");
+    } catch {
+      canonicalSqliteAvailable = false;
+    }
+    return {
+      ...this.projectionStatus,
+      providerRevision: this.providerRevision,
+      namespace: this.namespace,
+      canonicalSqliteAvailable,
+      outbox: this.outbox?.getHealth ? await this.outbox.getHealth() : undefined,
     };
   }
 

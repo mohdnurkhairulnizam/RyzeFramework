@@ -58,6 +58,7 @@ describe("durable MemPalace projection outbox", () => {
     expect(report).toEqual({ attempted: 1, applied: 1, failed: 0 });
     expect(addDrawer).toHaveBeenCalledWith(expect.objectContaining({ content: "Latest canonical fixture" }));
     expect((await db.listMemoryProjections("applied"))).toHaveLength(1);
+    await expect(outbox.getHealth()).resolves.toMatchObject({ pending: 0, inFlight: 0, applied: 1, failed: 0 });
   });
 
   it("retains failed work and replays it successfully when the provider recovers", async () => {

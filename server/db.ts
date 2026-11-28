@@ -519,6 +519,28 @@ export async function listMemoryProjections(status?: MemoryProjectionOutboxStatu
     .orderBy(ryzeMemoryProjectionOutbox.id);
 }
 
+export async function getMemoryProjectionHealth() {
+  const db = await requireDb();
+  const rows = await db.select({
+    status: ryzeMemoryProjectionOutbox.status,
+    count: sql<number>`count(*)`,
+  }).from(ryzeMemoryProjectionOutbox).groupBy(ryzeMemoryProjectionOutbox.status);
+  const latestApplied = await db.select({ appliedAt: ryzeMemoryProjectionOutbox.appliedAt })
+    .from(ryzeMemoryProjectionOutbox)
+    .where(eq(ryzeMemoryProjectionOutbox.status, "applied"))
+    .orderBy(desc(ryzeMemoryProjectionOutbox.appliedAt))
+    .limit(1);
+  const counts = { pending: 0, inFlight: 0, applied: 0, failed: 0 };
+  for (const row of rows) {
+    if (row.status === "in_flight") counts.inFlight = Number(row.count);
+    else if (row.status === "pending" || row.status === "applied" || row.status === "failed") counts[row.status] = Number(row.count);
+  }
+  return {
+    ...counts,
+    lastSuccessfulReplayAt: latestApplied[0]?.appliedAt?.toISOString(),
+  };
+}
+
 export async function getRyzeIdentity(userId: number) {
   const db = await requireDb();
   const [profile] = await db.select().from(ryzeIdentityProfiles).where(and(eq(ryzeIdentityProfiles.userId, userId), eq(ryzeIdentityProfiles.id, `identity_${userId}`))).limit(1);

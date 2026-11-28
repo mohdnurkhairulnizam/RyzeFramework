@@ -1,0 +1,45 @@
+{
+  "date": "2026-11-28",
+  "scope": "synthetic/provider-isolated Stage 2 safeguards",
+  "branch": "feature/mempalace-production-gate",
+  "implementation": {
+    "health": "server/memPalaceMemoryProvider.ts#getProjectionHealth",
+    "outboxHealth": "server/db.ts#getMemoryProjectionHealth",
+    "approval": "server/mempalaceProjectionApproval.ts#validateProjectionApproval"
+  },
+  "tests": {
+    "files": 3,
+    "focusedTests": 15,
+    "fullSuiteFiles": 27,
+    "fullSuiteTests": 92,
+    "focusedStatus": "PASS",
+    "fullStatus": "PASS"
+  },
+  "healthCoverage": [
+    "provider revision and namespace are reported",
+    "canonical SQLite availability is checked read-only",
+    "pending, in-flight, applied, and failed outbox counts are reported",
+    "last successful replay field is available from the SQLite outbox"
+  ],
+  "approvalCoverage": [
+    "exact unexpired manifest approval succeeds",
+    "missing approval fails closed",
+    "manifest hash, namespace, provider revision, branch, and operation-count changes fail closed",
+    "expired approval fails closed",
+    "restricted and System Memory operations fail closed under the default policy"
+  ],
+  "safetyBoundary": {
+    "sqliteAuthoritative": true,
+    "liveRoutersTouched": false,
+    "liveDatabaseOpened": false,
+    "productionProjectionPerformed": false,
+    "approvalValidatorWiredToLiveProjection": false,
+    "privateDataUsed": false,
+    "automaticCaptureEnabled": false
+  },
+  "limitations": [
+    "Health and approval code are intentionally not exposed through live routers in this checkpoint.",
+    "The evidence is synthetic/provider-isolated and does not establish target-Windows acceptance.",
+    "Target-Windows automatic-expiry verification remains open."
+  ]
+}
