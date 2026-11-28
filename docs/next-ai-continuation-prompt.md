@@ -38,7 +38,8 @@ Read these documents before planning or editing:
 10. `docs/evidence/mempalace-adapter-assessment-2026-11-28.md`
 11. `docs/stage-3-wp1-protected-skill-registry-spec-2026-11-29.md`
 12. `docs/stage-3-wp1-implementation-plan-2026-11-29.md`
-13. This file
+13. `docs/stage-3-research-architectural-enhancement-2026-11-29.md`
+14. This file
 
 Preserve the distinction between independently run sandbox evidence, owner-reported disposable Windows evidence, and unrun work.
 
@@ -51,6 +52,7 @@ Preserve the distinction between independently run sandbox evidence, owner-repor
 - Do not use private production data, live databases, secrets, Telegram sessions, real backups, or `.env` files for MemPalace testing.
 - Preserve owner scoping, provenance, versioning, restricted retrieval, conflict confirmation, rollback, export/restore, and fail-closed behavior.
 - Do not bulk-install ECC or modify live Ryze skill/intent rules as a shortcut.
+- Do not install or adopt any researched Stage 3 repository as a parallel runtime; use the research report's adapter/study boundaries.
 - Do not describe a branch push or merge as Stage 1 or Stage 2 completion.
 
 ## Current gate status at this checkpoint

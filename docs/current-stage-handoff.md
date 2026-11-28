@@ -397,6 +397,8 @@ The Stage 3 transition procedure and separate design checkpoint are prepared. WP
 
 The safe future implementation slice is an owner-scoped, SQLite-authoritative registry schema/migration, fail-closed lifecycle and permission validation, read-only inspection, and fixture-only tests. It must not load arbitrary code, mutate its own record, promote a revision, install a watchdog, or change live MemPalace behavior. The existing `ryze_skills` XP/domain table remains separate and is not repurposed.
 
+The requested eight-repository Stage 3 research is recorded in `docs/stage-3-research-architectural-enhancement-2026-11-29.md`. Its recommendation is no wholesale integration: adapt SkillOpt, promptfoo/Inspect evaluation patterns, and possibly WinSW as a process-host boundary; study the other orchestration runtimes without creating a parallel authority.
+
 Implementation approval remains pending Stage 2 closure and separate exact owner authorization. Stage 3 runtime work is not started.
 
 ### Safety boundaries

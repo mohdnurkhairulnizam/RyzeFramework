@@ -76,3 +76,9 @@ The safe future implementation slice is read-only registry inspection, schema/mi
 The initial sequencing and task breakdown is [`stage-3-wp1-implementation-plan-2026-11-29.md`](./stage-3-wp1-implementation-plan-2026-11-29.md). It is a planning artifact only and does not authorize implementation.
 
 Stage 2 remains active/not complete because target-Windows automatic retention evidence is still open. The generated Markdown summary capability is recorded as owner-reported PASS for the exact bounded request and does not change that stage disposition.
+
+## Stage 3 repository research checkpoint — 29 November 2026
+
+The eight-repository research brief was assessed against the current Ryze implementation and origin blueprint. The report is [`stage-3-research-architectural-enhancement-2026-11-29.md`](./stage-3-research-architectural-enhancement-2026-11-29.md). The result is **no wholesale integration**: adapt SkillOpt concepts for offline candidate proposal/validation, promptfoo and Inspect AI patterns for isolated evaluation, and WinSW only as a possible Windows process-host boundary. Study LangGraph and the OpenCode orchestration projects without introducing a parallel runtime.
+
+This research does not authorize external dependency installation, private-data transfer, live transcript harvesting, agent-fleet activation, watchdog installation, or any change to SQLite/MemPalace authority. WP-1 remains first, and implementation approval remains pending Stage 2 closure or explicit owner disposition plus separate authorization.

@@ -73,4 +73,8 @@ Every Stage 3 work package must distinguish repository tests, synthetic tests, d
 5. Review the Stage 3 design against the origin blueprint completion criteria and approve work packages individually.
 6. Start with a disposable synthetic profile; do not modify the normal Windows profile or production projection settings.
 
+## Research checkpoint
+
+The requested eight-repository Stage 3 research is recorded in [`stage-3-research-architectural-enhancement-2026-11-29.md`](./stage-3-research-architectural-enhancement-2026-11-29.md). Its recommendation is to preserve Ryze's existing execution and authority boundaries, adapt only selected evaluation, skill-proposal, process-supervision, and orchestration patterns, and implement WP-1 metadata/validation first. The report does not authorize dependency installation or Stage 3 runtime activation.
+
 **Current transition status:** Stage 3 readiness prepared; Stage 2 closure pending retention evidence.
