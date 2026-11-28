@@ -240,3 +240,13 @@ Using a fresh disposable SQLite database and palace with the exact two approved 
 ### Approved disposable deletion reconciliation — 28 November 2026
 
 After explicit owner approval for deletion testing, a fresh disposable palace received the two approved synthetic projections. The `fixture-1` deletion was durably queued in the SQLite outbox, the provider was restarted, and the deletion replay applied successfully. `fixture-1` was absent from its owner-scoped search afterward, while unrelated `fixture-2` remained searchable with owner `991122` and its expected metadata. Evidence: `initial_projection=PASS`, `deletion_queued=PASS`, `provider_restart=PASS`, `deletion_replay=PASS`, `deleted_record_absent=PASS`, `unrelated_record_retained=PASS`, `deletion_reconciliation=PASS`. The disposable database and palace were deleted afterward. No live database or production namespace was used.
+
+### Final MemPalace production-gate checkpoint — 28 November 2026
+
+The approved synthetic MemPalace gate sequence is complete for disposable scope: dry-run manifest, two-record canary projection, MCP restart/metadata rehydration, provider-unavailable SQLite outbox retention and replay, and explicit deletion reconciliation all passed. The exact synthetic manifest SHA-256 is `7bbf637a41614f943ea8d1d9b1284b1429ccce3d335eaa5930e94d068f710893`; provider commit is `4df7b830ff1398332d4118884520a24f1aab9cc1`; records are `fixture-1` and `fixture-2`, owner metadata `991122`, branch `sanitized-test`, namespace `ryze-dry-run-sanitized`.
+
+Target-Windows MemPalace replay is recorded as PASS only for the disposable synthetic scope previously executed by the owner: provider-unavailable behavior, restart/replay, search rehydration, and deletion. Linux synthetic and repository validation also pass. This does not establish live Windows production behavior, production-corpus quality, or authorization to project live data.
+
+The branch head after the final evidence commit is `18260e47f4dc097fbb387c98837f5695ebcbe5b3` before this documentation update. The current documentation update must be treated as the new continuation head after push. `docs/next-ai-continuation-prompt.md` is the copy-paste handoff for the next AI and supersedes any older section that says the disposable Windows replay is still pending.
+
+**Gate disposition:** Stage 1 remains **PARTIAL — closed for sequencing, not complete**. Stage 2 remains **active and not complete**. MemPalace live/production projection remains **NOT APPROVED and NOT PERFORMED**. Any controlled production projection requires a new exact dry-run manifest and a second explicit owner approval covering the fixed records, versions, namespace, provider revision, batch, and lease.

@@ -1,33 +1,30 @@
 # Prompt for the Next AI — Continue RyzeFramework to Completion
 
-You are continuing the `RyzeFramework` project owned by `mohdnurkhairulnizam`.
+You are continuing the existing `RyzeFramework` project owned by `mohdnurkhairulnizam`. Do not create a replacement project.
 
-## Clone and select the correct branch
+## Repository and branch
 
-The repository is:
+Repository:
 
 ```text
 https://github.com/mohdnurkhairulnizam/RyzeFramework.git
 ```
 
-The active implementation branch is `feature/telegram-file-transfer`. Do not assume `main` contains the current implementation. Clone and check out the branch with:
+The active implementation branch is `feature/telegram-file-transfer`. Clone it directly:
 
 ```bash
 git clone --branch feature/telegram-file-transfer --single-branch https://github.com/mohdnurkhairulnizam/RyzeFramework.git
 cd RyzeFramework
+git fetch origin --prune
 git status --short --branch
 git log --oneline --decorate -10
 ```
 
-If this environment provides the authorized GitHub connector, prefer its authenticated CLI entry point or authenticated `gh` CLI. Do not ask the owner for a token, print tokens, run `gh auth login`, force-push, reset, clean, or overwrite uncommitted changes. Fetch before making decisions:
+The current pushed head is the continuation checkpoint recorded in `docs/current-stage-handoff.md` and `docs/project-memory.md`. Verify the remote head before acting; do not assume `main` contains this work. If an authorized GitHub connector or authenticated `gh` CLI is available, use it. Do not ask the owner for a token, run `gh auth login`, force-push, reset, clean, or overwrite uncommitted changes.
 
-```bash
-git fetch origin --prune
-git branch -vv
-git log --oneline --decorate --graph --all -20
-```
+## Read first
 
-## Read these documents first
+Read these documents before planning or editing:
 
 1. `docs/current-stage-handoff.md`
 2. `docs/project-memory.md`
@@ -36,81 +33,62 @@ git log --oneline --decorate --graph --all -20
 5. `docs/blueprint-implementation.md`
 6. `docs/origin-blueprint.md`
 7. `docs/ryze-playbook.md`
-8. `docs/evidence/mempalace-adapter-assessment-2026-11-28.md`
-9. This file, `docs/next-ai-continuation-prompt.md`
+8. `docs/mempalace-production-integration-gate.md`
+9. `docs/evidence/mempalace-production-dry-run-manifest-2026-11-28.json`
+10. `docs/evidence/mempalace-adapter-assessment-2026-11-28.md`
+11. This file
 
-The documents distinguish sandbox evidence, owner-reported disposable Windows evidence, and unrun tests. Preserve those distinctions in every update.
+Preserve the distinction between independently run sandbox evidence, owner-reported disposable Windows evidence, and unrun work.
 
-## Current architecture and non-negotiable boundaries
+## Non-negotiable architecture and safety boundaries
 
-- SQLite is the operational and authoritative memory store.
-- MemPalace is an optional, rebuildable projection behind the provider-neutral `MemoryProvider` boundary.
-- The live routers remain SQLite-backed; MemPalace is not enabled in normal production/live behavior.
-- Automatic memory formation, broad MCP/skill writes, cross-agent memory sharing, and SQLite replacement remain disabled.
-- Do not use private production data, real databases, secrets, Telegram sessions, or real backups for MemPalace testing.
+- SQLite remains the operational and authoritative memory store.
+- MemPalace is optional and rebuildable, behind the provider-neutral `MemoryProvider` boundary.
+- Live Ryze routers remain SQLite-backed; MemPalace is not enabled in normal production behavior.
+- Automatic memory formation, broad MCP/skill writes, cross-agent memory sharing, System Memory projection, and SQLite replacement remain disabled.
+- Do not use private production data, live databases, secrets, Telegram sessions, real backups, or `.env` files for MemPalace testing.
 - Preserve owner scoping, provenance, versioning, restricted retrieval, conflict confirmation, rollback, export/restore, and fail-closed behavior.
-- Do not bulk-install ECC or modify live Ryze skill/intent instructions as a shortcut.
-- Do not claim Stage 1 or Stage 2 completion merely because this branch is pushed or merged.
+- Do not bulk-install ECC or modify live Ryze skill/intent rules as a shortcut.
+- Do not describe a branch push or merge as Stage 1 or Stage 2 completion.
 
-## Current implementation checkpoint
+## Current gate status at this checkpoint
 
-Implemented and tested in the branch:
+- Stage 1: **PARTIAL — closed for sequencing, not complete**. Preserve its original criteria and historical self-test.
+- Stage 2: **active and not complete**. Gate 2 implementation is complete; Gate 3 owner-facing synthetic acceptance is complete for its tested scope; Gate 4 is passed only for the approved synthetic evaluation; Gate 5 is passed only for the documented disposable synthetic Windows scope.
+- MemPalace Gate 0 architecture review: **PASS**.
+- MemPalace Gate 1 provider-neutral contract harness: **PASS**.
+- Linux pinned MemPalace MCP replay: **PASS**.
+- Target-Windows synthetic MemPalace replay: **PASS for disposable synthetic scope only**, including provider-unavailable behavior, restart/replay, search rehydration, and deletion reconciliation. Do not generalize this to live or production data.
+- Approved production-gate dry run: **PASS with no writes**. Manifest SHA-256: `7bbf637a41614f943ea8d1d9b1284b1429ccce3d335eaa5930e94d068f710893`.
+- Approved disposable canary projection: **PASS** for exactly `fixture-1` and `fixture-2`, owner metadata `991122`, namespace `ryze-dry-run-sanitized`, branch `sanitized-test`.
+- Disposable MCP restart/rehydration: **PASS**.
+- Disposable provider-unavailable SQLite outbox retention and replay: **PASS**.
+- Disposable deletion reconciliation: **PASS** after explicit approval; deleted `fixture-1`, retained `fixture-2`.
+- Final repository validation on the pushed head: `pnpm run check` PASS, 26 test files/87 tests PASS, `pnpm run build:local` PASS, `git diff --check` PASS.
+- Live or production projection: **NOT APPROVED and NOT PERFORMED**.
 
-- Provider-neutral `MemoryProvider` boundary and SQLite-first `server/memPalaceMemoryProvider.ts` adapter.
-- Durable SQLite projection outbox in `server/mempalaceProjectionOutbox.ts` and migration `drizzle/sqlite/0006_mempalace_projection_outbox.sql`.
-- Pending/in-flight/applied/failed states, deduplication, retry tracking, restart recovery, deletion reconciliation, and fail-closed replay.
-- Opt-in stdio JSON-RPC bridge in `server/mempalaceMcpBridge.ts`.
-- Synthetic replay harness in `scripts/mempalace-replay-smoke.ts`.
-- Windows runner in `scripts/windows/Run-MemPalace-Replay-Test.ps1`.
-- Windows dependency setup in `scripts/windows/Install-MemPalaceRuntime.ps1`; normal install/update now automatically checks/installs Python 3.12 and creates the isolated pinned runtime, while live Ryze remains SQLite-only and MemPalace routers remain disabled. The `/InstallMemPalaceRuntime` switch remains accepted for compatibility.
-- Pinned MemPalace target: tag `v3.12.0`, commit `4df7b830ff1398332d4118884520a24f1aab9cc1`.
+## Immediate next work
 
-The Linux sandbox real MCP replay smoke test passed for synthetic data:
+1. Read `docs/mempalace-production-integration-gate.md` and design any remaining work as a separately reviewed, reversible gate.
+2. Keep the live routers SQLite-only until a new explicit owner approval authorizes a specific production manifest, namespace, provider revision, batch size, and lease.
+3. If proposing controlled production projection, first produce a new exact dry-run manifest and request owner approval. Do not reuse the disposable canary approval.
+4. Before any live projection, add/verify health/status reporting, canonical SQLite fingerprint capture, export/restore evidence, resource limits, rollback/discard procedure, and fail-closed approval/hash checks required by the production gate.
+5. Preserve the remaining Stage 1 residuals and Stage 2 open items, including the natural-language new-summary file-creation capability gap and target-Windows automatic 30-day expiry verification.
+6. Treat Stage 3 and Stage 4 as future work unless separately authorized.
 
-```text
-provider_unavailable=PASS
-projection_replay_after_restart=PASS
-projection_search_rehydration=PASS
-projection_deletion=PASS
-overall=PASS
+## Validation and Git rules
+
+For code changes, run focused tests plus:
+
+```bash
+pnpm run check
+pnpm test -- --run
+pnpm run build:local
+git diff --check
 ```
 
-The real Windows run has **not passed yet**. The corrected source-only package was transferred and extracted successfully, but the Windows profile has no installed Python runtime. `py.exe -3.12` returned `No installed Python found!`; `winget`, Chocolatey, and Scoop were unavailable. Therefore the Windows MemPalace MCP process was never started and no Windows MemPalace PASS may be claimed.
+Inspect the complete staged diff and confirm that `.env*`, databases, backups, logs, Telegram sessions, `node_modules`, `dist`, ZIP artifacts, and private data are not staged. Work on `feature/telegram-file-transfer`; never force-push. Do not merge into `main` without explicit review and approval. Push through the authorized GitHub connector/authenticated Git route and report the full commit hash, validation results, skipped checks, and remaining risks.
 
-## Immediate next task
+## Copy-paste instruction for the next AI
 
-On the authorized disposable Windows synthetic profile:
-
-1. From the extracted package, run the normal `Install-Ryze.cmd` or, for an existing installation, run `Update-Ryze.cmd` after stopping Ryze. The installer/update automatically checks `py.exe -3.12`, uses user-scoped `winget` for `Python.Python.3.12` when available, and fails with manual-install instructions when no supported package manager is present. It never enables live MemPalace routers.
-2. Confirm:
-
-   ```powershell
-   py -3.12 --version
-   ```
-
-3. Use the current source-only package or a package rebuilt from the exact pushed commit. Verify the ZIP SHA-256 against the handoff/project-memory record before extraction.
-4. Extract to a new temporary folder; do not run the package over the installed Ryze directory.
-5. Run:
-
-   ```powershell
-   $root = Join-Path (Get-Location) 'Windows-MemPalace-Replay-20261128'
-   & powershell.exe -NoProfile -ExecutionPolicy Bypass `
-     -File (Join-Path $root 'scripts\windows\Run-MemPalace-Replay-Test.ps1') `
-     -RuntimeRoot (Join-Path $env:TEMP 'ryze-mempalace-windows-replay-20261128')
-   ```
-
-6. Record only sanitized PASS/FAIL results for provider-unavailable behavior, MCP restart/projection replay, search rehydration, deletion reconciliation, and any non-sensitive error text.
-7. Confirm the test did not use the live Ryze database, live router, private records, secrets, Telegram sessions, or real backups.
-8. If Python installation or the runtime fails, record the prerequisite failure and do not reinterpret it as a MemPalace provider failure.
-
-After Windows testing, update the handoff, project memory, and assessment evidence with the exact result boundary. Then rerun `pnpm run check`, `pnpm test`, `pnpm run build:local`, and `git diff --check` on the exact pushed head.
-
-## Git and delivery rules
-
-- Work on `feature/telegram-file-transfer` unless the owner explicitly requests another branch.
-- Never force-push or merge into `main` without explicit review and approval.
-- Keep `.env*` credentials, databases, backups, logs, Telegram sessions, `node_modules`, `dist`, and ZIP artifacts out of Git.
-- Before committing, inspect `git status`, `git diff --stat`, `git diff --check`, and the complete staged diff.
-- Use a descriptive commit message and report its full hash.
-- Push only with the authorized GitHub connector or authenticated `gh`/Git operation.
-- Report exact source branch, target branch, commit hash, validation results, skipped checks, and remaining risks.
+> Clone `https://github.com/mohdnurkhairulnizam/RyzeFramework.git` on branch `feature/telegram-file-transfer` using the authorized GitHub connector available in this conversation. Fetch the latest remote state, inspect `git status` before editing, and read `docs/current-stage-handoff.md`, `docs/project-memory.md`, `docs/stage-2-implementation-plan.md`, `docs/memory-identity-contract.md`, `docs/mempalace-production-integration-gate.md`, and this continuation prompt. Continue the project rather than creating a replacement. Keep SQLite authoritative and live routers SQLite-only. Treat MemPalace as an optional rebuildable projection. The disposable Linux and Windows synthetic MemPalace gates now pass, but live/production projection is not approved. Do not use private data, live databases, secrets, backups, Telegram sessions, automatic capture, broad MCP/skill writes, or cross-agent sharing. Propose the next exact gate and request fresh owner approval before any live projection. Preserve Stage 1 as PARTIAL and Stage 2 as active/not complete. Run the repository validation suite for code changes, commit only intentional changes on `feature/telegram-file-transfer`, and push without force-pushing or merging `main`.
