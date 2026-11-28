@@ -32,7 +32,10 @@ function redactContent(content: string) {
 }
 
 function loadRecords(inputPath: string): InputRecord[] {
-  const parsed = JSON.parse(readFileSync(inputPath, "utf8"));
+  // Windows PowerShell 5.1 writes UTF-8 text with a BOM by default.
+  // Remove only the BOM; keep all other input validation strict.
+  const raw = readFileSync(inputPath, "utf8").replace(/^\uFEFF/, "");
+  const parsed = JSON.parse(raw);
   if (!Array.isArray(parsed) || parsed.length === 0) throw new Error("Input must be a non-empty JSON array of explicitly sanitized records.");
   for (const [index, record] of parsed.entries()) {
     if (!record || typeof record !== "object") throw new Error(`Record ${index} is not an object.`);
