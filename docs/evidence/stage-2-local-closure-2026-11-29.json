@@ -11,8 +11,8 @@
   },
   "externalOpen": {
     "generatedSummaryOwnerFacingNaturalLanguageBenchmark": {
-      "status": "OPEN",
-      "reason": "The bounded backend now recognizes the exact make-summary request and creates a source-bound Markdown artifact; target-Windows owner-facing Telegram delivery still requires the updated package and live verification."
+      "status": "PASS-owner-reported",
+      "reason": "Owner reports the exact bounded request completed on target Windows, created a distinct Markdown artifact, and delivered it to the originating authorized private chat after the reviewed intent/delivery fix."
     },
     "targetWindowsAutomatic30DayExpiry": {
       "status": "OPEN",
