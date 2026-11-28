@@ -47,7 +47,19 @@
   "rollbackAndRestart": {
     "mode": "disabled",
     "searchDerived": false,
-    "sqliteCheckAfterRollback": "PENDING_OWNER_REPORT",
+    "sqliteCheckAfterRollback": {
+      "integrity": "PASS",
+      "counts": {
+        "users": 1,
+        "memories": 20,
+        "identities": 1,
+        "identityRevisions": 2,
+        "systemMemory": 1
+      },
+      "memoryRows": 20,
+      "memorySha256": "2d12d09fa65578df6e7178bdc209496ecb333de5dc0a913e9f3d45548af49257",
+      "readOnly": "PASS"
+    },
     "dashboardAfterRestart": "PASS_OWNER_REPORTED",
     "memoryVaultAfterRestart": "PASS_OWNER_REPORTED"
   },
