@@ -1,0 +1,110 @@
+{
+  "format": "ryze-mempalace-projection-dry-run-v1",
+  "mode": "dry-run",
+  "writesPerformed": false,
+  "provider": {
+    "name": "mempalace",
+    "commit": "4df7b830ff1398332d4118884520a24f1aab9cc1"
+  },
+  "namespace": "ryze-production-main",
+  "branch": "main",
+  "recordCount": 8,
+  "operations": [
+    {
+      "operation": "upsert_projection",
+      "ryzeMemoryId": "mem_-2qbyC9Kbh5-UC",
+      "ownerId": 1,
+      "category": "personal",
+      "memoryType": "preference",
+      "version": 1,
+      "sensitivity": "normal",
+      "tagsHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "sanitizedContentHash": "ff484bf56fc3d34bb7e0c365f4edcc8e2996982e263e498b5bd10c394627aa07",
+      "sourceRefClass": "redacted-reference"
+    },
+    {
+      "operation": "upsert_projection",
+      "ryzeMemoryId": "mem_BlyK9b0O92DZSA",
+      "ownerId": 1,
+      "category": "personal",
+      "memoryType": "preference",
+      "version": 1,
+      "sensitivity": "normal",
+      "tagsHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "sanitizedContentHash": "183f254afcf4ddc14df37438b24154c04e4eef9eeb8dda25d310e5b4ffb4cd36",
+      "sourceRefClass": "redacted-reference"
+    },
+    {
+      "operation": "upsert_projection",
+      "ryzeMemoryId": "mem_O45yGyaYlLSfyo",
+      "ownerId": 1,
+      "category": "personal",
+      "memoryType": "preference",
+      "version": 1,
+      "sensitivity": "normal",
+      "tagsHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "sanitizedContentHash": "58aa86c62dad010396b41213fcbb932836673fc17aa332860299f13c87f62f81",
+      "sourceRefClass": "redacted-reference"
+    },
+    {
+      "operation": "upsert_projection",
+      "ryzeMemoryId": "mem_R-ON8F2uJ5CdwG",
+      "ownerId": 1,
+      "category": "personal",
+      "memoryType": "preference",
+      "version": 1,
+      "sensitivity": "normal",
+      "tagsHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "sanitizedContentHash": "e1b61f05c131088c53227c460e995afff3ffc1547a523c03899f13c0a6c0db93",
+      "sourceRefClass": "redacted-reference"
+    },
+    {
+      "operation": "upsert_projection",
+      "ryzeMemoryId": "mem_U13_XNowUjMPPs",
+      "ownerId": 1,
+      "category": "personal",
+      "memoryType": "preference",
+      "version": 1,
+      "sensitivity": "normal",
+      "tagsHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "sanitizedContentHash": "a12106b59e03721ef5d3e45d9f5ae8e027c87f27335857e243c447dc09365ec6",
+      "sourceRefClass": "redacted-reference"
+    },
+    {
+      "operation": "upsert_projection",
+      "ryzeMemoryId": "mem_WFQ544hMMuM-QX",
+      "ownerId": 1,
+      "category": "experience",
+      "memoryType": "preference",
+      "version": 1,
+      "sensitivity": "normal",
+      "tagsHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "sanitizedContentHash": "f06f6f69644a3c457cc0ba8ec222d04f7860120767d9ec9ad39eaca72d0b27d4",
+      "sourceRefClass": "redacted-reference"
+    },
+    {
+      "operation": "upsert_projection",
+      "ryzeMemoryId": "mem_j2Iwoz7u8HdfVE",
+      "ownerId": 1,
+      "category": "personal",
+      "memoryType": "preference",
+      "version": 1,
+      "sensitivity": "normal",
+      "tagsHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "sanitizedContentHash": "d0a1dfa0862b6160a8c846e4e927237f1c6558641bf86f151f7f1efe47712443",
+      "sourceRefClass": "redacted-reference"
+    },
+    {
+      "operation": "upsert_projection",
+      "ryzeMemoryId": "mem_vdMi4w6okjaoYd",
+      "ownerId": 1,
+      "category": "personal",
+      "memoryType": "preference",
+      "version": 1,
+      "sensitivity": "normal",
+      "tagsHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "sanitizedContentHash": "dce947af4c3ff72c6b140798e90940cfde954996b24f9a0c1fa1e0d45b6af223",
+      "sourceRefClass": "redacted-reference"
+    }
+  ]
+}

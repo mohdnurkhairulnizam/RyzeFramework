@@ -14,7 +14,8 @@
     "test": "vitest run",
     "worker:test": "python3 -m unittest discover -s worker -p 'test_*.py' -v",
     "db:generate": "drizzle-kit generate",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "mempalace:project": "tsx server/mempalaceOneShotProjector.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
