@@ -1,6 +1,6 @@
 # Stage 3A — Controlled production projection-only pilot
 
-**Status:** Prepared; target-Windows activation remains pending operator execution.
+**Status:** PASS — owner-reported target-Windows controlled pilot acceptance, 28 November 2026.
 
 Stage 3A keeps SQLite as the sole authoritative memory store while allowing the reviewed MemPalace projection path to remain enabled for a short, approval-bounded pilot. It does not enable provider-derived search, automatic capture, broad synchronization, System Memory projection, restricted projection, or provider authority.
 
@@ -96,7 +96,7 @@ Restart Ryze, rerun the read-only SQLite checker, and confirm the known fingerpr
 
 ## Stage 3A exit criteria
 
-Stage 3A is **PASS** only when target-Windows evidence records:
+Stage 3A is recorded as **PASS, owner-reported**, after the owner confirmed completion of the prescribed target-Windows test and verification process. The acceptance evidence should retain the following records:
 
 1. exact provider revision, namespace, branch, manifest hash, and approval expiry;
 2. projection-only health with derived search disabled;
