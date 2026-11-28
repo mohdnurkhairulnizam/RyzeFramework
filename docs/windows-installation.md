@@ -84,6 +84,51 @@ Stop Ryze first, then run `Backup-Ryze.cmd` from the installed folder, or use **
 
 To restore, stop Ryze and preserve the current `%LOCALAPPDATA%\RyzeFramework` folder first. Extract the backup and restore its `data` folder to that location; restore `config\app.env` to the installed program's `.env` only if you intend to restore that account/configuration and gateway key too. Never overwrite newer data without first making a separate backup.
 
+## Read-only live SQLite check
+
+The installed application includes `scripts\windows\Check-Live-Sqlite.ps1`. It opens the live database read-only, runs SQLite `integrity_check`, verifies the required Stage 2 tables/columns, reports row counts, and prints a stable SHA-256 fingerprint of the memory rows. It does not write to the database or involve MemPalace. From the installed folder, run:
+
+```powershell
+$install = Join-Path $env:LOCALAPPDATA 'Programs\RyzeFramework'
+& powershell.exe -NoProfile -ExecutionPolicy Bypass `
+  -File (Join-Path $install 'scripts\windows\Check-Live-Sqlite.ps1') `
+  -OutputPath (Join-Path $env:TEMP 'ryze-live-sqlite-before.txt')
+```
+
+Record the `counts=` and `memory_sha256=` lines. Stop and restart Ryze normally, then rerun the command with a second output file. The counts and fingerprint should match unless an owner-approved memory change happened during the interval. This is a persistence check, not a MemPalace projection test.
+
+## Sanitized disposable-copy projection test
+
+The repository includes `scripts\sanitized-mempalace-copy.ts`. It accepts only an explicitly supplied JSON array of redacted records, rejects secret-like fields/content, creates a disposable SQLite database, and optionally projects those records into a separately supplied disposable MemPalace palace. It never opens the live Ryze database. Example input should contain synthetic values only:
+
+```json
+[
+  {
+    "id": "sanitized-preference-1",
+    "ownerId": 991122,
+    "category": "personal",
+    "memoryType": "preference",
+    "content": "Synthetic owner prefers concise status reports.",
+    "tags": ["synthetic"],
+    "sourceRef": "sanitized://fixture-1"
+  }
+]
+```
+
+From the extracted source package, run it with a disposable database and an already-created disposable MemPalace palace:
+
+```powershell
+$root = Get-Location
+$db = Join-Path $env:TEMP 'ryze-sanitized-mempalace-copy.sqlite'
+$json = Join-Path $env:TEMP 'ryze-sanitized-records.json'
+$palace = Join-Path $env:TEMP 'ryze-mempalace-windows-replay-20261128\palace'
+& npx.cmd --yes tsx@4.19.1 (Join-Path $root 'scripts\sanitized-mempalace-copy.ts') `
+  --input $json --database $db --palace $palace `
+  --command (Join-Path $env:TEMP 'ryze-mempalace-windows-replay-20261128\venv\Scripts\mempalace-mcp.exe')
+```
+
+The harness reports `sanitized_input=PASS`, `disposable_sqlite_integrity=PASS`, and, when `--palace` is provided, `mempalace_projection=PASS`. Remove only the disposable files after review. Do not substitute `%LOCALAPPDATA%\RyzeFramework\data\ryze.sqlite` for the disposable database.
+
 ## Troubleshooting
 
 - If Ryze does not start, the double-click window remains open and shows the PowerShell error. Also check `%LOCALAPPDATA%\RyzeFramework\logs\server-error.log` and `opencode-error.log`.
