@@ -123,6 +123,24 @@ describe("MemPalace SQLite-first projection adapter", () => {
     expect(provider.projectionStatus).toMatchObject({ enabled: true, projected: 0, failed: 0 });
   });
 
+  it("can exclude System Memory and restricted records from projection without blocking canonical writes", async () => {
+    const canonical = new InMemoryContractProvider();
+    const queued = memoryOutbox();
+    const provider = new MemPalaceMemoryProvider({
+      canonical,
+      outbox: queued.outbox,
+      shouldProject: entry => entry.category !== "system" && entry.sensitivity === "normal" && entry.status === "active",
+    });
+
+    const system = await provider.store({ ownerId: 101, category: "system", memoryType: "semantic", content: "Protected system fixture" });
+    const restricted = await provider.store({ ownerId: 101, category: "personal", memoryType: "preference", sensitivity: "restricted", content: "Restricted owner fixture" });
+    const normal = await provider.store({ ownerId: 101, category: "experience", memoryType: "project", content: "Normal project fixture" });
+
+    expect(await canonical.retrieve(101, system.id)).toMatchObject({ content: system.content });
+    expect(await canonical.retrieve(101, restricted.id)).toMatchObject({ content: restricted.content });
+    expect(queued.items.map(item => item.memoryId)).toEqual([normal.id]);
+  });
+
   it("reports a bounded read-only health snapshot without making the provider authoritative", async () => {
     const canonical = new InMemoryContractProvider();
     const queued = memoryOutbox();

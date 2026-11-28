@@ -84,11 +84,11 @@ function toDrawer(entry: MemoryEntry): MemPalaceDrawer {
 /**
  * SQLite-first MemPalace fusion boundary.
  *
- * This class is deliberately not wired into the live routers. When it is
- * used, SQLite remains the canonical store for every operation. MemPalace is
- * an optional projection and, unless `searchDerivedCandidates` is enabled,
- * all reads continue to come from SQLite. Projection failures never remove or
- * alter canonical SQLite records.
+ * The runtime selector keeps this provider disabled by default. When explicitly
+ * configured and approved, SQLite remains the canonical store for every
+ * operation. MemPalace is an optional projection and, unless
+ * `searchDerivedCandidates` is enabled, all reads continue to come from
+ * SQLite. Projection failures never remove or alter canonical SQLite records.
  */
 export class MemPalaceMemoryProvider implements MemoryProvider {
   readonly name = "sqlite+mempalace-projection";
@@ -98,6 +98,7 @@ export class MemPalaceMemoryProvider implements MemoryProvider {
   private readonly searchDerivedCandidates: boolean;
   private readonly providerRevision?: string;
   private readonly namespace?: string;
+  private readonly shouldProject: (entry: MemoryEntry) => boolean;
   private projected = 0;
   private failed = 0;
   private lastError?: string;
@@ -109,6 +110,7 @@ export class MemPalaceMemoryProvider implements MemoryProvider {
     searchDerivedCandidates?: boolean;
     providerRevision?: string;
     namespace?: string;
+    shouldProject?: (entry: MemoryEntry) => boolean;
   } = {}) {
     this.canonical = options.canonical ?? sqliteMemoryProvider;
     this.bridge = options.bridge;
@@ -116,6 +118,7 @@ export class MemPalaceMemoryProvider implements MemoryProvider {
     this.searchDerivedCandidates = options.searchDerivedCandidates === true && Boolean(options.bridge);
     this.providerRevision = options.providerRevision;
     this.namespace = options.namespace;
+    this.shouldProject = options.shouldProject ?? (() => true);
   }
 
   get projectionStatus(): MemPalaceProjectionStatus {
@@ -145,6 +148,7 @@ export class MemPalaceMemoryProvider implements MemoryProvider {
   }
 
   private async project(entry: MemoryEntry) {
+    if (!this.shouldProject(entry)) return;
     const drawer = toDrawer(entry);
     if (this.outbox) {
       await this.outbox.enqueue({
@@ -175,6 +179,7 @@ export class MemPalaceMemoryProvider implements MemoryProvider {
   }
 
   private async projectDelete(entry: MemoryEntry) {
+    if (!this.shouldProject(entry)) return;
     const drawer = toDrawer(entry);
     if (this.outbox) {
       await this.outbox.enqueue({
@@ -240,6 +245,7 @@ export class MemPalaceMemoryProvider implements MemoryProvider {
         if (!input.includeArchived && canonical.status === "archived") continue;
         if (!input.includeSuperseded && canonical.status === "superseded") continue;
         if (canonical.version !== drawer.metadata.version) continue;
+        if (!this.shouldProject(canonical)) continue;
         entries.push(canonical);
       }
       return entries.slice(0, input.limit ?? 12);

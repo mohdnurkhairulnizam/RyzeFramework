@@ -1,0 +1,46 @@
+{
+  "checkpoint": "stage-2-optional-mempalace-runtime-wiring",
+  "date": "2026-11-28",
+  "status": "implemented; disabled by default; not live-enabled",
+  "runtime_modes": {
+    "disabled": "default; live routers use SQLite provider directly",
+    "projection-only": "explicit configuration only; SQLite remains canonical"
+  },
+  "projection_only_requirements": [
+    "pinned provider revision",
+    "fixed namespace",
+    "fixed branch",
+    "MCP command and JSON argument list",
+    "exact dry-run manifest path",
+    "unexpired owner approval path",
+    "manifest/provider/namespace/branch equality"
+  ],
+  "projection_policy": [
+    "only approved memory ID/version pairs are projected",
+    "System Memory excluded",
+    "restricted records excluded",
+    "archived and superseded records excluded",
+    "derived search is rehydrated through canonical SQLite and filtered by the same allowlist",
+    "canonical SQLite writes continue if provider configuration is invalid or provider is unavailable"
+  ],
+  "operator_controls": [
+    "memoryProviderHealth protected procedure",
+    "bounded provider/outbox/error status",
+    "rollback by setting RYZE_MEMPALACE_MODE=disabled"
+  ],
+  "validation": {
+    "focused_tests": {"tests": 21, "result": "PASS"},
+    "full_vitest": {"files": 28, "tests": 97, "result": "PASS"},
+    "typecheck": "PASS",
+    "local_build": "PASS with existing non-fatal chunk-size warning",
+    "git_diff_check": "PASS"
+  },
+  "not_claimed": [
+    "target-Windows read-only check in this session",
+    "target-Windows provider replay acceptance",
+    "production manifest",
+    "live/private data projection",
+    "production namespace activation",
+    "MemPalace authority over SQLite"
+  ]
+}

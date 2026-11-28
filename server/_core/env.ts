@@ -7,6 +7,10 @@ const localDataDir = path.resolve(
     path.join(process.env.LOCALAPPDATA || os.homedir(), "RyzeFramework"),
 );
 const localMode = process.env.RYZE_LOCAL_MODE === "true";
+const rawMemPalaceMode = process.env.RYZE_MEMPALACE_MODE?.trim() || "disabled";
+if (rawMemPalaceMode !== "disabled" && rawMemPalaceMode !== "projection-only") {
+  throw new Error("RYZE_MEMPALACE_MODE must be 'disabled' or 'projection-only'.");
+}
 
 function getFreeLlmApiBaseUrl() {
   if (!localMode) return "";
@@ -49,4 +53,14 @@ export const ENV = {
   // Local mode remains worker-disabled unless a caller explicitly presents this private token.
   workerToken: process.env.RYZE_WORKER_TOKEN ?? "",
   workerOwnerOpenId: process.env.RYZE_WORKER_OWNER_OPEN_ID ?? process.env.OWNER_OPEN_ID ?? process.env.RYZE_LOCAL_OWNER_OPEN_ID ?? "",
+  memPalaceMode: rawMemPalaceMode as "disabled" | "projection-only",
+  memPalaceCommand: process.env.RYZE_MEMPALACE_COMMAND?.trim() ?? "",
+  memPalaceArgs: process.env.RYZE_MEMPALACE_ARGS?.trim() || "[]",
+  memPalaceWorkingDirectory: process.env.RYZE_MEMPALACE_WORKING_DIRECTORY?.trim() ?? "",
+  memPalaceProviderRevision: process.env.RYZE_MEMPALACE_PROVIDER_REVISION?.trim() ?? "",
+  memPalaceNamespace: process.env.RYZE_MEMPALACE_NAMESPACE?.trim() ?? "",
+  memPalaceBranch: process.env.RYZE_MEMPALACE_BRANCH?.trim() ?? "",
+  memPalaceSearchDerived: process.env.RYZE_MEMPALACE_SEARCH_DERIVED === "true",
+  memPalaceManifestPath: process.env.RYZE_MEMPALACE_MANIFEST_PATH?.trim() ?? "",
+  memPalaceApprovalPath: process.env.RYZE_MEMPALACE_APPROVAL_PATH?.trim() ?? "",
 };
