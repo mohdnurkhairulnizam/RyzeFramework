@@ -8,6 +8,7 @@ describe("Stage 2 SQLite schema compatibility", () => {
     try {
       sqlite.exec(`
         CREATE TABLE users (id integer PRIMARY KEY);
+        CREATE TABLE ryze_files (id text PRIMARY KEY);
         CREATE TABLE ryze_memory (
           id text PRIMARY KEY,
           userId integer NOT NULL,
@@ -34,6 +35,10 @@ describe("Stage 2 SQLite schema compatibility", () => {
       expect(columns.has("category")).toBe(true);
       expect(columns.has("memoryType")).toBe(true);
       expect(columns.has("syncStatus")).toBe(true);
+      const fileColumns = new Set(
+        (sqlite.pragma("table_info(ryze_files)") as Array<{ name: string }>).map(column => column.name),
+      );
+      expect(fileColumns).toEqual(new Set(["id", "sourceFileId", "sourceContentHash", "generatorLabel"]));
       expect(sqlite.prepare("SELECT content, scope, legacyScope, status FROM ryze_memory WHERE id = ?").get("memory-1"))
         .toMatchObject({
           content: "Keep the original content",

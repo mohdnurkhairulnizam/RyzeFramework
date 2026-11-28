@@ -1,0 +1,38 @@
+{
+  "checkpoint": "stage-2-generated-summary-provenance",
+  "date": "2026-11-28",
+  "scope": "synthetic/provider-isolated sandbox only",
+  "status": "implemented and validated; owner-facing natural-language acceptance remains pending",
+  "implementation": {
+    "output": "Markdown UTF-8 artifact",
+    "source_max_bytes": 65536,
+    "output_max_bytes": 65536,
+    "source_binding": ["sourceFileId", "sourceContentHash", "ownerId", "taskId", "generatorLabel"],
+    "generator_label": "opencode-summary-v1",
+    "validation": ["non-empty summary", "valid UTF-8 source", "NUL rejection", "bounded output size"],
+    "delivery": "same originating authorized private chat only",
+    "retention": "existing owner-scoped 30-day file retention policy"
+  },
+  "migration": {
+    "file": "drizzle/sqlite/0007_generated_artifact_provenance.sql",
+    "journal_entries": 8,
+    "columns": ["sourceFileId", "sourceContentHash", "generatorLabel"],
+    "compatibility_repair": true
+  },
+  "validation": {
+    "focused_tests": {"files": 3, "tests": 13, "result": "PASS"},
+    "full_vitest": {"files": 27, "tests": 95, "result": "PASS"},
+    "typecheck": "PASS",
+    "local_build": "PASS with existing non-fatal chunk-size warning",
+    "git_diff_check": "PASS"
+  },
+  "safety_boundaries": [
+    "SQLite remains authoritative",
+    "live routers remain SQLite-only",
+    "MemPalace remains optional and rebuildable",
+    "no live database, private data, secrets, backups, Telegram sessions, or production namespace used",
+    "no arbitrary file writing, shell execution, automatic capture, or live skill/intent change enabled",
+    "target-Windows automatic expiry remains pending",
+    "live or production MemPalace projection remains unauthorized"
+  ]
+}

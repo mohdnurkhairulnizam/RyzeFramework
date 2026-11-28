@@ -27,7 +27,7 @@ vi.mock("./routers/ryze", async (importOriginal) => {
 });
 
 const db = await import("./db");
-const { registerWorkerRoutes } = await import("./workerApi");
+const { registerWorkerRoutes, buildGeneratedSummaryArtifact } = await import("./workerApi");
 const storage = await import("./storage");
 
 let server: Server;
@@ -82,6 +82,15 @@ async function uploadFile(overrides: Record<string, string> = {}, body = Buffer.
 }
 
 describe("Telegram file transfer boundary", () => {
+  it("bounds generated Markdown summaries before storage", () => {
+    const artifact = buildGeneratedSummaryArtifact("brief.md", "A concise synthetic summary.");
+    expect(artifact.bytes.length).toBeLessThanOrEqual(64 * 1024);
+    expect(artifact.content).toContain("# Summary: brief.md");
+    expect(() => buildGeneratedSummaryArtifact("brief.md", " ")).toThrow(/bounded UTF-8 and size validation/);
+    expect(() => buildGeneratedSummaryArtifact("brief.md", "x".repeat(70 * 1024))).toThrow(/bounded UTF-8 and size validation/);
+    expect(() => buildGeneratedSummaryArtifact("brief.md", "\0")).toThrow(/bounded UTF-8 and size validation/);
+  });
+
   it("accepts stable text-only worker payloads without weakening the private-chat boundary", async () => {
     const endpoint = `${baseUrl}/api/worker/v1/inbound`;
     const legacy = {
@@ -211,8 +220,10 @@ describe("Telegram file transfer boundary", () => {
 
     const files = await db.listFiles(ownerId);
     const generated = files.find((file) => file.source === "generated" && file.telegramMessageId === "9041");
+    const sourceBytes = Buffer.from("# Stage 1 file\nContent for test.\n");
     expect(generated).toMatchObject({
       mimeType: "text/markdown", category: "documents", telegramChatId: "12345", telegramSenderId: "12345",
+      sourceFileId: source.fileId, sourceContentHash: crypto.createHash("sha256").update(sourceBytes).digest("hex"), generatorLabel: "opencode-summary-v1",
     });
     expect(generated!.id).not.toBe(source.fileId);
     expect(generated!.originalName).toMatch(/^summary-brief-task_.*\.md$/);

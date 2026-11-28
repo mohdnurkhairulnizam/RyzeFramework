@@ -36,6 +36,7 @@ import { FILE_RETENTION_MS } from "../shared/fileRetention";
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
 const MAX_ANALYSIS_BYTES = 64 * 1024;
+const MAX_GENERATED_SUMMARY_BYTES = 64 * 1024;
 const workerIdSchema = z.string().regex(/^[a-zA-Z0-9._-]{1,64}$/);
 const fileIdSchema = z.string().regex(/^file_[a-zA-Z0-9_-]{14}$/);
 const allowedMimeTypes = new Set([
@@ -163,6 +164,15 @@ export function formatGeneratedSummaryMarkdown(sourceName: string, summary: stri
   return `# Summary: ${sourceName}\n\n${summary.trim()}\n`;
 }
 
+export function buildGeneratedSummaryArtifact(sourceName: string, summary: string) {
+  const content = formatGeneratedSummaryMarkdown(sourceName, summary);
+  const bytes = Buffer.from(content, "utf8");
+  if (!summary.trim() || !bytes.length || bytes.length > MAX_GENERATED_SUMMARY_BYTES || content.includes("\0")) {
+    throw new Error("Generated summary did not pass bounded UTF-8 and size validation.");
+  }
+  return { content, bytes };
+}
+
 function summaryFilename(sourceName: string, taskId: string) {
   const stem = sourceName.replace(/\.[^.]*$/, "").replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 60) || "document";
   return cleanFilename(`summary-${stem}-${taskId}.md`);
@@ -226,7 +236,15 @@ async function loadTextFileContext(userId: number, chatId: string, senderId: str
   try {
     const content = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
     if (content.includes("\0")) return { error: "That file is not valid UTF-8 text and was not sent for analysis." };
-    return { fileContext: { originalName: file.originalName, mimeType: file.mimeType, content } };
+    return {
+      fileContext: {
+        fileId: file.id,
+        originalName: file.originalName,
+        mimeType: file.mimeType,
+        content,
+        contentHash: crypto.createHash("sha256").update(bytes).digest("hex"),
+      },
+    };
   } catch {
     return { error: "That file is not valid UTF-8 text and was not sent for analysis." };
   }
@@ -417,7 +435,7 @@ export function registerWorkerRoutes(app: Express) {
     await addTelegramLog(userId, { direction: "system", telegramUserId: input.data.senderId, chatId: input.data.chatId, messagePreview: "Authorized private-chat request accepted for bounded processing.", status: `queued:${eventKey}` });
 
     const requestFile = requestsFileContent(input.data.text) || Boolean(input.data.fileId);
-    let fileContext: { originalName: string; mimeType: string; content: string } | undefined;
+    let fileContext: { fileId: string; originalName: string; mimeType: string; content: string; contentHash: string } | undefined;
     let fileContextError: string | undefined;
     if (requestFile) {
       const loaded = await loadTextFileContext(userId, input.data.chatId, input.data.senderId, input.data.fileId);
@@ -476,8 +494,7 @@ export function registerWorkerRoutes(app: Express) {
       let metadataSaved = false;
       try {
         const filename = summaryFilename(fileContext.originalName, task.id);
-        const content = formatGeneratedSummaryMarkdown(fileContext.originalName, result.summary);
-        const bytes = Buffer.from(content, "utf8");
+        const { content, bytes } = buildGeneratedSummaryArtifact(fileContext.originalName, result.summary);
         const stored = await storagePut(`ryze/${userId}/generated/${filename}`, bytes, "text/markdown");
         storageKey = stored.key;
         validateGeneratedArtifact({ originalName: filename, mimeType: "text/markdown", byteSize: bytes.length, storageKey, source: "generated", category: "documents" });
@@ -490,6 +507,9 @@ export function registerWorkerRoutes(app: Express) {
           category: "documents",
           source: "generated",
           telegramOrigin: { chatId: input.data.chatId, senderId: input.data.senderId, messageId: input.data.messageId },
+          sourceFileId: fileContext.fileId,
+          sourceContentHash: fileContext.contentHash,
+          generatorLabel: "opencode-summary-v1",
         });
         metadataSaved = true;
         result = { ...result, fileId: file.id, summary: `${result.summary}\n\nCreated a new Markdown summary file: ${filename}.` };

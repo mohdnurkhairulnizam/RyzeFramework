@@ -183,6 +183,9 @@ export const ryzeFiles = sqliteTable("ryze_files", {
   telegramChatId: text("telegramChatId"),
   telegramSenderId: text("telegramSenderId"),
   telegramMessageId: text("telegramMessageId"),
+  sourceFileId: text("sourceFileId"),
+  sourceContentHash: text("sourceContentHash"),
+  generatorLabel: text("generatorLabel"),
   createdAt: timestampMs("createdAt"),
 }, (table) => [uniqueIndex("ryze_files_telegram_origin_uq").on(table.userId, table.telegramChatId, table.telegramMessageId)]);
 

@@ -18,6 +18,12 @@ const memoryColumns: Record<string, string> = {
   syncStatus: "text DEFAULT 'local'",
 };
 
+const fileColumns: Record<string, string> = {
+  sourceFileId: "text",
+  sourceContentHash: "text",
+  generatorLabel: "text",
+};
+
 /**
  * Repairs databases where Drizzle skipped migration 0005 because its journal
  * timestamp is earlier than migration 0004. This operation only adds missing
@@ -37,6 +43,15 @@ export function ensureStage2SchemaCompatibility(sqlite: Database.Database) {
     for (const [name, definition] of Object.entries(memoryColumns)) {
       if (!columns.has(name)) {
         sqlite.exec(`ALTER TABLE ryze_memory ADD COLUMN \`${name}\` ${definition}`);
+      }
+    }
+
+    if (tables.has("ryze_files")) {
+      const fileTableColumns = new Set(
+        (sqlite.pragma("table_info(ryze_files)") as Array<{ name: string }>).map(column => column.name),
+      );
+      for (const [name, definition] of Object.entries(fileColumns)) {
+        if (!fileTableColumns.has(name)) sqlite.exec(`ALTER TABLE ryze_files ADD COLUMN \`${name}\` ${definition}`);
       }
     }
 

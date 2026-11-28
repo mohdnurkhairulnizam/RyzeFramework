@@ -615,10 +615,10 @@ export async function awardSkill(userId: number, domain: string, success: boolea
   await db.update(ryzeSkills).set({ xp, level: 1 + Math.floor(xp / 100), successCount: existing[0].successCount + (success ? 1 : 0), failCount: existing[0].failCount + (success ? 0 : 1), updatedAt: new Date() }).where(eq(ryzeSkills.id, existing[0].id));
 }
 
-export async function saveFileMetadata(userId: number, input: { taskId?: string; storageKey: string; originalName: string; mimeType: string; byteSize: number; category: string; source: "upload" | "generated"; telegramOrigin?: { chatId: string; senderId: string; messageId: string } }) {
+export async function saveFileMetadata(userId: number, input: { taskId?: string; storageKey: string; originalName: string; mimeType: string; byteSize: number; category: string; source: "upload" | "generated"; telegramOrigin?: { chatId: string; senderId: string; messageId: string }; sourceFileId?: string; sourceContentHash?: string; generatorLabel?: string }) {
   const db = await requireDb();
   const id = `file_${nanoid(14)}`;
-  const file = { id, userId, taskId: input.taskId ?? null, storageKey: input.storageKey, url: `/api/files/${id}/download`, originalName: input.originalName, mimeType: input.mimeType, byteSize: input.byteSize, category: input.category, source: input.source, telegramChatId: input.telegramOrigin?.chatId ?? null, telegramSenderId: input.telegramOrigin?.senderId ?? null, telegramMessageId: input.telegramOrigin?.messageId ?? null };
+  const file = { id, userId, taskId: input.taskId ?? null, storageKey: input.storageKey, url: `/api/files/${id}/download`, originalName: input.originalName, mimeType: input.mimeType, byteSize: input.byteSize, category: input.category, source: input.source, telegramChatId: input.telegramOrigin?.chatId ?? null, telegramSenderId: input.telegramOrigin?.senderId ?? null, telegramMessageId: input.telegramOrigin?.messageId ?? null, sourceFileId: input.sourceFileId ?? null, sourceContentHash: input.sourceContentHash ?? null, generatorLabel: input.generatorLabel ?? null };
   await db.insert(ryzeFiles).values(file);
   return file;
 }
