@@ -2,7 +2,7 @@
 
 ## Decision recorded
 
-The owner directed proceeding with the Stage 3 transition procedure. This records approval to **prepare and review the origin blueprint Stage 3 design**. It does not authorize implementation, autonomous skill mutation, watchdog installation, automatic rollback, unrestricted file creation, or any MemPalace authority change.
+The owner directed proceeding with the Stage 3 transition procedure and approved this separate design checkpoint and work-package review. This records approval to **prepare and review the origin blueprint Stage 3 design**. It does not authorize implementation, autonomous skill mutation, watchdog installation, automatic rollback, unrestricted file creation, or any MemPalace authority change.
 
 Stage 2 remains **active/not complete** until the target-Windows one-day retention evidence is supplied and reviewed.
 
@@ -56,7 +56,10 @@ Define sanitized incident fields, diagnostic preservation limits, owner notifica
 
 ## Approval state
 
-- Planning approval: **OWNER-DIRECTED — proceed with preparation and design review**.
-- WP-1 through WP-5 implementation approval: **PENDING individual review after Stage 2 closure**.
+- Planning approval: **OWNER-DIRECTED — approved for preparation and design review**.
+- WP-1 through WP-5 design review: **COMPLETE — individually reviewed at design level**.
+- WP-1 through WP-5 implementation approval: **PENDING Stage 2 closure and separate implementation authorization**.
 - Stage 3 start: **NOT STARTED**.
 - Stage 2 closure prerequisite: **target-Windows retention evidence OPEN**.
+
+The disposable synthetic-profile procedure is [`stage-3-disposable-synthetic-profile-guide-2026-11-29.md`](./stage-3-disposable-synthetic-profile-guide-2026-11-29.md). It requires a disposable VM or separate Windows profile, uses `RYZE_MEMPALACE_MODE=disabled`, forbids real credentials and production data, and starts with a read-only SQLite baseline.
